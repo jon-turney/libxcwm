@@ -190,29 +190,29 @@ const static struct {
     {UKEYSYM (0x31b), XK_dead_horn},		/* COMBINING HORN */
 };
 
-typedef struct darwinKeyboardInfo_struct {
+typedef struct XtoQKeymapInfo_struct {
     // FIXME: Note that this will need to be a XModifierKeymap for use in client-space
     char modMap[MAP_LENGTH];
     KeySym keyMap[MAP_LENGTH * GLYPHS_PER_KEY];
     unsigned char modifierKeycodes[32][2];
-} darwinKeyboardInfo;
+} XtoQKeymapInfo;
 
-darwinKeyboardInfo keyInfo;
+XtoQKeymapInfo keyInfo;
 
 // FIXME: Just do this work on a single serial queue along with the
 //        rest of the input event stream
 pthread_mutex_t keyInfo_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 //-----------------------------------------------------------------------------
-// Utility functions to help parse Darwin keymap
+// Utility functions to help parse XtoQ keymap
 //-----------------------------------------------------------------------------
 
 /*
- * DarwinBuildModifierMaps
+ * XtoQBuildModifierMaps
  *      Use the keyMap field of keyboard info structure to populate
  *      the modMap and modifierKeycodes fields.
  */
-static void DarwinBuildModifierMaps(darwinKeyboardInfo *info) {
+static void XtoQBuildModifierMaps(XtoQKeymapInfo *info) {
     int i;
     KeySym *k;
 
@@ -281,7 +281,7 @@ static void DarwinBuildModifierMaps(darwinKeyboardInfo *info) {
                 break;
 
             case XK_Mode_switch:
-                ErrorF("DarwinBuildModifierMaps: XK_Mode_switch encountered, unable to determine side.\n");
+                ErrorF("XtoQBuildModifierMaps: XK_Mode_switch encountered, unable to determine side.\n");
                 info->modifierKeycodes[NX_MODIFIERKEY_ALTERNATE][0] = i;
 #ifdef NX_MODIFIERKEY_RALTERNATE
                 info->modifierKeycodes[NX_MODIFIERKEY_RALTERNATE][0] = i;
@@ -315,7 +315,7 @@ static void DarwinBuildModifierMaps(darwinKeyboardInfo *info) {
 /* Set the repeat rates based on global preferences and keycodes for modifiers.
  * Precondition: Has the keyInfo_mutex lock.
  */
-static void DarwinKeyboardSetRepeat(DeviceIntPtr pDev, int initialKeyRepeatValue, int keyRepeatValue) {
+static void XtoQKeyboardSetRepeat(DeviceIntPtr pDev, int initialKeyRepeatValue, int keyRepeatValue) {
     if(initialKeyRepeatValue == 300000) { // off
         /* Turn off repeats globally */
         XkbSetRepeatKeys(pDev, -1, AutoRepeatModeOff);
@@ -366,7 +366,7 @@ static void DarwinKeyboardSetRepeat(DeviceIntPtr pDev, int initialKeyRepeatValue
 }
 #endif
 
-void DarwinKeyboardReloadHandler(void) {
+void XtoQKeyboardReloadHandler(void) {
     CFIndex initialKeyRepeatValue, keyRepeatValue;
     Boolean ok;
 #if 0 /* FIXME: Don't worry about xmodmap until we're done with everything else */
@@ -376,7 +376,7 @@ void DarwinKeyboardReloadHandler(void) {
     char usermodmap[PATH_MAX], cmd[PATH_MAX];
 #endif
 
-    DEBUG_LOG("DarwinKeyboardReloadHandler\n");
+    DEBUG_LOG("XtoQKeyboardReloadHandler\n");
 
     /* Get our key repeat settings from GlobalPreferences */
     (void)CFPreferencesAppSynchronize(CFSTR(".GlobalPreferences"));
@@ -407,7 +407,7 @@ void DarwinKeyboardReloadHandler(void) {
         //XkbApplyMappingChange(darwinKeyboard, &keySyms, keySyms.minKeyCode,
         //                      keySyms.maxKeyCode - keySyms.minKeyCode + 1,
         //                      keyInfo.modMap, serverClient);
-        //FIXME: Disabled DarwinKeyboardSetRepeat(darwinKeyboard, initialKeyRepeatValue, keyRepeatValue);
+        //FIXME: Disabled XtoQKeyboardSetRepeat(darwinKeyboard, initialKeyRepeatValue, keyRepeatValue);
     } pthread_mutex_unlock(&keyInfo_mutex);
 #endif
 
@@ -450,12 +450,12 @@ void DarwinKeyboardReloadHandler(void) {
 //-----------------------------------------------------------------------------
 
 /*
- * DarwinModifierNXKeyToNXKeycode
+ * XtoQModifierNXKeyToNXKeycode
  *      Return the keycode for an NX_MODIFIERKEY_* modifier.
  *      side = 0 for left or 1 for right.
  *      Returns 0 if key+side is not a known modifier.
  */
-int DarwinModifierNXKeyToNXKeycode(int key, int side) {
+int XtoQModifierNXKeyToNXKeycode(int key, int side) {
     int retval;
     pthread_mutex_lock(&keyInfo_mutex);
     retval = keyInfo.modifierKeycodes[key][side];
@@ -465,11 +465,11 @@ int DarwinModifierNXKeyToNXKeycode(int key, int side) {
 }
 
 /*
- * DarwinModifierNXKeycodeToNXKey
+ * XtoQModifierNXKeycodeToNXKey
  *      Returns -1 if keycode+side is not a modifier key
  *      outSide may be NULL, else it gets 0 for left and 1 for right.
  */
-int DarwinModifierNXKeycodeToNXKey(unsigned char keycode, int *outSide) {
+int XtoQModifierNXKeycodeToNXKey(unsigned char keycode, int *outSide) {
     int key, side;
 
     keycode += MIN_KEYCODE;
@@ -492,10 +492,10 @@ int DarwinModifierNXKeycodeToNXKey(unsigned char keycode, int *outSide) {
 }
 
 /*
- * DarwinModifierNXMaskToNXKey
+ * XtoQModifierNXMaskToNXKey
  *      Returns -1 if mask is not a known modifier mask.
  */
-int DarwinModifierNXMaskToNXKey(int mask) {
+int XtoQModifierNXMaskToNXKey(int mask) {
     switch (mask) {
         case NX_ALPHASHIFTMASK:       return NX_MODIFIERKEY_ALPHALOCK;
         case NX_SHIFTMASK:            return NX_MODIFIERKEY_SHIFT;
@@ -526,10 +526,10 @@ int DarwinModifierNXMaskToNXKey(int mask) {
 }
 
 /*
- * DarwinModifierNXKeyToNXMask
+ * XtoQModifierNXKeyToNXMask
  *      Returns 0 if key is not a known modifier key.
  */
-int DarwinModifierNXKeyToNXMask(int key) {
+int XtoQModifierNXKeyToNXMask(int key) {
     switch (key) {
         case NX_MODIFIERKEY_ALPHALOCK:   return NX_ALPHASHIFTMASK;
 #ifdef NX_DEVICELSHIFTKEYMASK
@@ -555,10 +555,10 @@ int DarwinModifierNXKeyToNXMask(int key) {
 }
 
 /*
- * DarwinModifierStringToNXMask
+ * XtoQModifierStringToNXMask
  *      Returns 0 if string is not a known modifier.
  */
-int DarwinModifierStringToNXMask(const char *str, int separatelr) {
+int XtoQModifierStringToNXMask(const char *str, int separatelr) {
 #ifdef NX_DEVICELSHIFTKEYMASK
     if(separatelr) {
         if (!strcasecmp(str, "shift"))    return NX_DEVICELSHIFTKEYMASK | NX_DEVICERSHIFTKEYMASK;
@@ -640,7 +640,7 @@ static KeySym make_dead_key(KeySym in) {
     return in;
 }
 
-static Boolean QuartzReadSystemKeymap(darwinKeyboardInfo *info) {
+static Boolean XtoQReadSystemKeymap(XtoQKeymapInfo *info) {
 #if !defined(__LP64__) || MAC_OS_X_VERSION_MIN_REQUIRED < 1050
     KeyboardLayoutRef key_layout;
     int is_uchr = 1;
@@ -832,7 +832,7 @@ static Boolean QuartzReadSystemKeymap(darwinKeyboardInfo *info) {
     }
 #endif
 
-    DarwinBuildModifierMaps(info);
+    XtoQBuildModifierMaps(info);
 
     return TRUE;
 }
@@ -841,9 +841,9 @@ void XtoQKeymapReSync(void) {
     /* Update keyInfo */
     pthread_mutex_lock(&keyInfo_mutex);
     memset(keyInfo.keyMap, 0, sizeof(keyInfo.keyMap));
-    QuartzReadSystemKeymap(&keyInfo);
+    XtoQReadSystemKeymap(&keyInfo);
     pthread_mutex_unlock(&keyInfo_mutex);
 
     /* Tell server thread to deal with new keyInfo */
-    DarwinKeyboardReloadHandler();
+    XtoQKeyboardReloadHandler();
 }
