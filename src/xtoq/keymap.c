@@ -1,7 +1,7 @@
 /*
    quartzKeyboard.c: Keyboard support for Xquartz
 
-   Copyright (c) 2003-2008 Apple Inc.
+   Copyright (c) 2003-2012 Apple Inc.
    Copyright (c) 2001-2004 Torrey T. Lyons. All Rights Reserved.
    Copyright 2004 Kaleb S. KEITHLEY. All Rights Reserved.
 
@@ -31,10 +31,8 @@
    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include "sanitizedCarbon.h"
-
-#ifdef HAVE_DIX_CONFIG_H
-#include <dix-config.h>
+#ifdef CONFIG_H
+#include <config.h>
 #endif
 
 #define HACK_MISSING 1
@@ -43,29 +41,38 @@
 
 #include <unistd.h>
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <sys/stat.h>
 #include <AvailabilityMacros.h>
-
-#include "quartz.h"
-#include "darwin.h"
-#include "darwinEvents.h"
-
-#include "quartzKeyboard.h"
-
-#include "X11Application.h"
+#include <Carbon/Carbon.h>
+#include <IOKit/hidsystem/ev_keymap.h>
 
 #include <assert.h>
 #include <pthread.h>
 
-#include "xkbsrv.h"
-#include "exevents.h"
-#include "X11/keysym.h"
+/* FIXME: Use xcb instead */
+#include <X11/X.h>
+#include <X11/keysym.h>
+#include <X11/extensions/XKB.h>
+
+#include "keymap.h"
 #include "keysym2ucs.h"
 
-extern void
-CopyKeyClass(DeviceIntPtr device, DeviceIntPtr master);
+// FIXME: Convert away from server-style error logging
+#define DEBUG_LOG(...) /**/
+#define ErrorF(...) /**/
+
+// Each key can generate 4 glyphs. They are, in order:
+// unshifted, shifted, modeswitch unshifted, modeswitch shifted
+#define GLYPHS_PER_KEY  4
+#define NUM_KEYCODES    248    // NX_NUMKEYCODES might be better
+#define MIN_KEYCODE     XkbMinLegalKeyCode     // unfortunately, this isn't 0...
+#define MAX_KEYCODE     NUM_KEYCODES + MIN_KEYCODE - 1
+
+// FIXME: Don't rely on this
+#define MAP_LENGTH      256
 
 enum {
     MOD_COMMAND = 256,
@@ -184,18 +191,17 @@ const static struct {
 };
 
 typedef struct darwinKeyboardInfo_struct {
-    CARD8 modMap[MAP_LENGTH];
+    // FIXME: Note that this will need to be a XModifierKeymap for use in client-space
+    char modMap[MAP_LENGTH];
     KeySym keyMap[MAP_LENGTH * GLYPHS_PER_KEY];
     unsigned char modifierKeycodes[32][2];
 } darwinKeyboardInfo;
 
 darwinKeyboardInfo keyInfo;
-pthread_mutex_t keyInfo_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-static void DarwinChangeKeyboardControl(DeviceIntPtr device, KeybdCtrl *ctrl) {
-    // FIXME: to be implemented
-    // keyclick, bell volume / pitch, autorepead, LED's
-}
+// FIXME: Just do this work on a single serial queue along with the
+//        rest of the input event stream
+pthread_mutex_t keyInfo_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 //-----------------------------------------------------------------------------
 // Utility functions to help parse Darwin keymap
@@ -253,8 +259,11 @@ static void DarwinBuildModifierMaps(darwinKeyboardInfo *info) {
             case XK_Alt_L:
                 info->modifierKeycodes[NX_MODIFIERKEY_ALTERNATE][0] = i;
                 info->modMap[MIN_KEYCODE + i] = Mod1Mask;
+#if 0
+// FIXME: Add support for this toggle into XtoQ
                 if(!XQuartzOptionSendsAlt)
                     *k = XK_Mode_switch; // Yes, this is ugly.  This needs to be cleaned up when we integrate quartzKeyboard with this code and refactor.
+#endif
                 break;
 
             case XK_Alt_R:
@@ -263,8 +272,11 @@ static void DarwinBuildModifierMaps(darwinKeyboardInfo *info) {
 #else
                 info->modifierKeycodes[NX_MODIFIERKEY_ALTERNATE][0] = i;
 #endif
+#if 0
+// FIXME: Add support for this toggle into XtoQ
                 if(!XQuartzOptionSendsAlt)
                     *k = XK_Mode_switch; // Yes, this is ugly.  This needs to be cleaned up when we integrate quartzKeyboard with this code and refactor.
+#endif
                 info->modMap[MIN_KEYCODE + i] = Mod1Mask;
                 break;
 
@@ -298,24 +310,7 @@ static void DarwinBuildModifierMaps(darwinKeyboardInfo *info) {
     }
 }
 
-/*
- * DarwinKeyboardInit
- *      Get the Darwin keyboard map and compute an equivalent
- *      X keyboard map and modifier map. Set the new keyboard
- *      device structure.
- */
-void DarwinKeyboardInit(DeviceIntPtr pDev) {
-    // Open a shared connection to the HID System.
-    // Note that the Event Status Driver is really just a wrapper
-    // for a kIOHIDParamConnectType connection.
-    assert(darwinParamConnect = NXOpenEventStatus());
-
-    InitKeyboardDeviceStruct(pDev, NULL, NULL, DarwinChangeKeyboardControl);
-
-    DarwinKeyboardReloadHandler();
-
-    CopyKeyClass(pDev, inputInfo.keyboard);
-}
+#if 0 /* FIXME: This code depends on too much of server internals to worry about now */
 
 /* Set the repeat rates based on global preferences and keycodes for modifiers.
  * Precondition: Has the keyInfo_mutex lock.
@@ -330,7 +325,7 @@ static void DarwinKeyboardSetRepeat(DeviceIntPtr pDev, int initialKeyRepeatValue
         XkbControlsRec      old;
 
         /* Turn on repeats globally */
-        XkbSetRepeatKeys(pDev, -1, AutoRepeatModeOn);
+        XXkbSetRepeatKeys(pDev, -1, AutoRepeatModeOn);
         
         /* Setup the bit mask for individual key repeats */
         ctrl = pDev->key->xkbInfo->desc->ctrls;
@@ -369,16 +364,17 @@ static void DarwinKeyboardSetRepeat(DeviceIntPtr pDev, int initialKeyRepeatValue
         XkbDDXChangeControls(pDev, &old, ctrl);
     }
 }
+#endif
 
 void DarwinKeyboardReloadHandler(void) {
-    KeySymsRec keySyms;
     CFIndex initialKeyRepeatValue, keyRepeatValue;
-    BOOL ok;
-    DeviceIntPtr pDev;
+    Boolean ok;
+#if 0 /* FIXME: Don't worry about xmodmap until we're done with everything else */
     const char *xmodmap = PROJECTROOT "/bin/xmodmap";
     const char *sysmodmap = PROJECTROOT "/lib/X11/xinit/.Xmodmap";
     const char *homedir = getenv("HOME");
     char usermodmap[PATH_MAX], cmd[PATH_MAX];
+#endif
 
     DEBUG_LOG("DarwinKeyboardReloadHandler\n");
 
@@ -392,9 +388,15 @@ void DarwinKeyboardReloadHandler(void) {
     keyRepeatValue = CFPreferencesGetAppIntegerValue(CFSTR("KeyRepeat"), CFSTR(".GlobalPreferences"), &ok);
     if(!ok)
         keyRepeatValue = 6;
-    
+
+#if 0    
     pthread_mutex_lock(&keyInfo_mutex); {
+        //FIXME: Use Xi's ChangeDeviceKeyMapping (note that this won't handle modMap).
+        //       modMap needs to be sent using the core SetModifierMapping request,
+        //       and it probably needs to be in a different format than it is currently.
+
         /* Initialize our keySyms */
+        KeySymsRec keySyms;
         keySyms.map = keyInfo.keyMap;
         keySyms.mapWidth   = GLYPHS_PER_KEY;
         keySyms.minKeyCode = MIN_KEYCODE;
@@ -402,22 +404,14 @@ void DarwinKeyboardReloadHandler(void) {
 
 	// TODO: We should build the entire XkbDescRec and use XkbCopyKeymap
         /* Apply the mappings to darwinKeyboard */
-        XkbApplyMappingChange(darwinKeyboard, &keySyms, keySyms.minKeyCode,
-                              keySyms.maxKeyCode - keySyms.minKeyCode + 1,
-                              keyInfo.modMap, serverClient);
-        DarwinKeyboardSetRepeat(darwinKeyboard, initialKeyRepeatValue, keyRepeatValue);
-
-        /* Apply the mappings to the core keyboard */
-        for (pDev = inputInfo.devices; pDev; pDev = pDev->next) {
-            if ((pDev->coreEvents || pDev == inputInfo.keyboard) && pDev->key) {
-                XkbApplyMappingChange(pDev, &keySyms, keySyms.minKeyCode,
-                                      keySyms.maxKeyCode - keySyms.minKeyCode + 1,
-                                      keyInfo.modMap, serverClient);
-                DarwinKeyboardSetRepeat(pDev, initialKeyRepeatValue, keyRepeatValue);    
-            }
-        }
+        //XkbApplyMappingChange(darwinKeyboard, &keySyms, keySyms.minKeyCode,
+        //                      keySyms.maxKeyCode - keySyms.minKeyCode + 1,
+        //                      keyInfo.modMap, serverClient);
+        //FIXME: Disabled DarwinKeyboardSetRepeat(darwinKeyboard, initialKeyRepeatValue, keyRepeatValue);
     } pthread_mutex_unlock(&keyInfo_mutex);
+#endif
 
+#if 0 /* FIXME: Don't worry about xmodmap until we're done with everything else */
     /* Modify with xmodmap */
     if (access(xmodmap, F_OK) == 0) {
         /* Check for system .Xmodmap */
@@ -442,6 +436,7 @@ void DarwinKeyboardReloadHandler(void) {
             ErrorF("X11.app: Unable to determine path to user's .Xmodmap");
         }
     }
+#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -608,16 +603,6 @@ int DarwinModifierStringToNXMask(const char *str, int separatelr) {
     return 0;
 }
 
-/*
- * LegalModifier
- *      This allows the ddx layer to prevent some keys from being remapped
- *      as modifier keys.
- */
-Bool LegalModifier(unsigned int key, DeviceIntPtr pDev)
-{
-    return 1;
-}
-
 static inline UniChar macroman2ucs(unsigned char c) {
     /* Precalculated table mapping MacRoman-128 to Unicode. Generated
        by creating single element CFStringRefs then extracting the
@@ -655,7 +640,7 @@ static KeySym make_dead_key(KeySym in) {
     return in;
 }
 
-static Bool QuartzReadSystemKeymap(darwinKeyboardInfo *info) {
+static Boolean QuartzReadSystemKeymap(darwinKeyboardInfo *info) {
 #if !defined(__LP64__) || MAC_OS_X_VERSION_MIN_REQUIRED < 1050
     KeyboardLayoutRef key_layout;
     int is_uchr = 1;
@@ -852,17 +837,13 @@ static Bool QuartzReadSystemKeymap(darwinKeyboardInfo *info) {
     return TRUE;
 }
 
-Bool QuartsResyncKeymap(Bool sendDDXEvent) {
-    Bool retval;
+void XtoQKeymapReSync(void) {
     /* Update keyInfo */
     pthread_mutex_lock(&keyInfo_mutex);
     memset(keyInfo.keyMap, 0, sizeof(keyInfo.keyMap));
-    retval = QuartzReadSystemKeymap(&keyInfo);
+    QuartzReadSystemKeymap(&keyInfo);
     pthread_mutex_unlock(&keyInfo_mutex);
 
     /* Tell server thread to deal with new keyInfo */
-    if(sendDDXEvent)
-        DarwinSendDDXEvent(kXquartzReloadKeymap, 0);
-
-    return retval;
+    DarwinKeyboardReloadHandler();
 }
