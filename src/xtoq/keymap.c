@@ -50,7 +50,6 @@
 #include <IOKit/hidsystem/ev_keymap.h>
 
 #include <assert.h>
-#include <pthread.h>
 
 /* FIXME: Use xcb instead */
 #include <X11/X.h>
@@ -198,10 +197,6 @@ typedef struct XtoQKeymapInfo_struct {
 } XtoQKeymapInfo;
 
 XtoQKeymapInfo keyInfo;
-
-// FIXME: Just do this work on a single serial queue along with the
-//        rest of the input event stream
-pthread_mutex_t keyInfo_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 //-----------------------------------------------------------------------------
 // Utility functions to help parse XtoQ keymap
@@ -390,7 +385,6 @@ void XtoQKeyboardReloadHandler(void) {
         keyRepeatValue = 6;
 
 #if 0    
-    pthread_mutex_lock(&keyInfo_mutex); {
         //FIXME: Use Xi's ChangeDeviceKeyMapping (note that this won't handle modMap).
         //       modMap needs to be sent using the core SetModifierMapping request,
         //       and it probably needs to be in a different format than it is currently.
@@ -408,7 +402,6 @@ void XtoQKeyboardReloadHandler(void) {
         //                      keySyms.maxKeyCode - keySyms.minKeyCode + 1,
         //                      keyInfo.modMap, serverClient);
         //FIXME: Disabled XtoQKeyboardSetRepeat(darwinKeyboard, initialKeyRepeatValue, keyRepeatValue);
-    } pthread_mutex_unlock(&keyInfo_mutex);
 #endif
 
 #if 0 /* FIXME: Don't worry about xmodmap until we're done with everything else */
@@ -456,12 +449,7 @@ void XtoQKeyboardReloadHandler(void) {
  *      Returns 0 if key+side is not a known modifier.
  */
 int XtoQModifierNXKeyToNXKeycode(int key, int side) {
-    int retval;
-    pthread_mutex_lock(&keyInfo_mutex);
-    retval = keyInfo.modifierKeycodes[key][side];
-    pthread_mutex_unlock(&keyInfo_mutex);
-
-    return retval;
+    return keyInfo.modifierKeycodes[key][side];
 }
 
 /*
@@ -475,13 +463,11 @@ int XtoQModifierNXKeycodeToNXKey(unsigned char keycode, int *outSide) {
     keycode += MIN_KEYCODE;
 
     // search modifierKeycodes for this keycode+side
-    pthread_mutex_lock(&keyInfo_mutex);
     for (key = 0; key < NX_NUMMODIFIERS; key++) {
         for (side = 0; side <= 1; side++) {
             if (keyInfo.modifierKeycodes[key][side] == keycode) break;
         }
     }
-    pthread_mutex_unlock(&keyInfo_mutex);
 
     if (key == NX_NUMMODIFIERS) {
         return -1;
@@ -839,10 +825,8 @@ static Boolean XtoQReadSystemKeymap(XtoQKeymapInfo *info) {
 
 void XtoQKeymapReSync(void) {
     /* Update keyInfo */
-    pthread_mutex_lock(&keyInfo_mutex);
     memset(keyInfo.keyMap, 0, sizeof(keyInfo.keyMap));
     XtoQReadSystemKeymap(&keyInfo);
-    pthread_mutex_unlock(&keyInfo_mutex);
 
     /* Tell server thread to deal with new keyInfo */
     XtoQKeyboardReloadHandler();

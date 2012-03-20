@@ -27,6 +27,11 @@
 #ifndef XTOQ_KEYBOARD_H
 #define XTOQ_KEYBOARD_H
 
+/* It is assumed that appropriate serialization is done by the *CALLER* of these APIs
+ * These should all be called on the same serial queue that handles sending NSEvents
+ * to the server.
+ */
+
 int XtoQModifierNXKeycodeToNXKey(unsigned char keycode, int *outSide);
 int XtoQModifierNXKeyToNXKeycode(int key, int side);
 int XtoQModifierNXKeyToNXMask(int key);
