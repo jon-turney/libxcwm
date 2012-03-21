@@ -21,15 +21,15 @@
 
 //
 //  input.c
-//  xtoq-xcode
+//  xcwm-xcode
 
 #include <stdio.h>
 #include <xcwm/xcwm.h>
 
-#include "xtoq_internal.h"
+#include "xcwm_internal.h"
 
 void
-xtoq_key_press (xtoq_context_t *context, int window, uint8_t code)
+xcwm_key_press (xcwm_context_t *context, int window, uint8_t code)
 {
     xcb_generic_error_t *err;
     xcb_void_cookie_t cookie;
@@ -45,11 +45,11 @@ xtoq_key_press (xtoq_context_t *context, int window, uint8_t code)
         free(err);
     }	
     xcb_flush(context->conn);
-    printf("xtoq.c received key down - uint8_t '%i', from Mac window #%i to context.window %u\n", code,  window, context->window);
+    printf("xcwm.c received key down - uint8_t '%i', from Mac window #%i to context.window %u\n", code,  window, context->window);
 }
 
 void
-xtoq_key_release (xtoq_context_t *context, int window, uint8_t code)
+xcwm_key_release (xcwm_context_t *context, int window, uint8_t code)
 {
     xcb_generic_error_t *err;
     xcb_void_cookie_t cookie;
@@ -65,34 +65,34 @@ xtoq_key_release (xtoq_context_t *context, int window, uint8_t code)
         free(err);
     }	
     xcb_flush(context->conn);
-    printf("xtoq.c received key release- uint8_t '%i', from Mac window #%i to context.window %u\n", code,  window, context->window);
+    printf("xcwm.c received key release- uint8_t '%i', from Mac window #%i to context.window %u\n", code,  window, context->window);
 }
 
 void
-xtoq_button_press (xtoq_context_t *context, long x, long y, int window, int button)
+xcwm_button_press (xcwm_context_t *context, long x, long y, int window, int button)
 {
     //xcb_window_t none = { XCB_NONE };
     xcb_test_fake_input (context->conn, XCB_BUTTON_PRESS, 1, XCB_CURRENT_TIME,
                          context->window, 0, 0, 0);
 	xcb_flush(context->conn);
-    printf("button down received by xtoq.c - (%ld,%ld) in Mac window #%i\n", x, y, window);
+    printf("button down received by xcwm.c - (%ld,%ld) in Mac window #%i\n", x, y, window);
 }
 
 void
-xtoq_button_release (xtoq_context_t *context, long x, long y, int window, int button)
+xcwm_button_release (xcwm_context_t *context, long x, long y, int window, int button)
 {
     xcb_test_fake_input (context->conn, XCB_BUTTON_RELEASE, 1, XCB_CURRENT_TIME,
                          context->window, 0, 0, 0);
 	xcb_flush(context->conn);
-    printf("button release received by xtoq.c - (%ld,%ld) in Mac window #%i\n", x, y, window);
+    printf("button release received by xcwm.c - (%ld,%ld) in Mac window #%i\n", x, y, window);
 }
 
 void
-xtoq_mouse_motion (xtoq_context_t *context, long x, long y, int window, int button)
+xcwm_mouse_motion (xcwm_context_t *context, long x, long y, int window, int button)
 {
     xcb_test_fake_input (context->conn, XCB_MOTION_NOTIFY, 0, XCB_CURRENT_TIME,
                          root_context->window//root_context->window//none//context->parent
                          ,x, y, 0);
 	xcb_flush(context->conn);
-    //printf("mouse motion received by xtoq.c - (%ld,%ld) in Mac window #%i\n", x, y, window);
+    //printf("mouse motion received by xcwm.c - (%ld,%ld) in Mac window #%i\n", x, y, window);
 }

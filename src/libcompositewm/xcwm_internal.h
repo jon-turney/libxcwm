@@ -1,7 +1,7 @@
 /* Copyright (c) 2012 Jess VanDerwalker <washu@sonic.net>
  * All rights reserved.
  *
- * xtoq_internal.h
+ * xcwm_internal.h
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -41,25 +41,25 @@
 #include "data.h"
 
 /**
- * Strucuture used to pass nesessary data to xtoq_start_event_loop.
+ * Strucuture used to pass nesessary data to xcwm_start_event_loop.
  */
-typedef struct xtoq_event_connetion {
+typedef struct xcwm_event_connetion {
 	xcb_connection_t *conn;	          /* Connection to listen to events on */
-	xtoq_event_cb_t event_callback;   /* Fuction to call when event caught */
-} xtoq_event_connection;
+	xcwm_event_cb_t event_callback;   /* Fuction to call when event caught */
+} xcwm_event_connection;
 
 /**
  * Structure to hold WM_* atoms that we care about
  */
-typedef struct xtoq_wm_atoms {
+typedef struct xcwm_wm_atoms {
     xcb_atom_t wm_protocols_atom;
     xcb_atom_t wm_delete_window_atom;
-} xtoq_wm_atoms;
+} xcwm_wm_atoms;
 
 /**
  * Global for the atoms needed
  */
-extern xtoq_wm_atoms *_wm_atoms;
+extern xcwm_wm_atoms *_wm_atoms;
 
 /**
  * Mutex lock supplied to client to lock event loop thread
@@ -76,7 +76,7 @@ extern pthread_mutex_t event_thread_lock;
  * @return The window attributes reply. Null if the request fails.
  */
 xcb_get_window_attributes_reply_t *
-_xtoq_get_window_attributes (xcb_connection_t *conn, xcb_window_t window);
+_xcwm_get_window_attributes (xcb_connection_t *conn, xcb_window_t window);
 
 /**
  * Return the geometry of the window in a geometry reply. Caller must free
@@ -86,7 +86,7 @@ _xtoq_get_window_attributes (xcb_connection_t *conn, xcb_window_t window);
  * @return The window's geometry reply. Null if the request for reply fails.
  */
 xcb_get_geometry_reply_t *
-_xtoq_get_window_geometry (xcb_connection_t *conn, xcb_window_t window);
+_xcwm_get_window_geometry (xcb_connection_t *conn, xcb_window_t window);
 
 /**
  * Print out information about the existing windows attached to our
@@ -97,7 +97,7 @@ _xtoq_get_window_geometry (xcb_connection_t *conn, xcb_window_t window);
  * @return the geometry of the window
  */
 void
-_xtoq_write_all_children_window_info (xcb_connection_t *conn,
+_xcwm_write_all_children_window_info (xcb_connection_t *conn,
 								 xcb_window_t root);
 
 /**
@@ -107,7 +107,7 @@ _xtoq_write_all_children_window_info (xcb_connection_t *conn,
  * @return a structure containing data and data length.
  */
 image_data_t
-_xtoq_get_window_image_data (xcb_connection_t *conn, xcb_window_t window);
+_xcwm_get_window_image_data (xcb_connection_t *conn, xcb_window_t window);
 
 /**
  * Write information about a window out to stdio.
@@ -116,7 +116,7 @@ _xtoq_get_window_image_data (xcb_connection_t *conn, xcb_window_t window);
  * @param window The window.
  */
 void
-_xtoq_write_window_info (xcb_connection_t *conn, xcb_window_t window);
+_xcwm_write_window_info (xcb_connection_t *conn, xcb_window_t window);
 
 /**
  * Check the request cookie and determine if there is an error.
@@ -126,7 +126,7 @@ _xtoq_write_window_info (xcb_connection_t *conn, xcb_window_t window);
  * @return int The number of the error code, if any. Otherwise zero.
  */
 int
-_xtoq_request_check (xcb_connection_t *conn, xcb_void_cookie_t cookie,
+_xcwm_request_check (xcb_connection_t *conn, xcb_void_cookie_t cookie,
               char *msg);
 
 /****************
@@ -140,7 +140,7 @@ _xtoq_request_check (xcb_connection_t *conn, xcb_void_cookie_t cookie,
  * @return The reply structure
  */
 xcb_query_extension_reply_t * 
-_xtoq_init_extension(xcb_connection_t *conn, char *extension_name);
+_xcwm_init_extension(xcb_connection_t *conn, char *extension_name);
 
 /**
  * Initializes damage on a window contained in a context.
@@ -148,7 +148,7 @@ _xtoq_init_extension(xcb_connection_t *conn, char *extension_name);
  * @param contxt A context containing a window 
  */
 void 
-_xtoq_init_damage(xtoq_context_t *contxt);
+_xcwm_init_damage(xcwm_context_t *contxt);
 
 /**
  * Initializes the composite extension on the context containg
@@ -156,21 +156,21 @@ _xtoq_init_damage(xtoq_context_t *contxt);
  * @param contxt The contxt containing the root window
  */
 void 
-_xtoq_init_composite(xtoq_context_t *contxt);
+_xcwm_init_composite(xcwm_context_t *contxt);
 
 /**
  * Initialize the xfixes extension.
  * @param contxt The context
  */
 void
-_xtoq_init_xfixes (xtoq_context_t *contxt);
+_xcwm_init_xfixes (xcwm_context_t *contxt);
 
 /**
  * Get the values for the WM_* atoms that we need.
  * @param contxt The context
  */
 void
-_xtoq_get_wm_atoms (xtoq_context_t *contxt);
+_xcwm_get_wm_atoms (xcwm_context_t *contxt);
 
 /****************
  * event_loop.c
@@ -184,15 +184,15 @@ _xtoq_get_wm_atoms (xtoq_context_t *contxt);
  * @return 0 on success, nonzero on failure.
  */
 int
-_xtoq_start_event_loop (xcb_connection_t *conn,
-						xtoq_event_cb_t event_callback);
+_xcwm_start_event_loop (xcb_connection_t *conn,
+						xcwm_event_cb_t event_callback);
 
 /**
  * Stops the thread running the event loop.
  * @return 0 on success, otherwise zero.
  */
 int
-_xtoq_stop_event_loop (void);
+_xcwm_stop_event_loop (void);
 
 /****************
  * context_list.c
@@ -202,22 +202,22 @@ _xtoq_stop_event_loop (void);
  * A structure (doubly linked list) to hold
  * pointers to the contexts
  */
-typedef struct _xtoq_context_node {
-    struct xtoq_context_t *context;   /**< Pointer to a context */
-    struct _xtoq_context_node * next; /**< Pointer to the next context node */
-    struct _xtoq_context_node * prev; /**< Pointer to the previous context node */
-} _xtoq_context_node;
+typedef struct _xcwm_context_node {
+    struct xcwm_context_t *context;   /**< Pointer to a context */
+    struct _xcwm_context_node * next; /**< Pointer to the next context node */
+    struct _xcwm_context_node * prev; /**< Pointer to the previous context node */
+} _xcwm_context_node;
 
 /* this is the head pointer */
-extern _xtoq_context_node *_xtoq_window_list_head;
+extern _xcwm_context_node *_xcwm_window_list_head;
 
 /**
  * Add a newly created context to the context_list.
  * @param context The context to be added to the linked list
  * @return Pointer to context added to the list.
  */
-xtoq_context_t * 
-_xtoq_add_context_t(struct xtoq_context_t *context);
+xcwm_context_t * 
+_xcwm_add_context_t(struct xcwm_context_t *context);
 
 /**
  * Remove a context to the context_list using the window's id.
@@ -225,15 +225,15 @@ _xtoq_add_context_t(struct xtoq_context_t *context);
  * be removed from the context_list
  */
 void
-_xtoq_remove_context_node(xcb_window_t window_id);
+_xcwm_remove_context_node(xcb_window_t window_id);
 
 /**
  * Find a context in the doubly linked list using its window_id.
  * @param window_id The window_id of the context which should
  * @return Pointer to context (if found), NULL if not found.
  */
-xtoq_context_t *
-_xtoq_get_context_node_by_window_id (xcb_window_t window_id);
+xcwm_context_t *
+_xcwm_get_context_node_by_window_id (xcb_window_t window_id);
 
 /****************
  * window.c
@@ -245,8 +245,8 @@ _xtoq_get_context_node_by_window_id (xcb_window_t window_id);
  * @param evt The map event for the window
  * @return Pointer to new context. NULL if window already exists.
  */
-xtoq_context_t *
-_xtoq_window_created(xcb_connection_t * conn,
+xcwm_context_t *
+_xcwm_window_created(xcb_connection_t * conn,
 									 xcb_map_request_event_t *evt);
 /**
  * Destroy the damage object associated with the window. 
@@ -256,8 +256,8 @@ _xtoq_window_created(xcb_connection_t * conn,
  * @return Pointer to the context that was removed from the list, NULL if
  * window isn't being managed by context_list
  */
-xtoq_context_t *
-_xtoq_destroy_window(xcb_destroy_notify_event_t *event);
+xcwm_context_t *
+_xcwm_destroy_window(xcb_destroy_notify_event_t *event);
 
 /**
  * Resize the window to given width and height.
@@ -267,7 +267,7 @@ _xtoq_destroy_window(xcb_destroy_notify_event_t *event);
  * @param height The new height
  */
 void
-_xtoq_resize_window (xcb_connection_t *conn, xcb_window_t window,
+_xcwm_resize_window (xcb_connection_t *conn, xcb_window_t window,
 					 int width, int height);
 
 /**
@@ -275,6 +275,6 @@ _xtoq_resize_window (xcb_connection_t *conn, xcb_window_t window,
  * @param context The context of the window to map
  */
 void
-_xtoq_map_window (xtoq_context_t *context);
+_xcwm_map_window (xcwm_context_t *context);
 
 #endif  /* _XTOQ_INTERNAL_H_ */

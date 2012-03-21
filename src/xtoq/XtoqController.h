@@ -22,7 +22,7 @@
 
 /** 
  *  AppController.h
- *  xtoq
+ *  xcwm
  *
  *  TODO: rename this class to XtoqController
  *  This was controller for the Popup to retreive the display number
@@ -53,16 +53,16 @@
 id referenceToSelf;
 
 @interface XtoqController : NSObject {
-    XtoqWindow *xtoqWindow;
+    XtoqWindow *xcwmWindow;
     XtoqView * ourView;
     
-    dispatch_queue_t xtoqDispatchQueue;
+    dispatch_queue_t xcwmDispatchQueue;
     
     //The X :1 paramater, updated in the XtoqApplication
     char *screen;
     
-    xtoq_image_t *libImageT;
-    xtoq_context_t *rootContext;
+    xcwm_image_t *libImageT;
+    xcwm_context_t *rootContext;
     xcb_image_t *imageT;
     XtoqImageRep *image;
     XtoqImageRep *imageNew;
@@ -158,12 +158,12 @@ id referenceToSelf;
  * Put a new image in the window / view
  * Send an image to the view after being notified of a damage event from 
  * the event handler.
- * @param an xtoq_context_t sent from eventHandler
+ * @param an xcwm_context_t sent from eventHandler
  */
-- (void) updateImage: (xtoq_context_t *) windowContext;
+- (void) updateImage: (xcwm_context_t *) windowContext;
 
-- (void) createNewWindow: (xtoq_context_t *) windowContext;
-- (void) destroyWindow:   (xtoq_context_t *) windowContext;
+- (void) createNewWindow: (xcwm_context_t *) windowContext;
+- (void) destroyWindow:   (xcwm_context_t *) windowContext;
 
 /**
  * Sets the variable screen to correct display.
@@ -189,8 +189,8 @@ id referenceToSelf;
 
 
 /**
- * Callback function that will receive events from the xtoq event loop
+ * Callback function that will receive events from the xcwm event loop
  * once it is started.
  * @param event The event received.
  */
-void eventHandler (xtoq_event_t *event);
+void eventHandler (xcwm_event_t *event);

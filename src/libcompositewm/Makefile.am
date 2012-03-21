@@ -13,5 +13,5 @@ libcompositewm_la_SOURCES = \
 	event_loop.c \
 	init.c \
 	util.c \
-	xtoq.c \
+	xcwm.c \
     input.c

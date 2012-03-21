@@ -24,30 +24,30 @@
  */
 
 #include <xcwm/xcwm.h>
-#include "xtoq_internal.h"
+#include "xcwm_internal.h"
 
 /* Functions only used within this file */
 
 /* Sets the WM_* properties we care about in context */
 void
-set_icccm_properties (xtoq_context_t *context);
+set_icccm_properties (xcwm_context_t *context);
 
 /* Set the WM_NAME property in context */
 void
-set_wm_name_in_context (xtoq_context_t *context);
+set_wm_name_in_context (xcwm_context_t *context);
 
 /* Find out of the WM_DELETE_WINDOW property is set */
 void
-set_wm_delete_win_in_context (xtoq_context_t *context);
+set_wm_delete_win_in_context (xcwm_context_t *context);
 
 /* Initialize damage on a window */
 void
-init_damage_on_window (xtoq_context_t *context);
+init_damage_on_window (xcwm_context_t *context);
 
 
 /* Set window to the top of the stack */
 void
-xtoq_set_window_to_top(xtoq_context_t *context) {
+xcwm_set_window_to_top(xcwm_context_t *context) {
 
     const static uint32_t values[] = { XCB_STACK_MODE_ABOVE };
     
@@ -57,7 +57,7 @@ xtoq_set_window_to_top(xtoq_context_t *context) {
 
 /* Set window to the bottom of the stack */
 void
-xtoq_set_window_to_bottom(xtoq_context_t *context) {
+xcwm_set_window_to_bottom(xcwm_context_t *context) {
     
     const static uint32_t values[] = { XCB_STACK_MODE_BELOW };
     
@@ -67,7 +67,7 @@ xtoq_set_window_to_bottom(xtoq_context_t *context) {
 
 /* Set input focus to window */ 
 void
-xtoq_set_input_focus(xtoq_context_t *context) {
+xcwm_set_input_focus(xcwm_context_t *context) {
     
     // Test -- David
     xcb_get_input_focus_cookie_t cookie = xcb_get_input_focus(context->conn);
@@ -81,19 +81,19 @@ xtoq_set_input_focus(xtoq_context_t *context) {
 	xcb_flush(context->conn);
 }
 
-xtoq_context_t *
-_xtoq_window_created(xcb_connection_t * conn, xcb_map_request_event_t *event) {
+xcwm_context_t *
+_xcwm_window_created(xcb_connection_t * conn, xcb_map_request_event_t *event) {
 
     /* Check to see if the window is already created */
-    if (_xtoq_get_context_node_by_window_id(event->window)) {
+    if (_xcwm_get_context_node_by_window_id(event->window)) {
         return NULL;
 	}
     
-    /* allocate memory for new xtoq_context_t */
-    xtoq_context_t *context = malloc(sizeof(xtoq_context_t));
+    /* allocate memory for new xcwm_context_t */
+    xcwm_context_t *context = malloc(sizeof(xcwm_context_t));
     
     xcb_get_geometry_reply_t *geom;
-    geom = _xtoq_get_window_geometry(conn, event->window);
+    geom = _xcwm_get_window_geometry(conn, event->window);
     
     /* set any available values from xcb_create_notify_event_t object pointer
        and geom pointer */
@@ -114,15 +114,15 @@ _xtoq_window_created(xcb_connection_t * conn, xcb_map_request_event_t *event) {
     init_damage_on_window(context);
 
     /* add context to context_list */
-    context = _xtoq_add_context_t(context);
+    context = _xcwm_add_context_t(context);
     
     return context;
 }
 
-xtoq_context_t *
-_xtoq_destroy_window(xcb_destroy_notify_event_t *event) {
+xcwm_context_t *
+_xcwm_destroy_window(xcb_destroy_notify_event_t *event) {
     
-    xtoq_context_t *context = _xtoq_get_context_node_by_window_id(event->window);
+    xcwm_context_t *context = _xcwm_get_context_node_by_window_id(event->window);
     if (!context) {
 		/* Window isn't being managed */
 		return NULL;
@@ -132,15 +132,15 @@ _xtoq_destroy_window(xcb_destroy_notify_event_t *event) {
     xcb_damage_destroy(context->conn,context->damage);
     
     /* Call the remove function in context_list.c */
-    _xtoq_remove_context_node(context->window);
+    _xcwm_remove_context_node(context->window);
     
     /* Return the pointer for the context that was removed from the list. */
     return context;
 }
 void
-xtoq_configure_window(xtoq_context_t *context, int x, int y, int height, int width) {
+xcwm_configure_window(xcwm_context_t *context, int x, int y, int height, int width) {
     
-    /* Set values for xtoq_context_t */
+    /* Set values for xcwm_context_t */
     context->x = x;
     context->y = y;
     context->width = width;
@@ -160,10 +160,10 @@ xtoq_configure_window(xtoq_context_t *context, int x, int y, int height, int wid
 }
 
 void
-xtoq_request_close(xtoq_context_t *context) {
+xcwm_request_close(xcwm_context_t *context) {
     
     /* check to see if the context is in the list */
-    context = _xtoq_get_context_node_by_window_id(context->window);
+    context = _xcwm_get_context_node_by_window_id(context->window);
     if (!context)
         return;
     
@@ -197,7 +197,7 @@ xtoq_request_close(xtoq_context_t *context) {
 
 /* Resize the window on server side */
 void
-_xtoq_resize_window (xcb_connection_t *conn, xcb_window_t window,
+_xcwm_resize_window (xcb_connection_t *conn, xcb_window_t window,
 					 int width, int height)
 {
 	uint32_t values[2] = { width, height };
@@ -211,7 +211,7 @@ _xtoq_resize_window (xcb_connection_t *conn, xcb_window_t window,
 }
 
 void
-_xtoq_map_window (xtoq_context_t *context)
+_xcwm_map_window (xcwm_context_t *context)
 {
 	/* Map the window. May want to handle other things here */
 	xcb_map_window(context->conn, context->window);
@@ -219,14 +219,14 @@ _xtoq_map_window (xtoq_context_t *context)
 }
 
 void
-set_icccm_properties (xtoq_context_t *context)
+set_icccm_properties (xcwm_context_t *context)
 {
 	set_wm_name_in_context(context);
 	set_wm_delete_win_in_context(context);
 }
 
 void
-set_wm_name_in_context (xtoq_context_t *context)
+set_wm_name_in_context (xcwm_context_t *context)
 {
 	xcb_get_property_cookie_t cookie;
 	xcb_get_property_reply_t *reply;
@@ -257,7 +257,7 @@ set_wm_name_in_context (xtoq_context_t *context)
 }
 
 void
-set_wm_delete_win_in_context (xtoq_context_t *context)
+set_wm_delete_win_in_context (xcwm_context_t *context)
 {
 	xcb_get_property_cookie_t cookie;
 	xcb_get_property_reply_t *reply;
@@ -300,7 +300,7 @@ set_wm_delete_win_in_context (xtoq_context_t *context)
 }
 
 void
-init_damage_on_window (xtoq_context_t *context)
+init_damage_on_window (xcwm_context_t *context)
 {
 	xcb_damage_damage_t damage_id;
 	uint8_t level;
@@ -316,7 +316,7 @@ init_damage_on_window (xtoq_context_t *context)
 							   context->window,
 							   level);
     
-	if (_xtoq_request_check(context->conn, cookie,
+	if (_xcwm_request_check(context->conn, cookie,
 							"Could not create damage for window")) {
 		context->damage = 0;
 		return;

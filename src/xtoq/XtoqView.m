@@ -48,7 +48,7 @@ initWithFrame:(NSRect)frame {
     return self;
 }
 
--(void) setContext: (xtoq_context_t *)context {
+-(void) setContext: (xcwm_context_t *)context {
     viewContext = context;
 }
 
@@ -56,12 +56,12 @@ initWithFrame:(NSRect)frame {
 // passed-in rectangle.
 -(void)
 drawRect:(NSRect)dirtyRect {
-    xtoq_image_t *imageT;
+    xcwm_image_t *imageT;
 	float y_transformed;
 	XtoqImageRep *imageNew;
 
-    xtoq_get_event_thread_lock();
-    imageT = test_xtoq_get_image(viewContext);
+    xcwm_get_event_thread_lock();
+    imageT = test_xcwm_get_image(viewContext);
 	if (imageT->image) {
         y_transformed =( viewContext->height
 						 - viewContext->damaged_y
@@ -74,9 +74,9 @@ drawRect:(NSRect)dirtyRect {
 		[imageNew destroy];
 		
 		// Remove the damage
-		xtoq_remove_context_damage(viewContext);
+		xcwm_remove_context_damage(viewContext);
 	}
-	xtoq_release_event_thread_lock();
+	xcwm_release_event_thread_lock();
 }
 
 

@@ -27,11 +27,11 @@
 
 #include <pthread.h>
 #include <xcwm/xcwm.h>
-#include "xtoq_internal.h"
+#include "xcwm_internal.h"
 
 typedef struct _connection_data {
 	xcb_connection_t *conn;
-	xtoq_event_cb_t callback;
+	xcwm_event_cb_t callback;
 } _connection_data;
 
 /* The thread that is running the event loop */
@@ -46,24 +46,24 @@ pthread_mutex_t _event_thread_lock;
 void
 *run_event_loop(void *thread_arg_struct);
 
-/* Functions included in xtoq.h */
+/* Functions included in xcwm.h */
 int
-xtoq_get_event_thread_lock (void)
+xcwm_get_event_thread_lock (void)
 {
 	return pthread_mutex_lock(&_event_thread_lock);
 }
 
 int
-xtoq_release_event_thread_lock(void)
+xcwm_release_event_thread_lock(void)
 {
 	return pthread_mutex_unlock(&_event_thread_lock);
 }
 
-/* Functions included in xtoq_internal.h */
+/* Functions included in xcwm_internal.h */
 
 int
-_xtoq_start_event_loop (xcb_connection_t *conn,
-						xtoq_event_cb_t event_callback)
+_xcwm_start_event_loop (xcb_connection_t *conn,
+						xcwm_event_cb_t event_callback)
 {
 	_connection_data *conn_data;
 	int ret_val;
@@ -89,7 +89,7 @@ _xtoq_start_event_loop (xcb_connection_t *conn,
 }
 
 int
-_xtoq_stop_event_loop(void)
+_xcwm_stop_event_loop(void)
 {
 	if (_event_thread) {
 		return pthread_cancel(_event_thread);
@@ -102,8 +102,8 @@ void *run_event_loop (void *thread_arg_struct)
     _connection_data *conn_data;
     xcb_connection_t *event_conn;
     xcb_generic_event_t *evt;
-    xtoq_event_t *return_evt;
-    xtoq_event_cb_t callback_ptr;
+    xcwm_event_t *return_evt;
+    xcwm_event_cb_t callback_ptr;
     
     conn_data = thread_arg_struct;
     event_conn = conn_data->conn;
@@ -122,10 +122,10 @@ void *run_event_loop (void *thread_arg_struct)
 			int old_height;
 			int old_width;
 
-			return_evt = malloc(sizeof(xtoq_event_t));
+			return_evt = malloc(sizeof(xcwm_event_t));
 			return_evt->event_type = XTOQ_DAMAGE;
             return_evt->context =
-				_xtoq_get_context_node_by_window_id(dmgevnt->drawable);
+				_xcwm_get_context_node_by_window_id(dmgevnt->drawable);
 			if (!return_evt->context) {
 				free(return_evt);
 				continue;
@@ -135,7 +135,7 @@ void *run_event_loop (void *thread_arg_struct)
 			 * area already marked - this should be set back to 0 by 0
 			 * when area is actually redrawn. This is likely to be
 			 * done in another thread that handles window redraws */
-			xtoq_get_event_thread_lock();
+			xcwm_get_event_thread_lock();
 
 			old_x      = return_evt->context->damaged_x;
 			old_y      = return_evt->context->damaged_y;
@@ -163,7 +163,7 @@ void *run_event_loop (void *thread_arg_struct)
 					return_evt->context->damaged_height = dmgevnt->area.height;
 				}
 			}
-            xtoq_release_event_thread_lock();
+            xcwm_release_event_thread_lock();
 
 			if (((old_x > dmgevnt->area.x) || (old_y > dmgevnt->area.y))
 				|| ((old_width < dmgevnt->area.width)
@@ -205,7 +205,7 @@ void *run_event_loop (void *thread_arg_struct)
                        exevnt->window, exevnt->x, exevnt->y);
                 printf("with dimentions (%d, %d).\n", exevnt->width, exevnt->height);
                 
-				return_evt = malloc(sizeof(xtoq_event_t));
+				return_evt = malloc(sizeof(xcwm_event_t));
                 return_evt->event_type = XTOQ_EXPOSE;
                 callback_ptr(return_evt);
                 break;
@@ -219,14 +219,14 @@ void *run_event_loop (void *thread_arg_struct)
             case XCB_DESTROY_NOTIFY: {
                 // Window destroyed in root window
                 xcb_destroy_notify_event_t *notify = (xcb_destroy_notify_event_t *)evt;
-                xtoq_context_t *context = _xtoq_destroy_window(notify);
+                xcwm_context_t *context = _xcwm_destroy_window(notify);
 
 				if (!context) {
 					/* Not a window in the list, don't try and destroy */
 					break;
 				}
                 
-                return_evt = malloc(sizeof(xtoq_event_t));
+                return_evt = malloc(sizeof(xcwm_event_t));
                 return_evt->event_type = XTOQ_DESTROY;
                 return_evt->context = context;
 
@@ -236,13 +236,13 @@ void *run_event_loop (void *thread_arg_struct)
             }
 			case XCB_MAP_REQUEST: {
 				xcb_map_request_event_t *request = (xcb_map_request_event_t *)evt;
-                return_evt = malloc(sizeof(xtoq_event_t));
-                return_evt->context = _xtoq_window_created(event_conn, request);
+                return_evt = malloc(sizeof(xcwm_event_t));
+                return_evt->context = _xcwm_window_created(event_conn, request);
                 if (!return_evt->context) {
                     free(return_evt);
 					break;
                 }
-                _xtoq_map_window(return_evt->context);
+                _xcwm_map_window(return_evt->context);
                 return_evt->event_type = XTOQ_CREATE;
                 callback_ptr(return_evt);
                 break;
@@ -258,7 +258,7 @@ void *run_event_loop (void *thread_arg_struct)
                     request->width, request->height);
 
                 /* Change the size of the window, but not its position */
-                _xtoq_resize_window(event_conn, request->window,
+                _xcwm_resize_window(event_conn, request->window,
 									request->width, request->height);
                 break;
 			}
@@ -302,11 +302,11 @@ void *run_event_loop (void *thread_arg_struct)
     return NULL;
 }
 
-int xtoq_event_get_type(xtoq_event_t const *event) {
+int xcwm_event_get_type(xcwm_event_t const *event) {
     return event->event_type;
 }
 
-xtoq_context_t * xtoq_event_get_context(xtoq_event_t const *event) {
+xcwm_context_t * xcwm_event_get_context(xcwm_event_t const *event) {
     return event->context;
 }
 

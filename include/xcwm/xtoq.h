@@ -23,6 +23,11 @@
  * SOFTWARE.
  */
 
+/* FIXME: This header needs to go away.
+ *        Each subsystem should have its own header file.  structs
+ *        should not be API since that makes changes hard in the future.
+ *        See event.h for an example.
+ */
 
 #ifndef _XTOQ_H_
 #define _XTOQ_H_
@@ -39,10 +44,10 @@
 #include <xcb/xfixes.h>
 #include <xcb/xcb_keysyms.h>
 
-/* Abstract types for xtoq data types */
+/* Abstract types for xcwm data types */
 
 /* FIXME: Obfuscate these */
-struct xtoq_context_t {
+struct xcwm_context_t {
     xcb_connection_t *conn;
     xcb_drawable_t window;
     xcb_window_t parent;
@@ -59,7 +64,7 @@ struct xtoq_context_t {
     int wm_delete_set;  /* Flag for WM_DELETE_WINDOW, 1 if set */
     void *local_data;   /* Area for data client cares about */
 };
-typedef struct xtoq_context_t xtoq_context_t;
+typedef struct xcwm_context_t xcwm_context_t;
 
 struct image_data_t {
     uint8_t *data;
@@ -67,14 +72,14 @@ struct image_data_t {
 };
 typedef struct image_data_t image_data_t;
 
-struct xtoq_image_t {
+struct xcwm_image_t {
     xcb_image_t *image;
     int x;
     int y;
     int width;
     int height;
 };
-typedef struct xtoq_image_t xtoq_image_t;
+typedef struct xcwm_image_t xcwm_image_t;
 
 /**
  * Context which contains the display's root window.
@@ -82,131 +87,131 @@ typedef struct xtoq_image_t xtoq_image_t;
  * FIXME: We should avoid having global state where at all possible, and
  *        certainly not export such state for client access
  */
-extern xtoq_context_t *root_context;
+extern xcwm_context_t *root_context;
 
 /**
  * Sets up the connection and grabs the root window from the specified screen
  * @param display the display to connect to
  * @return The root context which contains the root window
  */
-xtoq_context_t *
-xtoq_init(char *display);
+xcwm_context_t *
+xcwm_init(char *display);
 
 /**
  * Returns a window's entire image
- * @param an xtoq_context_t 
+ * @param an xcwm_context_t 
  * FIXME: this might be for the root window
- * @return an xtoq_image_t with an the image of a window
+ * @return an xcwm_image_t with an the image of a window
  */
-xtoq_image_t *
-xtoq_get_image(xtoq_context_t *context);
+xcwm_image_t *
+xcwm_get_image(xcwm_context_t *context);
 
 /**
  * Intended for servicing to a client's reaction to a damage notification
  * this window returns the modified subrectangle of a window
- * @param an xtoq_context_t of the damaged window
- * @return an xtoq_image_t with partial image window contents
+ * @param an xcwm_context_t of the damaged window
+ * @return an xcwm_image_t with partial image window contents
  */
-xtoq_image_t *
-test_xtoq_get_image(xtoq_context_t * context);
+xcwm_image_t *
+test_xcwm_get_image(xcwm_context_t * context);
 
 
 /**
- * free the memory used by an xtoq_image_t created 
- * during a call to test_xtoq_image_create
- * @param xtoq_image an image to be freed
+ * free the memory used by an xcwm_image_t created 
+ * during a call to test_xcwm_image_create
+ * @param xcwm_image an image to be freed
  */
 void 
-xtoq_image_destroy(xtoq_image_t * xtoq_image);
+xcwm_image_destroy(xcwm_image_t * xcwm_image);
 
 /**
  * Set input focus to the window in context
  * @param context The context containing the window
  */
 void
-xtoq_set_input_focus(xtoq_context_t *context);
+xcwm_set_input_focus(xcwm_context_t *context);
 
 /**
  * Set a window to the bottom of the window stack.
  * @param context The context containing the window
  */
 void
-xtoq_set_window_to_bottom(xtoq_context_t *context);
+xcwm_set_window_to_bottom(xcwm_context_t *context);
 
 /**
  * Set a window to the top of the window stack.
  * @param context The context containing the window
  */
 void
-xtoq_set_window_to_top(xtoq_context_t *context);
+xcwm_set_window_to_top(xcwm_context_t *context);
 
 /**
  * Remove the damage from the given context.
  * @param context The context to remove the damage from
  */
 void
-xtoq_remove_context_damage(xtoq_context_t *context);
+xcwm_remove_context_damage(xcwm_context_t *context);
 
 /**
  * Closes the windows open on the X Server, the connection, and the event
  * loop. 
  */
 void 
-xtoq_close(void);
+xcwm_close(void);
 
 /**
  * function
- * @param context xtoq_context_t 
+ * @param context xcwm_context_t 
  * @param window The window that the key press was made in.
  * @param keyCode The key pressed.
  */
 void
-xtoq_key_press (xtoq_context_t *context, int window, uint8_t code);
+xcwm_key_press (xcwm_context_t *context, int window, uint8_t code);
 
 /**
  * function
- * @param context xtoq_context_t 
+ * @param context xcwm_context_t 
  * @param window The window that the key press was made in.
  * @param keyCode The key released.
  */
 void
-xtoq_key_release (xtoq_context_t *context, int window, uint8_t code);
+xcwm_key_release (xcwm_context_t *context, int window, uint8_t code);
 
 /**
  * Uses the XTEST protocol to send input events to the X Server (The X Server
  * is usually in the position of sending input events to a client). The client
  * will often choose to send coordinates through mouse motion and set the params 
  * x & y to 0 here.
- * @param context xtoq_context_t 
+ * @param context xcwm_context_t 
  * @param x - x coordinate
  * @param y - y coordinate
  * @param window The window that the key press was made in.
  */
 void
-xtoq_button_press (xtoq_context_t *context, long x, long y, int window, int button);
+xcwm_button_press (xcwm_context_t *context, long x, long y, int window, int button);
 
 /**
  * Uses the XTEST protocol to send input events to the X Server (The X Server
  * is usually in the position of sending input events to a client). The client
  * will often choose to send coordinates through mouse motion and set the params 
  * x & y to 0 here.
- * @param context xtoq_context_t 
+ * @param context xcwm_context_t 
  * @param x - x coordinate
  * @param y - y coordinate
  * @param window The window that the key release was made in.
  */
 void
-xtoq_button_release (xtoq_context_t *context, long x, long y, int window, int button);
+xcwm_button_release (xcwm_context_t *context, long x, long y, int window, int button);
 
 /**
  * function
- * @param context xtoq_context_t 
+ * @param context xcwm_context_t 
  * @param x - x coordinate
  * @param y - y coordinate
  * @param window The window that the key release was made in.
  */
 void
-xtoq_mouse_motion (xtoq_context_t *context, long x, long y, int window, int button);
+xcwm_mouse_motion (xcwm_context_t *context, long x, long y, int window, int button);
 
 /****************
  * window.c
@@ -218,7 +223,7 @@ xtoq_mouse_motion (xtoq_context_t *context, long x, long y, int window, int butt
  * @param context The context of the window to be killed
  */
 void
-xtoq_request_close(xtoq_context_t *context);
+xcwm_request_close(xcwm_context_t *context);
 
 /**
  * move and/or resize the window, update the context 
@@ -229,6 +234,6 @@ xtoq_request_close(xtoq_context_t *context);
  * @param width The new width
  */
 void
-xtoq_configure_window(xtoq_context_t *context, int x, int y, int height, int width);
+xcwm_configure_window(xcwm_context_t *context, int x, int y, int height, int width);
 
 #endif // _XTOQ_H_

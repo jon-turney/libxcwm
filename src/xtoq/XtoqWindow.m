@@ -50,11 +50,11 @@
     [super makeKeyAndOrderFront:sender];
 }
 
--(void) setContext:(xtoq_context_t *)aContext {
+-(void) setContext:(xcwm_context_t *)aContext {
     winContext = aContext;
 }
 
--(xtoq_context_t *) getContext {
+-(xcwm_context_t *) getContext {
     return winContext;
 }
 
@@ -73,8 +73,8 @@
 
 -(void)windowDidBecomeKey:(NSNotification *)note {
     
-    xtoq_set_input_focus(winContext);
-    xtoq_set_window_to_top(winContext);
+    xcwm_set_input_focus(winContext);
+    xcwm_set_window_to_top(winContext);
 }
 
 @end

@@ -26,7 +26,7 @@
 #import "XtoqView.h"
 
 @interface XtoqWindow : NSWindow {
-    xtoq_context_t *winContext;  // The context of the window.
+    xcwm_context_t *winContext;  // The context of the window.
     NSNotificationCenter * notificationCenter;
 }
 
@@ -44,17 +44,17 @@
 /**
  * Used for setting member variables context and id.
  */
--(void) setContext: (xtoq_context_t *) aContext;
+-(void) setContext: (xcwm_context_t *) aContext;
 
 /**
  * Function for getting context of window from list.
  */
--(xtoq_context_t *) getContext;
+-(xcwm_context_t *) getContext;
 
 /**
- * Sets the root window's pointer xtoqLocalData to the context's pointer.
+ * Sets the root window's pointer xcwmLocalData to the context's pointer.
  */
-//-(void) setRootDataPointer: (xtoq_context_t *) xqContext;
+//-(void) setRootDataPointer: (xcwm_context_t *) xqContext;
 
 /**
  * Catches the close event from clicking the red button or from preformClose.

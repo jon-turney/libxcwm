@@ -23,47 +23,47 @@
  * SOFTWARE.
  */
 
-#include "xtoq_internal.h"
+#include "xcwm_internal.h"
 
-_xtoq_context_node *_xtoq_window_list_head = NULL;
+_xcwm_context_node *_xcwm_window_list_head = NULL;
 
-xtoq_context_t *
-_xtoq_add_context_t(struct xtoq_context_t *context)
+xcwm_context_t *
+_xcwm_add_context_t(struct xcwm_context_t *context)
 {
     /* temp pointers for traversing */
-    _xtoq_context_node *new_node;
-    _xtoq_context_node *curr;
-    _xtoq_context_node *prev;
+    _xcwm_context_node *new_node;
+    _xcwm_context_node *curr;
+    _xcwm_context_node *prev;
     
     /* Create node to hold the new window */
-    new_node = malloc(sizeof(_xtoq_context_node));
+    new_node = malloc(sizeof(_xcwm_context_node));
     if (!new_node) {
         exit(1);
     }
     new_node->context = context;
     
     /* Handle the case where this is the first node added */
-    if (!_xtoq_window_list_head) {
+    if (!_xcwm_window_list_head) {
         new_node->prev = NULL;
         new_node->next = NULL;
-        _xtoq_window_list_head = new_node;
+        _xcwm_window_list_head = new_node;
     } else { 
         /* Add the new node to the beginning of the list */
-        new_node->next = _xtoq_window_list_head;
-        _xtoq_window_list_head->prev = new_node;
+        new_node->next = _xcwm_window_list_head;
+        _xcwm_window_list_head->prev = new_node;
         new_node->prev = NULL;
-        _xtoq_window_list_head = new_node;
+        _xcwm_window_list_head = new_node;
         
     }
     return new_node->context;
 }       
 
-xtoq_context_t *
-_xtoq_get_context_node_by_window_id (xcb_window_t window_id)
+xcwm_context_t *
+_xcwm_get_context_node_by_window_id (xcb_window_t window_id)
 {
-    _xtoq_context_node *curr;
+    _xcwm_context_node *curr;
         
-    curr = _xtoq_window_list_head;
+    curr = _xcwm_window_list_head;
     while (curr) {
         if (curr->context->window == window_id) {
             return curr->context;
@@ -75,11 +75,11 @@ _xtoq_get_context_node_by_window_id (xcb_window_t window_id)
 
 
 void
-_xtoq_remove_context_node(xcb_window_t window_id) {
+_xcwm_remove_context_node(xcb_window_t window_id) {
 
-    _xtoq_context_node *curr;
+    _xcwm_context_node *curr;
     
-    curr = _xtoq_window_list_head;
+    curr = _xcwm_window_list_head;
     while (curr != NULL) {
         if (curr->context->window == window_id) {
             // this will be freed in the event_loop
@@ -90,7 +90,7 @@ _xtoq_remove_context_node(xcb_window_t window_id) {
                 curr->prev->next = curr->next;
             }
             else{
-                _xtoq_window_list_head = curr->next;
+                _xcwm_window_list_head = curr->next;
             }
                 
             free(curr);

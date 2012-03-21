@@ -24,14 +24,14 @@
  */
 
 #include <string.h>
-#include "xtoq_internal.h"
+#include "xcwm_internal.h"
 
 int _damage_event = 0;
 
-xtoq_wm_atoms *_wm_atoms = NULL;
+xcwm_wm_atoms *_wm_atoms = NULL;
 
 xcb_query_extension_reply_t *
-_xtoq_init_extension (xcb_connection_t *conn, char *extension_name)
+_xcwm_init_extension (xcb_connection_t *conn, char *extension_name)
 {
     xcb_query_extension_cookie_t cookie = xcb_query_extension(conn, strlen(extension_name), extension_name);
 	xcb_query_extension_reply_t *reply = xcb_query_extension_reply(conn, cookie, NULL);
@@ -47,10 +47,10 @@ _xtoq_init_extension (xcb_connection_t *conn, char *extension_name)
 }
 
 void
-_xtoq_init_damage(xtoq_context_t *contxt)
+_xcwm_init_damage(xcwm_context_t *contxt)
 {
     
-    xcb_query_extension_reply_t *reply =_xtoq_init_extension(contxt->conn, "DAMAGE");
+    xcb_query_extension_reply_t *reply =_xcwm_init_extension(contxt->conn, "DAMAGE");
     
     xcb_damage_query_version_cookie_t version_cookie = 
     xcb_damage_query_version(contxt->conn, 
@@ -77,8 +77,8 @@ _xtoq_init_damage(xtoq_context_t *contxt)
 }
 
 void 
-_xtoq_init_composite(xtoq_context_t *contxt) {
-    xcb_query_extension_reply_t *reply = _xtoq_init_extension(contxt->conn, "Composite");
+_xcwm_init_composite(xcwm_context_t *contxt) {
+    xcb_query_extension_reply_t *reply = _xcwm_init_extension(contxt->conn, "Composite");
     
     xcb_composite_query_version_cookie_t cookie = xcb_composite_query_version (contxt->conn, XCB_COMPOSITE_MAJOR_VERSION, XCB_COMPOSITE_MINOR_VERSION);
     
@@ -92,7 +92,7 @@ _xtoq_init_composite(xtoq_context_t *contxt) {
 }
 
 void
-_xtoq_init_xfixes (xtoq_context_t *contxt)
+_xcwm_init_xfixes (xcwm_context_t *contxt)
 {
     xcb_xfixes_query_version_cookie_t cookie = 
     xcb_xfixes_query_version(contxt->conn, 4, 0);
@@ -104,13 +104,13 @@ _xtoq_init_xfixes (xtoq_context_t *contxt)
 }
 
 void
-_xtoq_get_wm_atoms (xtoq_context_t *context)
+_xcwm_get_wm_atoms (xcwm_context_t *context)
 {
 	xcb_intern_atom_reply_t *atom_reply;
 	xcb_intern_atom_cookie_t atom_cookie;
 	xcb_generic_error_t *error;
 
-    _wm_atoms = malloc(sizeof(xtoq_wm_atoms));
+    _wm_atoms = malloc(sizeof(xcwm_wm_atoms));
 
     /* WM_PROTOCOLS */
 	atom_cookie = xcb_intern_atom(context->conn,

@@ -30,7 +30,7 @@ int XtoqApplicationMain(int argc, char** argv){
     XtoqController *controller;
     char *scrn;
     FILE *fp;
-    const char *fifo_path = "/tmp/xtoq_fifo";
+    const char *fifo_path = "/tmp/xcwm_fifo";
     ssize_t bytes_read;
     size_t len = 0;
     char bundle_path[PATH_MAX];

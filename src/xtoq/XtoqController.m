@@ -22,7 +22,7 @@
 
 /** 
  *  AppController.m
- *  xtoq
+ *  xcwm
  *
  * 
  *  This is the controller for the Popup to retreive the display number
@@ -61,12 +61,12 @@
 - (void)applicationWillFinishLaunching:(NSNotification *)aNotification {
     
     // setup X connection and get the initial image from the server
-    rootContext = xtoq_init(screen);
+    rootContext = xcwm_init(screen);
     
     [[NSGraphicsContext currentContext]
     setImageInterpolation:NSImageInterpolationHigh];
     
-    xtoqWindow = [[XtoqWindow alloc] 
+    xcwmWindow = [[XtoqWindow alloc] 
                   initWithContentRect: NSMakeRect(rootContext->x, rootContext->y, 
                                                   rootContext->width, rootContext->height)
                             styleMask: (NSTitledWindowMask |
@@ -76,13 +76,13 @@
                               backing: NSBackingStoreBuffered
                                 defer: YES];
 
-	[xtoqWindow setContext: rootContext];
-	rootContext->local_data = xtoqWindow;
+	[xcwmWindow setContext: rootContext];
+	rootContext->local_data = xcwmWindow;
     // Make the menu
     [self makeMenu];
     
     //create an XtoqImageRep with the information from X
-    //libImageT = xtoq_get_image(rootContext);
+    //libImageT = xcwm_get_image(rootContext);
     //image = [[XtoqImageRep alloc] initWithData:libImageT x:0 y:0];  
     //draw the image into a rect
     imageRec = NSMakeRect(0, 0, 1028,768);//[image getWidth], [image getHeight]);
@@ -91,7 +91,7 @@
 	[ourView setContext: rootContext];
 
     // add view to its window
-    [xtoqWindow setContentView: ourView];  
+    [xcwmWindow setContentView: ourView];  
     // set the initial image in the window
     //[ourView setImage:image];
 
@@ -151,13 +151,13 @@
     
     
 
-    xtoqDispatchQueue = dispatch_queue_create("xtoq.dispatch.queue", NULL);
+    xcwmDispatchQueue = dispatch_queue_create("xcwm.dispatch.queue", NULL);
     
 }
 
 - (void)applicationWillTerminate:(NSNotification *)aNotification
 {
-    xtoq_close();
+    xcwm_close();
     
     const char *spawn[4];
     pid_t child;
@@ -173,13 +173,13 @@
 
 - (void) applicationDidFinishLaunching: (NSNotification *) aNotification
 {
-    [xtoqWindow makeKeyAndOrderFront: self];
+    [xcwmWindow makeKeyAndOrderFront: self];
     
     //hide window
-    [xtoqWindow orderOut:self];
+    [xcwmWindow orderOut:self];
     
     // Start the event loop and set the handler function
-	xtoq_start_event_loop(rootContext, (void *) eventHandler);
+	xcwm_start_event_loop(rootContext, (void *) eventHandler);
 }
 
 - (void) mouseMovedInApp: (NSNotification *) aNotification {
@@ -199,8 +199,8 @@
     
     NSLog(@"Mouse x = %i, y = %i", [xVal intValue], [yVal intValue]);
     
-    dispatch_async(xtoqDispatchQueue, 
-                   ^{ xtoq_mouse_motion (rootContext,
+    dispatch_async(xcwmDispatchQueue, 
+                   ^{ xcwm_mouse_motion (rootContext,
                                          [xVal intValue], 
                                          [yVal intValue], 
                                          (int)[event windowNumber],
@@ -219,18 +219,18 @@
     const char* charcharstar = [charNSString UTF8String];
 
     NSLog(@"%s pressed", charcharstar);
-    dispatch_async(xtoqDispatchQueue, 
-                   ^{ xtoq_key_press(rootContext, 
+    dispatch_async(xcwmDispatchQueue, 
+                   ^{ xcwm_key_press(rootContext, 
                                      (int)[event windowNumber],
                                      aChar + 8) ;});
-    dispatch_async(xtoqDispatchQueue, 
-                   ^{ xtoq_key_release(rootContext, 
+    dispatch_async(xcwmDispatchQueue, 
+                   ^{ xcwm_key_release(rootContext, 
                                      (int)[event windowNumber],
                                      aChar + 8) ;});
 }
  
 
-// on this side all I have is a xtoq_context , on the library side I need
+// on this side all I have is a xcwm_context , on the library side I need
 // to turn that into a real context 
 - (void) mouseButtonDownInView: (NSNotification *) aNotification
 {
@@ -246,15 +246,15 @@
     
     float height = [[NSScreen mainScreen] frame].size.height;
         
-    dispatch_async(xtoqDispatchQueue, 
-                   ^{ xtoq_button_press (rootContext,
+    dispatch_async(xcwmDispatchQueue, 
+                   ^{ xcwm_button_press (rootContext,
                                          0,
                                          0, 
                                          (int)[event windowNumber],
                                          0);;});
 }
 
-// on this side all I have is a xtoq_context , on the library side I need
+// on this side all I have is a xcwm_context , on the library side I need
 // to turn that into a real context 
 - (void) mouseButtonReleaseInView: (NSNotification *) aNotification
 {
@@ -270,8 +270,8 @@
     
     float height = [[NSScreen mainScreen] frame].size.height;
     
-    dispatch_async(xtoqDispatchQueue, 
-                   ^{ xtoq_button_release (rootContext,
+    dispatch_async(xcwmDispatchQueue, 
+                   ^{ xcwm_button_release (rootContext,
                                            0,
                                            0,
                                            (int)[event windowNumber],
@@ -395,11 +395,11 @@
 }
 
 // create a new window 
-- (void) createNewWindow: (xtoq_context_t *) windowContext {
+- (void) createNewWindow: (xcwm_context_t *) windowContext {
     
     XtoqWindow   *newWindow;
     XtoqView     *newView;
-    xtoq_image_t *xcbImage;
+    xcwm_image_t *xcbImage;
     XtoqImageRep *imageRep;  
 
     int y = [self xserverToOSX:windowContext->y windowHeight:windowContext->height];
@@ -421,7 +421,7 @@
     windowContext->local_data = (id)newWindow;
     
     // get image to darw
-    xcbImage = xtoq_get_image(windowContext);
+    xcbImage = xcwm_get_image(windowContext);
     imageRep = [[XtoqImageRep alloc] initWithData:xcbImage x: 0 y: 0];
     
     // draw the image into a rect
@@ -444,7 +444,7 @@
     
 }
 
-- (void) destroyWindow:(xtoq_context_t *) windowContext {
+- (void) destroyWindow:(xcwm_context_t *) windowContext {
     // set the window to be closed
     XtoqWindow *destWindow = windowContext->local_data;
     //close window
@@ -455,19 +455,19 @@
     
     NSDictionary *contextInfo = [aNotification userInfo];    
     XtoqWindow *aWindow = [contextInfo objectForKey: @"1"];
-    xtoq_context_t *theContext = [aWindow getContext];
+    xcwm_context_t *theContext = [aWindow getContext];
     
     //use dispatch_async() to handle the actual close 
-      dispatch_async(xtoqDispatchQueue, ^{
-          NSLog(@"Call xtoq_request_close(theContext)");
-          xtoq_request_close(theContext);
+      dispatch_async(xcwmDispatchQueue, ^{
+          NSLog(@"Call xcwm_request_close(theContext)");
+          xcwm_request_close(theContext);
       });
 }
 
 - (void) windowWillMove:(NSNotification*)notification {
     //NSLog(@"window will move");
 }
-- (void) updateImage:(xtoq_context_t *) windowContext
+- (void) updateImage:(xcwm_context_t *) windowContext
 {
     float  y_transformed;
 	NSRect newDamageRect;
@@ -494,29 +494,29 @@
   XtoqWindow *moveWindow = (XtoqWindow *)[NSApp mainWindow];
     
     if (moveWindow != nil) {        
-        xtoq_context_t *moveContext = [moveWindow getContext];        
+        xcwm_context_t *moveContext = [moveWindow getContext];        
         NSRect moveFrame = [moveWindow frame];
         int x = (int)moveFrame.origin.x;
         int y = [self osxToXserver:(int)moveFrame.origin.y
 					  windowHeight:moveContext->height] - WINDOWBAR;
         int width = (int)moveFrame.size.width;
         int height = (int)moveFrame.size.height - WINDOWBAR;
-        NSLog(@"Call xtoq_configure_window(moveContext, x = %i, y = %i, height = %i, width = %i)", x, y, height, width); 
-        xtoq_configure_window(moveContext, x, y - height, height, width);       
+        NSLog(@"Call xcwm_configure_window(moveContext, x = %i, y = %i, height = %i, width = %i)", x, y, height, width); 
+        xcwm_configure_window(moveContext, x, y - height, height, width);       
     }    
 }
 
 @end
 
-void eventHandler (xtoq_event_t *event)
+void eventHandler (xcwm_event_t *event)
 {
-    xtoq_context_t *context = xtoq_event_get_context(event);
-    if (xtoq_event_get_type(event) == XTOQ_DAMAGE) {
+    xcwm_context_t *context = xcwm_event_get_context(event);
+    if (xcwm_event_get_type(event) == XTOQ_DAMAGE) {
 	  [referenceToSelf updateImage: context];
-    } else if (xtoq_event_get_type(event) == XTOQ_CREATE) {
+    } else if (xcwm_event_get_type(event) == XTOQ_CREATE) {
         NSLog(@"Window was created");
         [referenceToSelf createNewWindow: context];
-    } else if (xtoq_event_get_type(event) == XTOQ_DESTROY) {
+    } else if (xcwm_event_get_type(event) == XTOQ_DESTROY) {
         NSLog(@"Window was destroyed");
         [referenceToSelf destroyWindow: context];
     } else { 

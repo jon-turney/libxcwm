@@ -28,8 +28,8 @@
 #ifndef _DATA_H_
 #define _DATA_H_
 
-struct xtoq_event_t {
-    xtoq_context_t *context;
+struct xcwm_event_t {
+    xcwm_context_t *context;
     int event_type;
 };
 

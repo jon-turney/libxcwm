@@ -23,12 +23,12 @@
  * SOFTWARE.
  */
 
-#include "xtoq_internal.h"
+#include "xcwm_internal.h"
 #include <xcb/xcb.h>
 
 
 xcb_get_window_attributes_reply_t *
-_xtoq_get_window_attributes (xcb_connection_t *conn, xcb_window_t window)
+_xcwm_get_window_attributes (xcb_connection_t *conn, xcb_window_t window)
 {
     xcb_get_window_attributes_reply_t *reply;
     xcb_generic_error_t *error;
@@ -45,7 +45,7 @@ _xtoq_get_window_attributes (xcb_connection_t *conn, xcb_window_t window)
 }
 
 xcb_get_geometry_reply_t *
-_xtoq_get_window_geometry (xcb_connection_t *conn, xcb_window_t window)
+_xcwm_get_window_geometry (xcb_connection_t *conn, xcb_window_t window)
 {
     xcb_get_geometry_cookie_t cookie;
     cookie = xcb_get_geometry(conn, window);
@@ -54,7 +54,7 @@ _xtoq_get_window_geometry (xcb_connection_t *conn, xcb_window_t window)
 
 
 void
-_xtoq_write_all_children_window_info (xcb_connection_t *conn,
+_xcwm_write_all_children_window_info (xcb_connection_t *conn,
 									  xcb_window_t root)
 {
 
@@ -81,8 +81,8 @@ _xtoq_write_all_children_window_info (xcb_connection_t *conn,
 	printf("--- Iterating through children of window %u ---\n",
 		   root);
     for (i = 0; i < len; i++) {
-        _xtoq_write_window_info(conn, children[i]);
-		img_data = _xtoq_get_window_image_data(conn, children[i]);
+        _xcwm_write_window_info(conn, children[i]);
+		img_data = _xcwm_get_window_image_data(conn, children[i]);
 		if (!img_data.data) {
 			printf("Image data is empty\n");
 		}
@@ -94,7 +94,7 @@ _xtoq_write_all_children_window_info (xcb_connection_t *conn,
 }
 
 image_data_t
-_xtoq_get_window_image_data (xcb_connection_t *conn, xcb_drawable_t window)
+_xcwm_get_window_image_data (xcb_connection_t *conn, xcb_drawable_t window)
 {
     image_data_t image_data;
     xcb_get_image_cookie_t img_cookie;
@@ -105,7 +105,7 @@ _xtoq_get_window_image_data (xcb_connection_t *conn, xcb_drawable_t window)
     image_data.data = NULL;
     image_data.length = 0;
 
-    geom_reply = _xtoq_get_window_geometry(conn, window);
+    geom_reply = _xcwm_get_window_geometry(conn, window);
     if (!geom_reply) {
         fprintf(stderr, "ERROR: Failed to get window image data.\n");
         return image_data;
@@ -136,17 +136,17 @@ _xtoq_get_window_image_data (xcb_connection_t *conn, xcb_drawable_t window)
 }
 
 void
-_xtoq_write_window_info (xcb_connection_t *conn, xcb_window_t window)
+_xcwm_write_window_info (xcb_connection_t *conn, xcb_window_t window)
 {
     xcb_get_geometry_reply_t *geom_reply;
     xcb_get_window_attributes_reply_t *attr_reply;
 
-    geom_reply = _xtoq_get_window_geometry(conn, window);
+    geom_reply = _xcwm_get_window_geometry(conn, window);
     if (!geom_reply) {
         printf("Failed to get geometry for window %u\n", window);
         return;
     }
-    attr_reply = _xtoq_get_window_attributes(conn, window);
+    attr_reply = _xcwm_get_window_attributes(conn, window);
     if (!attr_reply) {
         printf("Failed to get attributes for window %u\n", window);
         return;
@@ -171,7 +171,7 @@ _xtoq_write_window_info (xcb_connection_t *conn, xcb_window_t window)
 }
 
 int
-_xtoq_request_check (xcb_connection_t *conn, xcb_void_cookie_t cookie,
+_xcwm_request_check (xcb_connection_t *conn, xcb_void_cookie_t cookie,
                      char *msg)
 {
     xcb_generic_error_t *error;

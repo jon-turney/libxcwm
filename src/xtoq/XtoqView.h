@@ -32,7 +32,7 @@ SOFTWARE.
 #import <xcwm/xcwm.h>
 
 @interface XtoqView : NSView {
-    xtoq_context_t *viewContext;
+    xcwm_context_t *viewContext;
 
     //mouse event 
     NSPoint downPoint;
@@ -52,7 +52,7 @@ SOFTWARE.
  * Set the context associated with this view.
  * @param context The context
  */
--(void)setContext:(xtoq_context_t *)context;
+-(void)setContext:(xcwm_context_t *)context;
 
 /**
  * The OS X magic loop which is responsible for drawing content to the screen

@@ -40,7 +40,7 @@
 }
 
 
-- (id)initWithData:(xtoq_image_t *)imageData x:(int)x y:(int)y{
+- (id)initWithData:(xcwm_image_t *)imageData x:(int)x y:(int)y{
     imageParent = imageData;
     imageT = imageData->image;
     self = [super init];
@@ -125,7 +125,7 @@
 }
 - (void)destroy{
     if (imageParent) {
-        xtoq_image_destroy(imageParent);
+        xcwm_image_destroy(imageParent);
     }
 }
 
