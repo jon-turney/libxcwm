@@ -38,7 +38,7 @@
 #import "XtoqWindow.h"
 #import "XtoqImageRep.h"
 #import "XtoqView.h"
-#import <xcwm/xtoq.h>
+#import <xcwm/xcwm.h>
 #import "spawn.h"
 #import "crt_externs.h"
 #import "sys/times.h"

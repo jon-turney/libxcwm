@@ -1,7 +1,6 @@
-/* Copyright (c) 2012 Jess VanDerwalker <washu@sonic.net>
- * All rights reserved.
+/* Copyright (c) 2012 Apple Inc
  *
- * data.h
+ * xcwm/xcwm.h
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -24,16 +23,14 @@
  * SOFTWARE.
  */
 
+#ifndef _XCWM_XCWM_H_
+#define _XCWM_XWCM_H_
 
-#ifndef _DATA_H_
-#define _DATA_H_
-
-struct xtoq_event_t {
-    xtoq_context_t *context;
-    int event_type;
-};
-
-/* FIXME: We should not be using a global for this */
-extern int _damage_event;
-
+#ifndef __XCWM_INDIRECT__
+#define __XCWM_INDIRECT__
 #endif
+
+#include <xcwm/xtoq.h>
+#include <xcwm/event.h>
+
+#endif /* _XCWM_XCWM_H_ */

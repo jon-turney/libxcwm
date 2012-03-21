@@ -36,9 +36,9 @@
 #include <xcb/xcb_image.h>
 #include <xcb/xcb_icccm.h>
 #include <xcb/xcb_atom.h>
-#include "data.h"
-#include <xcwm/xtoq.h>
+#include <xcwm/xcwm.h>
 
+#include "data.h"
 
 /**
  * Strucuture used to pass nesessary data to xtoq_start_event_loop.

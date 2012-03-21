@@ -26,7 +26,7 @@
 
 
 #include <pthread.h>
-#include <xcwm/xtoq.h>
+#include <xcwm/xcwm.h>
 #include "xtoq_internal.h"
 
 typedef struct _connection_data {
@@ -301,3 +301,12 @@ void *run_event_loop (void *thread_arg_struct)
 	}
     return NULL;
 }
+
+int xtoq_event_get_type(xtoq_event_t const *event) {
+    return event->event_type;
+}
+
+xtoq_context_t * xtoq_event_get_context(xtoq_event_t const *event) {
+    return event->context;
+}
+

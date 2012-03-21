@@ -7,7 +7,7 @@ SUBDIRS = bundle
 AM_CFLAGS = $(XCB_CFLAGS) $(BASE_CFLAGS)
 AM_OBJCFLAGS = $(XCB_CFLAGS) $(BASE_CFLAGS)
 
-INCLUDES = -I$(top_srcdir)/include -I$(top_srcdir)/src/libcompositewm
+INCLUDES = -I$(top_srcdir)/include
 
 xtoqappdir = $(APPLE_APPLICATIONS_DIR)/$(APPLE_APPLICATION_NAME).app/Contents/MacOS
 

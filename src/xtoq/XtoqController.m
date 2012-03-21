@@ -510,13 +510,13 @@
 
 void eventHandler (xtoq_event_t *event)
 {
-    xtoq_context_t *context = event->context;
-    if (event->event_type == XTOQ_DAMAGE) {
+    xtoq_context_t *context = xtoq_event_get_context(event);
+    if (xtoq_event_get_type(event) == XTOQ_DAMAGE) {
 	  [referenceToSelf updateImage: context];
-    } else if (event->event_type == XTOQ_CREATE) {
+    } else if (xtoq_event_get_type(event) == XTOQ_CREATE) {
         NSLog(@"Window was created");
         [referenceToSelf createNewWindow: context];
-    } else if (event->event_type == XTOQ_DESTROY) {
+    } else if (xtoq_event_get_type(event) == XTOQ_DESTROY) {
         NSLog(@"Window was destroyed");
         [referenceToSelf destroyWindow: context];
     } else { 

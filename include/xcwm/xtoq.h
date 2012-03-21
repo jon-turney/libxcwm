@@ -37,12 +37,50 @@
 #include <xcb/composite.h>
 #include <xcb/xtest.h>
 #include <xcb/xfixes.h>
-#include "data.h"
 #include <xcb/xcb_keysyms.h>
-#include "xtoq_internal.h"
+
+/* Abstract types for xtoq data types */
+
+/* FIXME: Obfuscate these */
+struct xtoq_context_t {
+    xcb_connection_t *conn;
+    xcb_drawable_t window;
+    xcb_window_t parent;
+    xcb_damage_damage_t damage;
+    int x;
+    int y;
+    int width;
+    int height;
+    int damaged_x;
+    int damaged_y;
+    int damaged_width;
+    int damaged_height;
+    char *name;         /* The name of the window */
+    int wm_delete_set;  /* Flag for WM_DELETE_WINDOW, 1 if set */
+    void *local_data;   /* Area for data client cares about */
+};
+typedef struct xtoq_context_t xtoq_context_t;
+
+struct image_data_t {
+    uint8_t *data;
+    int length;
+};
+typedef struct image_data_t image_data_t;
+
+struct xtoq_image_t {
+    xcb_image_t *image;
+    int x;
+    int y;
+    int width;
+    int height;
+};
+typedef struct xtoq_image_t xtoq_image_t;
 
 /**
  * Context which contains the display's root window.
+ *
+ * FIXME: We should avoid having global state where at all possible, and
+ *        certainly not export such state for client access
  */
 extern xtoq_context_t *root_context;
 
@@ -101,36 +139,6 @@ xtoq_set_window_to_bottom(xtoq_context_t *context);
  */
 void
 xtoq_set_window_to_top(xtoq_context_t *context);
-
-/**
- * Starts the event loop and listens on the connection specified in
- * the given xtoq_context_t. Uses callback as the function to call
- * when an event of interest is received. Callback must be able to
- * take an xtoq_event_t as its one and only parameter.
- * @param context The context containing the connection to listen
- * for events on.
- * @param callback The function to call when an event of interest is
- * received.
- * @return Uses the return value of the call to pthread_create as 
- * the return value.
- */
-int
-xtoq_start_event_loop (xtoq_context_t *context, xtoq_event_cb_t callback);
-
-/**
- * Request a lock on the mutex for the event loop thread. Blocks
- * until lock is aquired, or error occurs.
- * @return 0 if successful, otherwise non-zero
- */
-int
-xtoq_get_event_thread_lock (void);
-
-/**
- * Release the lock on the mutex for the event loop thread.
- * @return 0 if successsful, otherwise non-zero
- */
-int
-xtoq_release_event_thread_lock(void);
 
 /**
  * Remove the damage from the given context.
