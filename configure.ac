@@ -1,7 +1,7 @@
 # Copyright (c) 2012 Jess VanDerwalker <washu@sonic.net>
 
 AC_PREREQ(2.61)
-AC_INIT([xtoq], [0.1])
+AC_INIT([libxcwm], [0.1])
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
 AM_MAINTAINER_MODE
 AM_CONFIG_HEADER(config.h)
@@ -25,7 +25,7 @@ PKG_CHECK_MODULES(XCB, xcb-damage xcb-composite xcb-event xcb-xtest xcb-image xc
 AC_CONFIG_FILES([Makefile
                  include/Makefile
                  man/Makefile
-                 src/libcompositewm/Makefile
+                 src/libxcwm/Makefile
                  src/Makefile
                  src/xtoq/bundle/Makefile
                  src/xtoq/Makefile])

@@ -26,5 +26,5 @@ xtoq_LDFLAGS =  \
         -Wl,-framework,AppKit
 
 xtoq_LDADD = \
-        $(top_builddir)/src/libcompositewm/libcompositewm.la
+        $(top_builddir)/src/libxcwm/libxcwm.la
 

@@ -1,1 +1,1 @@
-SUBDIRS = libcompositewm xtoq
+SUBDIRS = libxcwm xtoq
