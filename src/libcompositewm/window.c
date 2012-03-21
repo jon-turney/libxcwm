@@ -23,7 +23,7 @@
  * SOFTWARE.
  */
 
-#include "xtoq.h"
+#include <xcwm/xtoq.h>
 #include "xtoq_internal.h"
 
 /* Functions only used within this file */

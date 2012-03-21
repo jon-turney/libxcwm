@@ -26,7 +26,7 @@
 /* #ifndef _XTOQ_C_ */
 /* #define _XTOQ_C_ */
 
-#include "xtoq.h"
+#include <xcwm/xtoq.h>
 #include "xtoq_internal.h"
 #include "X11/keysym.h"
 #include <string.h>

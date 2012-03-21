@@ -22,7 +22,7 @@
 // Placehoder
 
 #import <Cocoa/Cocoa.h>
-#import "xtoq.h"
+#import <xcwm/xtoq.h>
 #import "XtoqView.h"
 
 @interface XtoqWindow : NSWindow {

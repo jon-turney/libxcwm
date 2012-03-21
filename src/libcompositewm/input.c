@@ -24,7 +24,7 @@
 //  xtoq-xcode
 
 #include <stdio.h>
-#include "xtoq.h"
+#include <xcwm/xtoq.h>
 
 void
 xtoq_key_press (xtoq_context_t *context, int window, uint8_t code)

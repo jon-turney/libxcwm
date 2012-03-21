@@ -29,7 +29,7 @@ SOFTWARE.
 
 #import <Cocoa/Cocoa.h>
 #import "XtoqImageRep.h"
-#import "xtoq.h"
+#import <xcwm/xtoq.h>
 
 @interface XtoqView : NSView {
     xtoq_context_t *viewContext;

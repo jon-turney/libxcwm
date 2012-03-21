@@ -26,7 +26,7 @@
 
 
 #include <pthread.h>
-#include "xtoq.h"
+#include <xcwm/xtoq.h>
 #include "xtoq_internal.h"
 
 typedef struct _connection_data {

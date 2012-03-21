@@ -26,7 +26,7 @@
 #import <AppKit/AppKit.h>
 #import <Cocoa/Cocoa.h>
 #import <xcb/xcb_image.h>
-#import "xtoq.h"
+#import <xcwm/xtoq.h>
 
 
 @interface XtoqImageRep : NSImageRep {

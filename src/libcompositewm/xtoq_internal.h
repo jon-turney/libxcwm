@@ -37,7 +37,7 @@
 #include <xcb/xcb_icccm.h>
 #include <xcb/xcb_atom.h>
 #include "data.h"
-#include "xtoq.h"
+#include <xcwm/xtoq.h>
 
 
 /**

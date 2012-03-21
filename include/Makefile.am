@@ -1,4 +1,5 @@
-lcwmincludedir=${includedir}/libcwm
+xcwmincludedir=${includedir}/xcwm
 
 # List your public API headers here (and place them in the libcwm subdirectory)
-lcwminclude_HEADERS =
+xcwminclude_HEADERS = \
+	xcwm/xtoq.h
