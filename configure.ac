@@ -22,6 +22,18 @@ AC_PROG_INSTALL
 # Checks for libraries.
 PKG_CHECK_MODULES(XCB, xcb-damage xcb-composite xcb-event xcb-xtest xcb-image xcb-keysyms xcb-icccm xcb-atom)
 
+AC_ARG_ENABLE(xtoq, AS_HELP_STRING([--enable-xtoq], [Build XtoQ.app for OS X (default: auto)]), [XTOQ=$enableval], [XTOQ=auto])
+AC_MSG_CHECKING([if we should build XtoQ.app])
+if test "x$XTOQ" = "xauto" ; then
+    case $host_os in
+        # darwin10 (Snow Leopard) and later is required for XtoQ
+        darwin1*) XTOQ=yes ;;
+        *) XTOQ=no ;;
+    esac
+fi
+AC_MSG_RESULT($XTOQ)
+AM_CONDITIONAL(XTOQ, [test "x$XTOQ" = "xyes"])
+
 AC_CONFIG_FILES([Makefile
                  include/Makefile
                  man/Makefile

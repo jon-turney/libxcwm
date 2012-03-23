@@ -1,1 +1,6 @@
-SUBDIRS = libxcwm xtoq
+DIST_SUBDIRS = libxcwm xtoq
+SUBDIRS = libxcwm
+
+if XTOQ
+SUBDIRS += xtoq
+endif
