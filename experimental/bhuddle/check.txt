@@ -1,1 +1,0 @@
-Just checking to make sure that I have git working properly.
