@@ -23,6 +23,10 @@
  * SOFTWARE.
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include <xcwm/xcwm.h>
 #include "xcwm_internal.h"
 

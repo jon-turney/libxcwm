@@ -23,8 +23,9 @@
  * SOFTWARE.
  */
 
-/* #ifndef _XTOQ_C_ */
-/* #define _XTOQ_C_ */
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
 
 #include <xcwm/xcwm.h>
 #include "xcwm_internal.h"

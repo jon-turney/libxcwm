@@ -23,6 +23,10 @@
  * SOFTWARE.
  */
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #include "xcwm_internal.h"
 
 _xcwm_context_node *_xcwm_window_list_head = NULL;

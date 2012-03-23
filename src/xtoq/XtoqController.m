@@ -27,8 +27,12 @@
  * 
  *  This is the controller for the Popup to retreive the display number
  *  from the user.
-
  */
+
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
 #import "XtoqController.h"
 
 #define WINDOWBAR 22
