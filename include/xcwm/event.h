@@ -23,7 +23,6 @@
  * SOFTWARE.
  */
 
-
 #ifndef _XCWM_EVENT_H_
 #define _XCWM_EVENT_H_
 
@@ -33,6 +32,7 @@
 
 /* Abstract types for xcwm data types */
 struct xcwm_event_t;
+
 typedef struct xcwm_event_t xcwm_event_t;
 
 typedef void (*xcwm_event_cb_t) (xcwm_event_t const *event);
@@ -51,7 +51,7 @@ int xcwm_event_get_type(xcwm_event_t const *event);
 /**
  * Return the context for the given event.
  */
-xcwm_context_t * xcwm_event_get_context(xcwm_event_t const *event);
+xcwm_context_t *xcwm_event_get_context(xcwm_event_t const *event);
 
 /**
  * Starts the event loop and listens on the connection specified in
@@ -66,7 +66,7 @@ xcwm_context_t * xcwm_event_get_context(xcwm_event_t const *event);
  * the return value.
  */
 int
-xcwm_start_event_loop (xcwm_context_t *context, xcwm_event_cb_t callback);
+ xcwm_start_event_loop(xcwm_context_t * context, xcwm_event_cb_t callback);
 
 /**
  * Request a lock on the mutex for the event loop thread. Blocks
@@ -74,14 +74,13 @@ xcwm_start_event_loop (xcwm_context_t *context, xcwm_event_cb_t callback);
  * @return 0 if successful, otherwise non-zero
  */
 int
-xcwm_get_event_thread_lock (void);
+ xcwm_get_event_thread_lock(void);
 
 /**
  * Release the lock on the mutex for the event loop thread.
  * @return 0 if successsful, otherwise non-zero
  */
 int
-xcwm_release_event_thread_lock(void);
+ xcwm_release_event_thread_lock(void);
 
-
-#endif /* _XCWM_EVENT_H_ */
+#endif                          /* _XCWM_EVENT_H_ */

@@ -36,37 +36,40 @@ _xcwm_add_context_t(struct xcwm_context_t *context)
 {
     /* temp pointers for traversing */
     _xcwm_context_node *new_node;
+
     _xcwm_context_node *curr;
+
     _xcwm_context_node *prev;
-    
+
     /* Create node to hold the new window */
     new_node = malloc(sizeof(_xcwm_context_node));
     if (!new_node) {
         exit(1);
     }
     new_node->context = context;
-    
+
     /* Handle the case where this is the first node added */
     if (!_xcwm_window_list_head) {
         new_node->prev = NULL;
         new_node->next = NULL;
         _xcwm_window_list_head = new_node;
-    } else { 
+    }
+    else {
         /* Add the new node to the beginning of the list */
         new_node->next = _xcwm_window_list_head;
         _xcwm_window_list_head->prev = new_node;
         new_node->prev = NULL;
         _xcwm_window_list_head = new_node;
-        
+
     }
     return new_node->context;
-}       
+}
 
 xcwm_context_t *
-_xcwm_get_context_node_by_window_id (xcb_window_t window_id)
+_xcwm_get_context_node_by_window_id(xcb_window_t window_id)
 {
     _xcwm_context_node *curr;
-        
+
     curr = _xcwm_window_list_head;
     while (curr) {
         if (curr->context->window == window_id) {
@@ -77,26 +80,26 @@ _xcwm_get_context_node_by_window_id (xcb_window_t window_id)
     return NULL;
 }
 
-
 void
-_xcwm_remove_context_node(xcb_window_t window_id) {
+_xcwm_remove_context_node(xcb_window_t window_id)
+{
 
     _xcwm_context_node *curr;
-    
+
     curr = _xcwm_window_list_head;
     while (curr != NULL) {
         if (curr->context->window == window_id) {
             // this will be freed in the event_loop
-            if(curr->next){
+            if (curr->next) {
                 curr->next->prev = curr->prev;
             }
             if (curr->prev) {
                 curr->prev->next = curr->next;
             }
-            else{
+            else {
                 _xcwm_window_list_head = curr->next;
             }
-                
+
             free(curr);
             return;
         }

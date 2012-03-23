@@ -33,4 +33,4 @@
 #include <xcwm/xtoq.h>
 #include <xcwm/event.h>
 
-#endif /* _XCWM_XCWM_H_ */
+#endif                          /* _XCWM_XCWM_H_ */
