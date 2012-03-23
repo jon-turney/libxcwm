@@ -22,6 +22,10 @@ AC_PROG_INSTALL
 # Checks for libraries.
 PKG_CHECK_MODULES(XCB, xcb-damage xcb-composite xcb-event xcb-xtest xcb-image xcb-keysyms xcb-icccm xcb-atom)
 
+AC_CHECK_FUNC(dispatch_async,
+              AC_DEFINE([HAVE_LIBDISPATCH], 1, [Define to 1 if you have the libdispatch (GCD) available])
+              [])
+
 AC_ARG_ENABLE(xtoq, AS_HELP_STRING([--enable-xtoq], [Build XtoQ.app for OS X (default: auto)]), [XTOQ=$enableval], [XTOQ=auto])
 AC_MSG_CHECKING([if we should build XtoQ.app])
 if test "x$XTOQ" = "xauto" ; then
