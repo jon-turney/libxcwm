@@ -1,22 +1,22 @@
 /*Copyright (C) 2012 Ben Huddle, Braden Wooley
- 
- Permission is hereby granted, free of charge, to any person obtaining a copy of
- this software and associated documentation files (the "Software"), to deal in
- the Software without restriction, including without limitation the rights to
- use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
- of the Software, and to permit persons to whom the Software is furnished to do
- so, subject to the following conditions:
- 
- The above copyright notice and this permission notice shall be included in all
- copies or substantial portions of the Software.
- 
- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- SOFTWARE.
+
+   Permission is hereby granted, free of charge, to any person obtaining a copy of
+   this software and associated documentation files (the "Software"), to deal in
+   the Software without restriction, including without limitation the rights to
+   use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+   of the Software, and to permit persons to whom the Software is furnished to do
+   so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included in all
+   copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+   SOFTWARE.
  */
 
 // Placehoder
@@ -33,23 +33,23 @@
 /**
  * Used for initialization of a window.
  */
--(id) initWithContentRect:(NSRect)contentRect styleMask:(NSUInteger)aStyle 
-                  backing:(NSBackingStoreType)bufferingType defer:(BOOL)flag;
+-(id)initWithContentRect:(NSRect) contentRect styleMask:(NSUInteger) aStyle
+                 backing:(NSBackingStoreType) bufferingType defer:(BOOL)flag;
 
 /*
  * Orders a specific window to the front and makes it key window.
  */
--(void) makeKeyAndOrderFront:(id)sender;
+-(void)makeKeyAndOrderFront:(id)sender;
 
 /**
  * Used for setting member variables context and id.
  */
--(void) setContext: (xcwm_context_t *) aContext;
+-(void)setContext: (xcwm_context_t *)aContext;
 
 /**
  * Function for getting context of window from list.
  */
--(xcwm_context_t *) getContext;
+-(xcwm_context_t *)getContext;
 
 /**
  * Sets the root window's pointer xcwmLocalData to the context's pointer.

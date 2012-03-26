@@ -32,12 +32,18 @@
  * to the server.
  */
 
-int XtoQModifierNXKeycodeToNXKey(unsigned char keycode, int *outSide);
-int XtoQModifierNXKeyToNXKeycode(int key, int side);
-int XtoQModifierNXKeyToNXMask(int key);
-int XtoQModifierNXMaskToNXKey(int mask);
-int XtoQModifierStringToNXMask(const char *string, int separatelr);
+int
+XtoQModifierNXKeycodeToNXKey(unsigned char keycode, int *outSide);
+int
+XtoQModifierNXKeyToNXKeycode(int key, int side);
+int
+XtoQModifierNXKeyToNXMask(int key);
+int
+XtoQModifierNXMaskToNXKey(int mask);
+int
+XtoQModifierStringToNXMask(const char *string, int separatelr);
 
-void XtoQKeymapReSync(void);
+void
+XtoQKeymapReSync(void);
 
 #endif /* XTOQ_KEYBOARD_H */

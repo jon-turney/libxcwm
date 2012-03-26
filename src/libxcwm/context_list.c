@@ -36,9 +36,7 @@ _xcwm_add_context_t(struct xcwm_context_t *context)
 {
     /* temp pointers for traversing */
     _xcwm_context_node *new_node;
-
     _xcwm_context_node *curr;
-
     _xcwm_context_node *prev;
 
     /* Create node to hold the new window */

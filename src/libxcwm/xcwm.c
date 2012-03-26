@@ -33,9 +33,8 @@
 #include <string.h>
 
 // aaron key stuff
-#define XK_Shift_L                       0xffe1
+#define XK_Shift_L 0xffe1
 xcb_key_symbols_t *syms = NULL;
-
 // end aaron key stuff
 xcwm_context_t *root_context = NULL;
 
@@ -46,15 +45,10 @@ xcwm_init(char *display)
 {
 
     xcb_connection_t *conn;
-
     int conn_screen;
-
     xcb_screen_t *root_screen;
-
     xcb_drawable_t root_window;
-
     xcb_void_cookie_t cookie;
-
     uint32_t mask_values[1];
 
     conn = xcb_connect(display, &conn_screen);
@@ -66,18 +60,20 @@ xcwm_init(char *display)
     // are created on the root. This is where we add masks for the events
     // we care about catching on the root window.
     mask_values[0] = XCB_EVENT_MASK_KEY_PRESS |
-        XCB_EVENT_MASK_KEY_RELEASE |
-        XCB_EVENT_MASK_BUTTON_PRESS |
-        XCB_EVENT_MASK_BUTTON_RELEASE |
-        XCB_EVENT_MASK_POINTER_MOTION |
-        XCB_EVENT_MASK_STRUCTURE_NOTIFY |
-        XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY |
-        XCB_EVENT_MASK_ENTER_WINDOW |
-        XCB_EVENT_MASK_LEAVE_WINDOW | XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT;
+                     XCB_EVENT_MASK_KEY_RELEASE |
+                     XCB_EVENT_MASK_BUTTON_PRESS |
+                     XCB_EVENT_MASK_BUTTON_RELEASE |
+                     XCB_EVENT_MASK_POINTER_MOTION |
+                     XCB_EVENT_MASK_STRUCTURE_NOTIFY |
+                     XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY |
+                     XCB_EVENT_MASK_ENTER_WINDOW |
+                     XCB_EVENT_MASK_LEAVE_WINDOW |
+                     XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT;
     cookie = xcb_change_window_attributes_checked(conn, root_window,
                                                   XCB_CW_EVENT_MASK,
                                                   mask_values);
-    if (_xcwm_request_check(conn, cookie, "Could not set root window mask.")) {
+    if (_xcwm_request_check(conn, cookie,
+                            "Could not set root window mask.")) {
         fprintf(stderr, "Is another window manager running?\n");
         xcb_disconnect(conn);
         exit(1);
@@ -114,7 +110,7 @@ xcwm_init(char *display)
 }
 
 xcwm_image_t *
-xcwm_get_image(xcwm_context_t * context)
+xcwm_get_image(xcwm_context_t *context)
 {
 
     xcb_get_geometry_reply_t *geom_reply;
@@ -124,8 +120,8 @@ xcwm_get_image(xcwm_context_t * context)
     geom_reply = _xcwm_get_window_geometry(context->conn, context->window);
 
     //FIXME - right size
-    xcwm_image_t *xcwm_image =
-        (xcwm_image_t *) malloc(10 * sizeof(xcwm_image_t));
+    xcwm_image_t * xcwm_image =
+        (xcwm_image_t *)malloc(10 * sizeof(xcwm_image_t));
 
     xcb_flush(context->conn);
     /* Get the image of the root window */
@@ -135,7 +131,8 @@ xcwm_get_image(xcwm_context_t * context)
                           geom_reply->y,
                           geom_reply->width,
                           geom_reply->height,
-                          (unsigned int) ~0L, XCB_IMAGE_FORMAT_Z_PIXMAP);
+                          (unsigned int)~0L,
+                          XCB_IMAGE_FORMAT_Z_PIXMAP);
 
     xcwm_image->image = image;
     xcwm_image->x = geom_reply->x;
@@ -149,14 +146,15 @@ xcwm_get_image(xcwm_context_t * context)
 }
 
 int
-xcwm_start_event_loop(xcwm_context_t * context, xcwm_event_cb_t callback)
+xcwm_start_event_loop(xcwm_context_t *context,
+                      xcwm_event_cb_t callback)
 {
     /* Simply call our internal function to do the actual setup */
     return _xcwm_start_event_loop(context->conn, callback);
 }
 
 xcwm_image_t *
-test_xcwm_get_image(xcwm_context_t * context)
+test_xcwm_get_image(xcwm_context_t *context)
 {
 
     xcb_image_t *image;
@@ -169,11 +167,12 @@ test_xcwm_get_image(xcwm_context_t * context)
                           context->damaged_y,
                           context->damaged_width,
                           context->damaged_height,
-                          (unsigned int) ~0L, XCB_IMAGE_FORMAT_Z_PIXMAP);
+                          (unsigned int)~0L,
+                          XCB_IMAGE_FORMAT_Z_PIXMAP);
 
     //FIXME - Calculate memory size correctly
-    xcwm_image_t *xcwm_image =
-        (xcwm_image_t *) malloc(10 * sizeof(xcwm_image_t));
+    xcwm_image_t * xcwm_image =
+        (xcwm_image_t *)malloc(10 * sizeof(xcwm_image_t));
 
     xcwm_image->image = image;
     xcwm_image->x = context->damaged_x;
@@ -193,12 +192,10 @@ xcwm_image_destroy(xcwm_image_t * xcwm_image)
 }
 
 void
-xcwm_remove_context_damage(xcwm_context_t * context)
+xcwm_remove_context_damage(xcwm_context_t *context)
 {
     xcb_xfixes_region_t region = xcb_generate_id(context->conn);
-
     xcb_rectangle_t rect;
-
     xcb_void_cookie_t cookie;
 
     if (!context) {
@@ -210,10 +207,15 @@ xcwm_remove_context_damage(xcwm_context_t * context)
     rect.width = context->damaged_width;
     rect.height = context->damaged_height;
 
-    xcb_xfixes_create_region(root_context->conn, region, 1, &rect);
+    xcb_xfixes_create_region(root_context->conn,
+                             region,
+                             1,
+                             &rect);
 
     cookie = xcb_damage_subtract_checked(context->conn,
-                                         context->damage, region, 0);
+                                         context->damage,
+                                         region,
+                                         0);
 
     if (!(_xcwm_request_check(context->conn, cookie,
                               "Failed to subtract damage"))) {
@@ -231,9 +233,7 @@ xcwm_close(void)
 {
 
     _xcwm_context_node *head = _xcwm_window_list_head;
-
     xcb_connection_t *conn = head->context->conn;
-
     xcb_flush(conn);
 
     // Close all windows
@@ -249,9 +249,7 @@ xcwm_close(void)
 
     // Terminate the event loop
     int ret = _xcwm_stop_event_loop();
-
-    if (ret != 1)
-        printf("Event loop failed to close\n");
+    if (ret != 1) printf("Event loop failed to close\n");
 
     return;
 

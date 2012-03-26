@@ -31,7 +31,8 @@
 #import <Cocoa/Cocoa.h>
 #import "XtoqApplication.h"
 
-int main(int argc, char *argv[])
+int
+main(int argc, char *argv[])
 {
     // Xcode provided code
     return XtoqApplicationMain(argc, argv);

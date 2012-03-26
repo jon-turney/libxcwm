@@ -31,12 +31,10 @@
 #include <xcb/xcb.h>
 
 xcb_get_window_attributes_reply_t *
-_xcwm_get_window_attributes(xcb_connection_t * conn, xcb_window_t window)
+_xcwm_get_window_attributes(xcb_connection_t *conn, xcb_window_t window)
 {
     xcb_get_window_attributes_reply_t *reply;
-
     xcb_generic_error_t *error;
-
     xcb_get_window_attributes_cookie_t cookie;
 
     cookie = xcb_get_window_attributes(conn, window);
@@ -50,30 +48,24 @@ _xcwm_get_window_attributes(xcb_connection_t * conn, xcb_window_t window)
 }
 
 xcb_get_geometry_reply_t *
-_xcwm_get_window_geometry(xcb_connection_t * conn, xcb_window_t window)
+_xcwm_get_window_geometry(xcb_connection_t *conn, xcb_window_t window)
 {
     xcb_get_geometry_cookie_t cookie;
-
     cookie = xcb_get_geometry(conn, window);
     return xcb_get_geometry_reply(conn, cookie, NULL);
 }
 
 void
-_xcwm_write_all_children_window_info(xcb_connection_t * conn, xcb_window_t root)
+_xcwm_write_all_children_window_info(xcb_connection_t *conn,
+                                     xcb_window_t root)
 {
 
     xcb_query_tree_reply_t *reply;
-
     xcb_query_tree_cookie_t tree_cookie;
-
     xcb_window_t *children;     /* The children of the given root */
-
     image_data_t img_data;
-
     xcb_generic_error_t *error;
-
     int len;
-
     int i;
 
     tree_cookie = xcb_query_tree(conn, root);
@@ -88,7 +80,8 @@ _xcwm_write_all_children_window_info(xcb_connection_t * conn, xcb_window_t root)
     children = xcb_query_tree_children(reply);
 
     /* Iterate thorough all the children and get their pixmap (hopefully) */
-    printf("--- Iterating through children of window %u ---\n", root);
+    printf("--- Iterating through children of window %u ---\n",
+           root);
     for (i = 0; i < len; i++) {
         _xcwm_write_window_info(conn, children[i]);
         img_data = _xcwm_get_window_image_data(conn, children[i]);
@@ -103,16 +96,12 @@ _xcwm_write_all_children_window_info(xcb_connection_t * conn, xcb_window_t root)
 }
 
 image_data_t
-_xcwm_get_window_image_data(xcb_connection_t * conn, xcb_drawable_t window)
+_xcwm_get_window_image_data(xcb_connection_t *conn, xcb_drawable_t window)
 {
     image_data_t image_data;
-
     xcb_get_image_cookie_t img_cookie;
-
     xcb_get_image_reply_t *reply;
-
     xcb_generic_error_t *error;
-
     xcb_get_geometry_reply_t *geom_reply;
 
     image_data.data = NULL;
@@ -130,7 +119,8 @@ _xcwm_get_window_image_data(xcb_connection_t * conn, xcb_drawable_t window)
                                0,
                                0,
                                geom_reply->width,
-                               geom_reply->height, (unsigned int) ~0L);
+                               geom_reply->height,
+                               (unsigned int)~0L);
 
     reply = xcb_get_image_reply(conn, img_cookie, &error);
     if (error) {
@@ -148,10 +138,9 @@ _xcwm_get_window_image_data(xcb_connection_t * conn, xcb_drawable_t window)
 }
 
 void
-_xcwm_write_window_info(xcb_connection_t * conn, xcb_window_t window)
+_xcwm_write_window_info(xcb_connection_t *conn, xcb_window_t window)
 {
     xcb_get_geometry_reply_t *geom_reply;
-
     xcb_get_window_attributes_reply_t *attr_reply;
 
     geom_reply = _xcwm_get_window_geometry(conn, window);
@@ -186,7 +175,7 @@ _xcwm_write_window_info(xcb_connection_t * conn, xcb_window_t window)
 }
 
 int
-_xcwm_request_check(xcb_connection_t * conn, xcb_void_cookie_t cookie,
+_xcwm_request_check(xcb_connection_t *conn, xcb_void_cookie_t cookie,
                     char *msg)
 {
     xcb_generic_error_t *error;

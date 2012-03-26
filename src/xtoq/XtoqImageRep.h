@@ -28,7 +28,6 @@
 #import <xcb/xcb_image.h>
 #import <xcwm/xcwm.h>
 
-
 @interface XtoqImageRep : NSImageRep {
     CGImageRef cgImage;
     xcb_image_t *imageT;
@@ -37,22 +36,20 @@
     CGFloat width;
     CGFloat height;
     NSArray *imageTypes;
-    NSSize windowSize; 
+    NSSize windowSize;
     float imageX;
     float imageY;
-    
+
 }
 
 - (float)imageX;
 - (float)imageY;
-
 
 /**
  * Return an NSArray of supported file types, currently nil
  * @return An array of supported image file types.
  */
 - (NSArray *)imageUnfilteredTypes;
-
 
 /**
  * Return Yes if the xcb_image_t it is passed is not null, else No.
@@ -70,7 +67,7 @@
 
 /**
  * Return whether the window was drawn
- * 'draw' draws the image at the coordinate system's origin 
+ * 'draw' draws the image at the coordinate system's origin
  * @return bool Yes if the image was drawn, No if it was not.
  */
 - (BOOL)draw;

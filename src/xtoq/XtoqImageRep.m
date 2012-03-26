@@ -31,108 +31,121 @@
 
 @implementation XtoqImageRep
 
-- (NSArray *)imageUnfilteredTypes{
-    imageTypes = [[NSArray alloc] initWithObjects:nil]; 
+- (NSArray *)imageUnfilteredTypes
+{
+    imageTypes = [[NSArray alloc] initWithObjects:nil];
     return imageTypes;
 }
 
-- (BOOL)canInitWithData:(xcb_image_t *)imageData {
+- (BOOL)canInitWithData:(xcb_image_t *)imageData
+{
     if (imageData == NULL) {
         return NO;
-    }    
+    }
     return YES;
 }
 
-
-- (id)initWithData:(xcwm_image_t *)imageData x:(int)x y:(int)y{
+- (id)initWithData:(xcwm_image_t *)imageData x:(int)x y:(int)y
+{
     imageParent = imageData;
     imageT = imageData->image;
     self = [super init];
-	if (!self) {
-		return nil;
+    if (!self) {
+        return nil;
     }
-    CGDataProviderRef cgdat =  CGDataProviderCreateWithData (
-                                                    NULL,
-                                                    imageT->data,
-                                                    imageT->size,
-                                                    NULL
-                                                    );
-    
+    CGDataProviderRef cgdat = CGDataProviderCreateWithData(
+        NULL,
+        imageT->data,
+        imageT->size,
+        NULL
+        );
+
     CGColorSpaceRef csp = CGColorSpaceCreateDeviceRGB();
-    CGBitmapInfo bitmapInfo = kCGImageAlphaNoneSkipFirst | kCGBitmapByteOrder32Host;
-    cgImage = CGImageCreate (imageT->width,// size_t width,
-                             imageT->height, //size_t height,
-                             8, //size_t bitsPerComponent,
-                             32,//size_t bitsPerPixel,
-                             imageT->stride,//size_t bytesPerRow,
-                             csp, //CGColorSpaceRef colorspace,
-                             bitmapInfo,
-                             cgdat,//CGDataProviderRef provider,
-                             NULL, //const CGFloat decode[],
-                             YES, //bool shouldInterpolate,
-                             kCGRenderingIntentDefault //CGColorRenderingIntent intent
-                             );
+    CGBitmapInfo bitmapInfo = kCGImageAlphaNoneSkipFirst |
+                              kCGBitmapByteOrder32Host;
+    cgImage = CGImageCreate(imageT->width, // size_t width,
+                            imageT->height,  //size_t height,
+                            8,  //size_t bitsPerComponent,
+                            32, //size_t bitsPerPixel,
+                            imageT->stride, //size_t bytesPerRow,
+                            csp,  //CGColorSpaceRef colorspace,
+                            bitmapInfo,
+                            cgdat, //CGDataProviderRef provider,
+                            NULL,  //const CGFloat decode[],
+                            YES,  //bool shouldInterpolate,
+                            kCGRenderingIntentDefault  //CGColorRenderingIntent intent
+                            );
     width = CGImageGetWidth(cgImage);
     height = CGImageGetHeight(cgImage);
-    size = NSMakeSize (width, height);
-    imageX =x;
-    imageY =y;
-    
+    size = NSMakeSize(width, height);
+    imageX = x;
+    imageY = y;
+
     return self;
 }
 
-- (BOOL)draw{   
-    CGContextRef contextMac = [[NSGraphicsContext currentContext] graphicsPort];
+- (BOOL)draw
+{
+    CGContextRef contextMac =
+        [[NSGraphicsContext currentContext] graphicsPort];
     if (contextMac == NULL)
         NSLog(@"NULL context in draw");
-	if ( !cgImage) {
+    if (!cgImage) {
         NSLog(@"No image");
-		return NO;
-	}
+        return NO;
+    }
     //    CGContextDrawImage(contextMac, CGRectMake(imageX, imageY, width, height), cgImage);
-    CGContextDrawImage(contextMac, CGRectMake(imageX, imageY, width, height), cgImage);
-    
-	return YES;
+    CGContextDrawImage(contextMac, CGRectMake(imageX, imageY, width,
+                                              height), cgImage);
+
+    return YES;
 }
 
-- (BOOL)drawInRect:(NSRect)rect{   
-    CGContextRef contextMac = [[NSGraphicsContext currentContext] graphicsPort];
+- (BOOL)drawInRect:(NSRect)rect
+{
+    CGContextRef contextMac =
+        [[NSGraphicsContext currentContext] graphicsPort];
     if (contextMac == NULL)
         NSLog(@"NULL context in drawInRect");
-	if ( !cgImage) {
+    if (!cgImage) {
         NSLog(@"No image");
-		return NO;
-	}
+        return NO;
+    }
     //changed origin to imageX imageY to get damage to work
-    CGContextDrawImage(contextMac, CGRectMake(imageX, imageY, width, height), cgImage);
-    
-	return YES;
+    CGContextDrawImage(contextMac, CGRectMake(imageX, imageY, width,
+                                              height), cgImage);
+
+    return YES;
 }
 
-- (NSSize)size{
+- (NSSize)size
+{
     return size;
 }
 
-- (CGFloat)getWidth{
+- (CGFloat)getWidth
+{
     return width;
 }
 
-- (CGFloat)getHeight{
+- (CGFloat)getHeight
+{
     return height;
 }
 
-- (float)imageX{
+- (float)imageX
+{
     return imageX;
 }
-- (float)imageY{
+- (float)imageY
+{
     return imageY;
 }
-- (void)destroy{
+- (void)destroy
+{
     if (imageParent) {
         xcwm_image_destroy(imageParent);
     }
 }
-
-
 
 @end

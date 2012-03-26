@@ -1,26 +1,25 @@
-
 /*Copyright (C) 2012 Aaron Skomra, Braden Wooley, Ben Huddle
- 
- Permission is hereby granted, free of charge, to any person obtaining a copy of
- this software and associated documentation files (the "Software"), to deal in
- the Software without restriction, including without limitation the rights to
- use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
- of the Software, and to permit persons to whom the Software is furnished to do
- so, subject to the following conditions:
- 
- The above copyright notice and this permission notice shall be included in all
- copies or substantial portions of the Software.
- 
- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- SOFTWARE.
+
+   Permission is hereby granted, free of charge, to any person obtaining a copy of
+   this software and associated documentation files (the "Software"), to deal in
+   the Software without restriction, including without limitation the rights to
+   use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+   of the Software, and to permit persons to whom the Software is furnished to do
+   so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included in all
+   copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+   SOFTWARE.
  */
 
-/** 
+/**
  *  AppController.h
  *  xcwm
  *
@@ -55,12 +54,12 @@ id referenceToSelf;
 @interface XtoqController : NSObject {
     XtoqWindow *xcwmWindow;
     XtoqView * ourView;
-    
+
     dispatch_queue_t xcwmDispatchQueue;
-    
+
     //The X :1 paramater, updated in the XtoqApplication
     char *screen;
-    
+
     xcwm_image_t *libImageT;
     xcwm_context_t *rootContext;
     xcb_image_t *imageT;
@@ -74,32 +73,32 @@ id referenceToSelf;
     NSString *keyFirst;
 }
 
-- (id) init;
-- (void) applicationWillFinishLaunching:(NSNotification *) aNotification;
-- (void) applicationDidFinishLaunching: (NSNotification *) aNotification;
+- (id)init;
+- (void)applicationWillFinishLaunching:(NSNotification *)aNotification;
+- (void)applicationDidFinishLaunching: (NSNotification *)aNotification;
 
 /**
  * Receive notification of a key down event from the view.
- * @param an NSNotification containing an NSEvent 
+ * @param an NSNotification containing an NSEvent
  */
-- (void) keyDownInView: (NSNotification *) aNotification;
+- (void)keyDownInView: (NSNotification *)aNotification;
 
 /**
  * Receive notification of a mouse button press from the view.
- * @param an NSNotification containing an NSEvent 
+ * @param an NSNotification containing an NSEvent
  */
-- (void) mouseButtonDownInView: (NSNotification *) aNotification;
+- (void)mouseButtonDownInView: (NSNotification *)aNotification;
 
 /**
  * Receive notification of a mouse button release from the view.
- * @param an NSNotification containing an NSEvent 
+ * @param an NSNotification containing an NSEvent
  */
-- (void) mouseButtonReleaseInView: (NSNotification *) aNotification;
+- (void)mouseButtonReleaseInView: (NSNotification *)aNotification;
 
 /**
  * Makemenu and related selector functions for launching X applications.
  */
-- (void) makeMenu;
+- (void)makeMenu;
 
 /**
  * Launches the application based on filename.
@@ -110,7 +109,7 @@ id referenceToSelf;
  *
  * @param filename The name of the application to be run within XtoQ.app.
  */
-- (void) launch_client: (NSString *) filename;
+- (void)launch_client: (NSString *)filename;
 
 /**
  * Runs xeyes.
@@ -120,7 +119,7 @@ id referenceToSelf;
  *
  * @param sender Only needed for functionality with Makemenu's menu system.
  */
-- (void) runXeyes: (id) sender;
+- (void)runXeyes: (id)sender;
 
 /**
  * Runs xclock.
@@ -130,7 +129,7 @@ id referenceToSelf;
  *
  * @param sender Only needed for functionality with Makemenu's menu system.
  */
-- (void) runXclock: (id) sender;
+- (void)runXclock: (id)sender;
 
 /**
  * Runs xlogo.
@@ -140,9 +139,9 @@ id referenceToSelf;
  *
  * @param sender Only needed for functionality with Makemenu's menu system.
  */
-- (void) runXlogo: (id) sender;
+- (void)runXlogo: (id)sender;
 
-- (void) mouseMovedInApp: (NSNotification *) aNotification;
+- (void)mouseMovedInApp: (NSNotification *)aNotification;
 
 /**
  * Runs xterm.
@@ -152,18 +151,18 @@ id referenceToSelf;
  *
  * @param sender Only needed for functionality with Makemenu's menu system.
  */
-- (void) runXterm: (id) sender;
+- (void)runXterm: (id)sender;
 
 /**
  * Put a new image in the window / view
- * Send an image to the view after being notified of a damage event from 
+ * Send an image to the view after being notified of a damage event from
  * the event handler.
  * @param an xcwm_context_t sent from eventHandler
  */
-- (void) updateImage: (xcwm_context_t *) windowContext;
+- (void)updateImage: (xcwm_context_t *)windowContext;
 
-- (void) createNewWindow: (xcwm_context_t *) windowContext;
-- (void) destroyWindow:   (xcwm_context_t *) windowContext;
+- (void)createNewWindow: (xcwm_context_t *)windowContext;
+- (void)destroyWindow:   (xcwm_context_t *)windowContext;
 
 /**
  * Sets the variable screen to correct display.
@@ -174,23 +173,23 @@ id referenceToSelf;
  * @param scrn This value is determined in XtoqApplication before connection
  *   to Xorg is established.
  */
-- (void) setScreen: (char *) scrn;
+- (void)setScreen: (char *)scrn;
 
-- (void)windowWillMove:(NSNotification*)notification;
-- (void)windowDidMove:(NSNotification*)notification;
-- (void)windowDidResize:(NSNotification*)notification;
+- (void)windowWillMove:(NSNotification *)notification;
+- (void)windowDidMove:(NSNotification *)notification;
+- (void)windowDidResize:(NSNotification *)notification;
 - (void)applicationWillTerminate:(NSNotification *)aNotification;
 - (void)reshape;
 
-- (int) xserverToOSX:(int)yValue windowHeight:(int)windowH;
-- (int) osxToXserver:(int)yValue windowHeight:(int)windowH;
+- (int)xserverToOSX:(int)yValue windowHeight:(int)windowH;
+- (int)osxToXserver:(int)yValue windowHeight:(int)windowH;
 
 @end
-
 
 /**
  * Callback function that will receive events from the xcwm event loop
  * once it is started.
  * @param event The event received.
  */
-void eventHandler (xcwm_event_t *event);
+void
+eventHandler(xcwm_event_t *event);
