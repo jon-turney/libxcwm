@@ -32,7 +32,7 @@
 #endif
 
 @interface XtoqApplication : NSApplication {
-
+    NSNotificationCenter *notificationCenter;
 }
 /**
  * The main of our Application.
@@ -50,8 +50,9 @@ int XtoqApplicationMain(int argc, char** argv);
 
 - (void) sendEvent:(NSEvent *)e;
 
+- (int) 
+eventToButtonInt:(NSEvent *)e;
 @end
 
-int
-XtoqApplicationMain(int argc, char** argv);
+
 
