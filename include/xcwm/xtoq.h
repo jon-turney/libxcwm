@@ -46,11 +46,9 @@
 
 /* Abstract types for xcwm data types */
 
-/* FIXME: Obfuscate these */
-struct xcwm_context_t {
-    xcb_connection_t *conn;
-    xcb_drawable_t window;
-    xcb_window_t parent;
+struct xcwm_window_t {
+    xcb_drawable_t window_id;
+    struct xcwm_window_t *parent;
     xcb_damage_damage_t damage;
     int x;
     int y;
@@ -63,6 +61,12 @@ struct xcwm_context_t {
     char *name;         /* The name of the window */
     int wm_delete_set;  /* Flag for WM_DELETE_WINDOW, 1 if set */
     void *local_data;   /* Area for data client cares about */
+};
+typedef struct xcwm_window_t xcwm_window_t;
+
+struct xcwm_context_t {
+    xcb_connection_t *conn;
+    xcwm_window_t *root_window;
 };
 typedef struct xcwm_context_t xcwm_context_t;
 
@@ -82,14 +86,6 @@ struct xcwm_image_t {
 typedef struct xcwm_image_t xcwm_image_t;
 
 /**
- * Context which contains the display's root window.
- *
- * FIXME: We should avoid having global state where at all possible, and
- *        certainly not export such state for client access
- */
-extern xcwm_context_t *root_context;
-
-/**
  * Sets up the connection and grabs the root window from the specified screen
  * @param display the display to connect to
  * @return The root context which contains the root window
@@ -100,20 +96,21 @@ xcwm_init(char *display);
 /**
  * Returns a window's entire image
  * @param an xcwm_context_t 
- * FIXME: this might be for the root window
+ * @param window The window to get image from.
  * @return an xcwm_image_t with an the image of a window
  */
 xcwm_image_t *
-xcwm_get_image(xcwm_context_t *context);
+xcwm_get_image(xcwm_context_t *context, xcwm_window_t *window);
 
 /**
  * Intended for servicing to a client's reaction to a damage notification
  * this window returns the modified subrectangle of a window
- * @param an xcwm_context_t of the damaged window
+ * @param context The context of the window
+ * @param window The window to get image from
  * @return an xcwm_image_t with partial image window contents
  */
 xcwm_image_t *
-test_xcwm_get_image(xcwm_context_t * context);
+test_xcwm_get_image(xcwm_context_t *context, xcwm_window_t *window);
 
 
 /**
@@ -127,37 +124,42 @@ xcwm_image_destroy(xcwm_image_t * xcwm_image);
 /**
  * Set input focus to the window in context
  * @param context The context containing the window
+ * @param window The window to set focus to
  */
 void
-xcwm_set_input_focus(xcwm_context_t *context);
+xcwm_set_input_focus(xcwm_context_t *context, xcwm_window_t *window);
 
 /**
  * Set a window to the bottom of the window stack.
  * @param context The context containing the window
+ * @param window The window to move to bottom
  */
 void
-xcwm_set_window_to_bottom(xcwm_context_t *context);
+xcwm_set_window_to_bottom(xcwm_context_t *context, xcwm_window_t *window);
 
 /**
  * Set a window to the top of the window stack.
- * @param context The context containing the window
+ * @param context The context containing the window.
+ * @param window The window to move.
  */
 void
-xcwm_set_window_to_top(xcwm_context_t *context);
+xcwm_set_window_to_top(xcwm_context_t *context, xcwm_window_t *window);
 
 /**
- * Remove the damage from the given context.
- * @param context The context to remove the damage from
+ * Remove the damage from a given window.
+ * @param context The context of the window.
+ * @param window The window to remove damage from
  */
 void
-xcwm_remove_context_damage(xcwm_context_t *context);
+xcwm_remove_window_damage (xcwm_context_t *context, xcwm_window_t *window);
 
 /**
  * Closes the windows open on the X Server, the connection, and the event
  * loop. 
+ * @param context The context to close.
  */
-void 
-xcwm_close(void);
+void
+xcwm_close (xcwm_context_t *context);
 
 /**
  * Send key event to the X server.
@@ -174,13 +176,15 @@ xcwm_input_key_event (xcwm_context_t *context, uint8_t code, int state);
  * will often choose to send coordinates through mouse motion and set the params 
  * x & y to 0 here.
  * @param context xcwm_context_t 
+ * @param window The window the event occured in.
  * @param x - x coordinate
  * @param y - y coordinate
  * @param button The mouse button pressed.
  * @param state 1 if the mouse button is pressed down, 0 if released.
  */
 void
-xcwm_input_mouse_button_event (xcwm_context_t *context, long x, long y,
+xcwm_input_mouse_button_event (xcwm_context_t *context, xcwm_window_t *window,
+                               long x, long y,
                                int button, int state);
 
 /**
@@ -199,20 +203,24 @@ xcwm_input_mouse_motion (xcwm_context_t *context, long x, long y, int button);
 /**
  * kill the window, if possible using WM_DELETE_WINDOW (icccm) 
  * otherwise using xcb_kill_client.
- * @param context The context of the window to be killed
+ * @param context The context of the window
+ * @param window The window to be closed.
  */
 void
-xcwm_request_close(xcwm_context_t *context);
+xcwm_request_close(xcwm_context_t *context, xcwm_window_t *window);
 
 /**
  * move and/or resize the window, update the context 
  * @param context the context of the window to configure
+ * @param window The window to configure
  * @param x The new x coordinate
  * @param y The new y coordinate
  * @param height The new height
  * @param width The new width
  */
 void
-xcwm_configure_window(xcwm_context_t *context, int x, int y, int height, int width);
+xcwm_configure_window(xcwm_context_t *context, xcwm_window_t *window,
+                      int x, int y,
+                      int height, int width);
 
 #endif // _XTOQ_H_

@@ -44,11 +44,11 @@ xcwm_input_key_event (xcwm_context_t *context, uint8_t code, int state)
 						 XCB_CURRENT_TIME, none, 0, 0, 1 );  
     
     xcb_flush(context->conn);
-    printf("xcwm.c received key event - uint8_t '%i', to context.window %u\n", code, context->window);
+    printf("xcwm.c received key event - uint8_t '%i'\n", code);
 }
 
 void
-xcwm_input_mouse_button_event (xcwm_context_t *context,
+xcwm_input_mouse_button_event (xcwm_context_t *context, xcwm_window_t *window,
                                long x, long y,
                                int button, int state)
 {
@@ -59,17 +59,19 @@ xcwm_input_mouse_button_event (xcwm_context_t *context,
     } else {
         button_state = XCB_BUTTON_RELEASE;
     }
+    /* FIXME: Why are we passing a specifing window ID here, when
+     * other handlers use either the root window or none. */
     xcb_test_fake_input (context->conn, button_state, button, XCB_CURRENT_TIME,
-                         context->window, 0, 0, 0);
+                         window->window_id, 0, 0, 0);
 	xcb_flush(context->conn);
     printf("Mouse event received by xtoq.c - (%ld,%ld), state: %d\n",
            x, y, state);
 }
 
 void
-xcwm_input_mouse_motion (xcwm_context_t *context, long x, long y,int button)
+xcwm_input_mouse_motion (xcwm_context_t *context, long x, long y, int button)
 {
     xcb_test_fake_input (context->conn, XCB_MOTION_NOTIFY, 0, XCB_CURRENT_TIME,
-                         root_context->window, x, y, 0);
+                         context->root_window->window_id, x, y, 0);
 	xcb_flush(context->conn);
 }

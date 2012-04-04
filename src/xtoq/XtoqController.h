@@ -182,24 +182,24 @@ id referenceToSelf;
 -(void) runXman: (id) sender;
 
 /**
- * Put a new image in the window / view
- * Send an image to the view after being notified of a damage event from 
- * the event handler.
- * @param an xtoq_context_t sent from eventHandler
+ * Put a new image in the window / view. Send an image to the view
+ * after being notified of a damage event from the event handler.
+ * @param window The xcwm_window_t sent from eventHandler
  */
-- (void) updateImage: (xcwm_context_t *) windowContext;
+- (void) updateImage: (xcwm_window_t *) window;
 
 /**
  * Creates a new window
- * @param an xtoq_context_t sent from eventHandler
+ * @param window The xcwm_window_t sent from eventHandler
+ * 
  */
-- (void) createNewWindow: (xcwm_context_t *) windowContext;
+- (void) createNewWindow: (xcwm_window_t *) window;
 
 /**
  * Closes the window
- * @param an xtoq_context_t sent from eventHandler
+ * @param window The window to destroy, sent from eventHandler
  */
-- (void) destroyWindow: (xcwm_context_t *) windowContext;
+- (void) destroyWindow: (xcwm_window_t *) window;
 
 /**
  * Send request to close

@@ -70,8 +70,10 @@
     setImageInterpolation:NSImageInterpolationHigh];
     
     xcwmWindow = [[XtoqWindow alloc] 
-                  initWithContentRect: NSMakeRect(rootContext->x, rootContext->y, 
-                                                  rootContext->width, rootContext->height)
+                  initWithContentRect: NSMakeRect(rootContext->root_window->x,
+                                                  rootContext->root_window->y, 
+                                                  rootContext->root_window->width,
+                                                  rootContext->root_window->height)
                             styleMask: (NSTitledWindowMask |
                                         NSClosableWindowMask |
                                         NSMiniaturizableWindowMask |
@@ -79,18 +81,20 @@
                               backing: NSBackingStoreBuffered
                                 defer: YES];
 
-	[xcwmWindow setContext: rootContext];
-	rootContext->local_data = xcwmWindow;
+	[xcwmWindow setXcwmWindow: rootContext->root_window
+               andXcwmContext: rootContext];
+	rootContext->root_window->local_data = xcwmWindow;
     // Make the menu
     [self makeMenu];
 
     // FIXME: Since this is the root window, should be getting width
     // and height from the size of the root window, not hard-coded
     // values.
-    imageRec = NSMakeRect(0, 0, 1028,768);//[image getWidth], [image getHeight]);
+    imageRec = NSMakeRect(0, 0, 1028,768);
     // create a view, init'ing it with our rect
     ourView = [[XtoqView alloc] initWithFrame:imageRec];
-	[ourView setContext: rootContext];
+	[ourView setXcwmWindow: rootContext->root_window
+            andXcwmContext: rootContext];
 
     // add view to its window
     [xcwmWindow setContentView: ourView];  
@@ -122,7 +126,6 @@
            selector: @selector(mouseMovedInApp:)
                name: @"MouseMovedEvent" 
              object: nil];
-
     // register for destroy event
     [nc addObserver: self
 		   selector: @selector(destroy:)
@@ -148,7 +151,7 @@
 
 - (void)applicationWillTerminate:(NSNotification *)aNotification
 {
-    xcwm_close();
+    xcwm_close(rootContext);
     
     const char *spawn[4];
     pid_t child;
@@ -226,6 +229,7 @@
     NSDictionary *mouseDownInfo = [aNotification userInfo];
     // NSLog(@"Controller Got a XTOQmouseButtonDownEvent");
     NSEvent * event = [mouseDownInfo objectForKey: @"1"];
+    xcwm_window_t *window = [(XtoqWindow *)[event window] getXcwmWindow];
 
     NSNumber * heightAsNumber =  [NSNumber alloc];
     heightAsNumber = [mouseDownInfo objectForKey: @"2"];
@@ -237,6 +241,7 @@
     
     dispatch_async(xcwmDispatchQueue, 
                    ^{ xcwm_input_mouse_button_event (rootContext,
+                                                     window,
                                                      0,
                                                      0, 
                                                      buttonInt,
@@ -250,6 +255,8 @@
     CGFloat heightFloat;
     NSDictionary *mouseReleaseInfo = [aNotification userInfo];
     NSEvent * event = [mouseReleaseInfo objectForKey: @"1"];
+    xcwm_window_t *window = [(XtoqWindow *)[event window] getXcwmWindow];
+
     NSNumber * heightAsNumber =  [NSNumber alloc];
     heightAsNumber = [mouseReleaseInfo objectForKey: @"2"];
     heightFloat = [heightAsNumber floatValue];
@@ -260,6 +267,7 @@
     
     dispatch_async(xcwmDispatchQueue, 
                    ^{ xcwm_input_mouse_button_event (rootContext,
+                                                     window,
                                                      0,
                                                      0,
                                                      buttonInt,
@@ -416,18 +424,19 @@
 }
 
 // create a new window 
-- (void) createNewWindow: (xcwm_context_t *) windowContext {
+- (void) createNewWindow: (xcwm_window_t *) window {
     
     XtoqWindow   *newWindow;
     XtoqView     *newView;
     xcwm_image_t *xcbImage;
     XtoqImageRep *imageRep;  
 
-    int y = [self xserverToOSX:windowContext->y windowHeight:windowContext->height];
+    int y = [self xserverToOSX: window->y windowHeight:window->height];
     
     newWindow =  [[XtoqWindow alloc] 
-                  initWithContentRect: NSMakeRect(windowContext->x, y, 
-                                                  windowContext->width, windowContext->height)
+                  initWithContentRect: NSMakeRect(window->x, y, 
+                                                  window->width,
+                                                  window->height)
                   styleMask: (NSTitledWindowMask |
                               NSClosableWindowMask |
                               NSMiniaturizableWindowMask |
@@ -435,39 +444,42 @@
                   backing: NSBackingStoreBuffered
                   defer: YES];
     
-    // save context in window
-    [newWindow setContext:windowContext];
+    // save xcwm_window_t in the XtoqWindow
+    [newWindow setXcwmWindow: window
+              andXcwmContext: rootContext];
     
     // save the newWindow pointer into the context
-    windowContext->local_data = (id)newWindow;
+    window->local_data = (id)newWindow;
     
     // get image to darw
-    xcbImage = xcwm_get_image(windowContext);
-    imageRep = [[XtoqImageRep alloc] initWithData:xcbImage x: 0 y: 0];
+    xcbImage = test_xcwm_get_image(rootContext, window);
+    imageRep = [[XtoqImageRep alloc] initWithData: xcbImage x: 0 y: 0];
     
     // draw the image into a rect
     NSRect imgRec = NSMakeRect(0, 0, [imageRep getWidth], [imageRep getHeight]);
     
     // create a view, init'ing it with our rect
     newView = [[XtoqView alloc] initWithFrame:imgRec];
-	[newView setContext:windowContext];
+	[newView setXcwmWindow: window
+            andXcwmContext: rootContext];
     
     // add view to its window
     [newWindow setContentView: newView ];
     
     // set title
     NSString *winTitle;
-    winTitle = [NSString stringWithCString:windowContext->name encoding:NSUTF8StringEncoding];
-    [newWindow setTitle:winTitle];
+    winTitle = [NSString stringWithCString: window->name
+                                  encoding: NSUTF8StringEncoding];
+    [newWindow setTitle: winTitle];
     
     //shows the window
-    [newWindow makeKeyAndOrderFront:self];
+    [newWindow makeKeyAndOrderFront: self];
     
 }
 
-- (void) destroyWindow:(xcwm_context_t *) windowContext {
+- (void) destroyWindow:(xcwm_window_t *) window {
     // set the window to be closed
-    XtoqWindow *destWindow = windowContext->local_data;
+    XtoqWindow *destWindow = window->local_data;
     //close window
     [destWindow close];
 }
@@ -476,27 +488,27 @@
     
     NSDictionary *contextInfo = [aNotification userInfo];    
     XtoqWindow *aWindow = [contextInfo objectForKey: @"1"];
-    xcwm_context_t *theContext = [aWindow getContext];
     
     //use dispatch_async() to handle the actual close 
-      dispatch_async(xcwmDispatchQueue, ^{
-          NSLog(@"Call xcwm_request_close(theContext)");
-          xcwm_request_close(theContext);
+    dispatch_async(xcwmDispatchQueue, ^{
+        NSLog(@"Call xcwm_request_close(theContext)");
+        xcwm_request_close(rootContext, [aWindow getXcwmWindow]);
       });
 }
 
-- (void) updateImage:(xcwm_context_t *) windowContext
-{
+- (void) updateImage:(xcwm_window_t *) window {
     float  y_transformed;
 	NSRect newDamageRect;
 
-    y_transformed =( windowContext->height - windowContext->damaged_y - windowContext->damaged_height)/1.0; 
-	newDamageRect = NSMakeRect(windowContext->damaged_x,
+    y_transformed =( window->height - window->damaged_y
+                     - window->damaged_height)/1.0; 
+	newDamageRect = NSMakeRect(window->damaged_x,
 							   y_transformed,
-							   windowContext->damaged_width,
-							   windowContext->damaged_height);
-	XtoqView *localView = (XtoqView *)[(XtoqWindow *)windowContext->local_data contentView];
-    [ localView setPartialImage:newDamageRect];
+							   window->damaged_width,
+							   window->damaged_height);
+	XtoqView *localView =
+        (XtoqView *)[(XtoqWindow *)window->local_data contentView];
+    [localView setPartialImage:newDamageRect];
 }
 
 - (void) windowDidMove:(NSNotification*)notification {
@@ -512,15 +524,16 @@
   XtoqWindow *moveWindow = (XtoqWindow *)[NSApp mainWindow];
     
     if (moveWindow != nil) {        
-        xcwm_context_t *moveContext = [moveWindow getContext];        
+        xcwm_window_t *window = [moveWindow getXcwmWindow];        
         NSRect moveFrame = [moveWindow frame];
         int x = (int)moveFrame.origin.x;
-        int y = [self osxToXserver:(int)moveFrame.origin.y
-					  windowHeight:moveContext->height] - WINDOWBAR;
+        int y = [self osxToXserver: (int)moveFrame.origin.y
+					  windowHeight: window->height] - WINDOWBAR;
         int width = (int)moveFrame.size.width;
         int height = (int)moveFrame.size.height - WINDOWBAR;
 
-        xcwm_configure_window(moveContext, x, y - height, height, width);
+        xcwm_configure_window(rootContext, window,
+                              x, y - height, height, width);
 		[[moveWindow contentView] setNeedsDisplay: YES];
     }    
 }
@@ -529,17 +542,17 @@
 
 void eventHandler (xcwm_event_t *event)
 {
-    xcwm_context_t *context = xcwm_event_get_context(event);
+    xcwm_window_t *window = xcwm_event_get_window(event);
     if (xcwm_event_get_type(event) == XTOQ_DAMAGE) {
-	  [referenceToSelf updateImage: context];
+	  [referenceToSelf updateImage: window];
     } else if (xcwm_event_get_type(event) == XTOQ_CREATE) {
         NSLog(@"Window was created");
-        [referenceToSelf createNewWindow: context];
+        [referenceToSelf createNewWindow: window];
     } else if (xcwm_event_get_type(event) == XTOQ_DESTROY) {
         NSLog(@"Window was destroyed");
-        [referenceToSelf destroyWindow: context];
+        [referenceToSelf destroyWindow: window];
     } else { 
-        NSLog(@"Hey I'm Not damage!"); 
+        NSLog(@"Unknown event type received.");
     }
     free(event);
 }

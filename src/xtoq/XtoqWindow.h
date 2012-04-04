@@ -26,7 +26,8 @@
 #import "XtoqView.h"
 
 @interface XtoqWindow : NSWindow {
-    xcwm_context_t *winContext;  // The context of the window.
+    xcwm_context_t *xcwmContext;  // The context of the window.
+    xcwm_window_t *xcwmWindow;    // The xcwm window assoicated with this one
     NSNotificationCenter * notificationCenter;
 }
 
@@ -42,14 +43,19 @@
 -(void) makeKeyAndOrderFront:(id)sender;
 
 /**
- * Used for setting member variables context and id.
+ * Set xcwm_window_t associated with this window and the
+ * xcwm_context_t context.
+ * @param aWindow The xcwm_window_t for this window.
+ * @param aContext The xcwm_context_t for this window.
  */
--(void) setContext: (xcwm_context_t *) aContext;
+-(void) setXcwmWindow: (xcwm_window_t *) aWindow
+       andXcwmContext: (xcwm_context_t *) aContext;;
 
 /**
- * Function for getting context of window from list.
+ * Function for getting the xcwm_window_t associated with this window.
+ * @return The xcwm_window_t for this window.
  */
--(xcwm_context_t *) getContext;
+-(xcwm_window_t *) getXcwmWindow;
 
 /**
  * Catches the close event from clicking the red button or from preformClose.

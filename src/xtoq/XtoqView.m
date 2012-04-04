@@ -44,8 +44,10 @@ initWithFrame: (NSRect)frame {
     return self;
 }
 
--(void) setContext: (xcwm_context_t *)context {
-    viewContext = context;
+-(void) setXcwmWindow: (xcwm_window_t *) xcwmWindow
+       andXcwmContext: (xcwm_context_t *) xcwmContext{
+    viewXcwmWindow = xcwmWindow;
+    viewXcwmContext = xcwmContext;
 }
 
 // Overridden by subclasses to draw the receiver’s image within the
@@ -57,20 +59,20 @@ drawRect: (NSRect)dirtyRect {
 	XtoqImageRep *imageNew;
 
     xcwm_get_event_thread_lock();
-    imageT = test_xcwm_get_image(viewContext);
+    imageT = test_xcwm_get_image(viewXcwmContext, viewXcwmWindow);
 	if (imageT->image) {
-        y_transformed =( viewContext->height
-						 - viewContext->damaged_y
-						 - viewContext->damaged_height)/1.0; 
+        y_transformed =( viewXcwmWindow->height
+						 - viewXcwmWindow->damaged_y
+						 - viewXcwmWindow->damaged_height)/1.0; 
 		imageNew = [[XtoqImageRep alloc]
 					 initWithData:imageT
-					            x:((viewContext->damaged_x))
+					            x:((viewXcwmWindow->damaged_x))
 					            y:y_transformed];
 		[imageNew draw];
 		[imageNew destroy];
 		
 		// Remove the damage
-		xcwm_remove_context_damage(viewContext);
+		xcwm_remove_window_damage(viewXcwmContext, viewXcwmWindow);
 	}
 	xcwm_release_event_thread_lock();
 }

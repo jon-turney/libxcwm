@@ -29,22 +29,19 @@
 
 #include "xcwm_internal.h"
 
-_xcwm_context_node *_xcwm_window_list_head = NULL;
+_xcwm_window_node *_xcwm_window_list_head = NULL;
 
-xcwm_context_t *
-_xcwm_add_context_t(struct xcwm_context_t *context)
+xcwm_window_t *
+_xcwm_add_window(xcwm_window_t *window)
 {
-    /* temp pointers for traversing */
-    _xcwm_context_node *new_node;
-    _xcwm_context_node *curr;
-    _xcwm_context_node *prev;
+    _xcwm_window_node *new_node;
     
     /* Create node to hold the new window */
-    new_node = malloc(sizeof(_xcwm_context_node));
+    new_node = malloc(sizeof(_xcwm_window_node));
     if (!new_node) {
         exit(1);
     }
-    new_node->context = context;
+    new_node->window = window;
     
     /* Handle the case where this is the first node added */
     if (!_xcwm_window_list_head) {
@@ -59,18 +56,18 @@ _xcwm_add_context_t(struct xcwm_context_t *context)
         _xcwm_window_list_head = new_node;
         
     }
-    return new_node->context;
+    return new_node->window;
 }       
 
-xcwm_context_t *
-_xcwm_get_context_node_by_window_id (xcb_window_t window_id)
+xcwm_window_t *
+_xcwm_get_window_node_by_window_id (xcb_window_t window_id)
 {
-    _xcwm_context_node *curr;
+    _xcwm_window_node *curr;
         
     curr = _xcwm_window_list_head;
     while (curr) {
-        if (curr->context->window == window_id) {
-            return curr->context;
+        if (curr->window->window_id == window_id) {
+            return curr->window;
         }
         curr = curr->next;
     }
@@ -79,13 +76,13 @@ _xcwm_get_context_node_by_window_id (xcb_window_t window_id)
 
 
 void
-_xcwm_remove_context_node(xcb_window_t window_id) {
+_xcwm_remove_window_node(xcb_window_t window_id) {
 
-    _xcwm_context_node *curr;
+    _xcwm_window_node *curr;
     
     curr = _xcwm_window_list_head;
     while (curr != NULL) {
-        if (curr->context->window == window_id) {
+        if (curr->window->window_id == window_id) {
             // this will be freed in the event_loop
             if(curr->next){
                 curr->next->prev = curr->prev;

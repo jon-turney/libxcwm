@@ -55,12 +55,14 @@
     [super makeKeyAndOrderFront: sender];
 }
 
--(void) setContext: (xcwm_context_t *)aContext {
-    winContext = aContext;
+-(void) setXcwmWindow: (xcwm_window_t *) aWindow
+       andXcwmContext: (xcwm_context_t *) aContext {
+    xcwmWindow = aWindow;
+    xcwmContext = aContext;
 }
 
--(xcwm_context_t *) getContext {
-    return winContext;
+-(xcwm_window_t *) getXcwmWindow {
+    return xcwmWindow;
 }
 
 - (BOOL) windowShouldClose: (id)sender {    
@@ -78,8 +80,8 @@
 
 -(void)windowDidBecomeKey: (NSNotification *)note {
     
-    xcwm_set_input_focus(winContext);
-    xcwm_set_window_to_top(winContext);
+    xcwm_set_input_focus(xcwmContext, xcwmWindow);
+    xcwm_set_window_to_top(xcwmContext, xcwmWindow);
 }
 
 

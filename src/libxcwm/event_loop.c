@@ -124,9 +124,9 @@ void *run_event_loop (void *thread_arg_struct)
 
 			return_evt = malloc(sizeof(xcwm_event_t));
 			return_evt->event_type = XTOQ_DAMAGE;
-            return_evt->context =
-				_xcwm_get_context_node_by_window_id(dmgevnt->drawable);
-			if (!return_evt->context) {
+            return_evt->window =
+				_xcwm_get_window_node_by_window_id(dmgevnt->drawable);
+			if (!return_evt->window) {
 				free(return_evt);
 				continue;
 			}
@@ -137,30 +137,30 @@ void *run_event_loop (void *thread_arg_struct)
 			 * done in another thread that handles window redraws */
 			xcwm_get_event_thread_lock();
 
-			old_x      = return_evt->context->damaged_x;
-			old_y      = return_evt->context->damaged_y;
-			old_width  = return_evt->context->damaged_width;
-			old_height = return_evt->context->damaged_height;
+			old_x      = return_evt->window->damaged_x;
+			old_y      = return_evt->window->damaged_y;
+			old_width  = return_evt->window->damaged_width;
+			old_height = return_evt->window->damaged_height;
 
-			if (return_evt->context->damaged_width == 0) {
+			if (return_evt->window->damaged_width == 0) {
 				/* We know something is damaged */
-				return_evt->context->damaged_x = dmgevnt->area.x;
-				return_evt->context->damaged_y = dmgevnt->area.y;
-				return_evt->context->damaged_width = dmgevnt->area.width;
-				return_evt->context->damaged_height = dmgevnt->area.height;
+				return_evt->window->damaged_x = dmgevnt->area.x;
+				return_evt->window->damaged_y = dmgevnt->area.y;
+				return_evt->window->damaged_width = dmgevnt->area.width;
+				return_evt->window->damaged_height = dmgevnt->area.height;
 			} else {
 				/* Is the new damage bigger than the old */
 				if (old_x > dmgevnt->area.x) {
-					return_evt->context->damaged_x = dmgevnt->area.x;
+					return_evt->window->damaged_x = dmgevnt->area.x;
 				}
 				if ( old_y > dmgevnt->area.y) {
-					return_evt->context->damaged_y = dmgevnt->area.y;
+					return_evt->window->damaged_y = dmgevnt->area.y;
 				}
 				if ( old_width < dmgevnt->area.width) {
-					return_evt->context->damaged_width = dmgevnt->area.width;
+					return_evt->window->damaged_width = dmgevnt->area.width;
 				}
 				if ( old_height <  dmgevnt->area.height) {
-					return_evt->context->damaged_height = dmgevnt->area.height;
+					return_evt->window->damaged_height = dmgevnt->area.height;
 				}
 			}
             xcwm_release_event_thread_lock();
@@ -217,31 +217,33 @@ void *run_event_loop (void *thread_arg_struct)
             }
             case XCB_DESTROY_NOTIFY: {
                 // Window destroyed in root window
-                xcb_destroy_notify_event_t *notify = (xcb_destroy_notify_event_t *)evt;
-                xcwm_context_t *context = _xcwm_destroy_window(notify);
+                xcb_destroy_notify_event_t *notify =
+                    (xcb_destroy_notify_event_t *)evt;
+                xcwm_window_t *window =
+                    _xcwm_destroy_window(event_conn, notify);
 
-				if (!context) {
+				if (!window) {
 					/* Not a window in the list, don't try and destroy */
 					break;
 				}
                 
                 return_evt = malloc(sizeof(xcwm_event_t));
                 return_evt->event_type = XTOQ_DESTROY;
-                return_evt->context = context;
+                return_evt->window = window;
 
                 callback_ptr(return_evt);
-                free(context);
+                free(window);
                 break;
             }
 			case XCB_MAP_REQUEST: {
 				xcb_map_request_event_t *request = (xcb_map_request_event_t *)evt;
                 return_evt = malloc(sizeof(xcwm_event_t));
-                return_evt->context = _xcwm_window_created(event_conn, request);
-                if (!return_evt->context) {
+                return_evt->window = _xcwm_window_created(event_conn, request);
+                if (!return_evt->window) {
                     free(return_evt);
 					break;
                 }
-                _xcwm_map_window(return_evt->context);
+                _xcwm_map_window(event_conn, return_evt->window);
                 return_evt->event_type = XTOQ_CREATE;
                 callback_ptr(return_evt);
                 break;
@@ -306,8 +308,13 @@ xcwm_event_get_type(xcwm_event_t const *event) {
     return event->event_type;
 }
 
+/* FIXME: Do we still need a context in the event? Probably not... */
 xcwm_context_t *
 xcwm_event_get_context(xcwm_event_t const *event) {
     return event->context;
 }
 
+xcwm_window_t *
+xcwm_event_get_window(xcwm_event_t const *event) {
+    return event->window;
+}
