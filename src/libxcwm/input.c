@@ -29,27 +29,22 @@
 #include "xcwm_internal.h"
 
 void
-xcwm_input_key_press (xcwm_context_t *context, uint8_t code)
+xcwm_input_key_event (xcwm_context_t *context, uint8_t code, int state)
 {
     xcb_window_t none = { XCB_NONE };
-    
-    xcb_test_fake_input( context->conn, XCB_KEY_PRESS, code, 
+    int key_state;
+
+    if (state) {
+        key_state = XCB_KEY_PRESS;
+    } else {
+        key_state = XCB_KEY_RELEASE;
+    }
+
+    xcb_test_fake_input( context->conn, key_state, code, 
 						 XCB_CURRENT_TIME, none, 0, 0, 1 );  
     
     xcb_flush(context->conn);
-    printf("xcwm.c received key down - uint8_t '%i', to context.window %u\n", code, context->window);
-}
-
-void
-xcwm_input_key_release (xcwm_context_t *context, uint8_t code)
-{
-    xcb_window_t none = { XCB_NONE };
-    
-    xcb_test_fake_input( context->conn, XCB_KEY_RELEASE, code, 
-                        XCB_CURRENT_TIME, none,0 ,0 , 1 );
-    
-    xcb_flush(context->conn);
-    printf("xcwm.c received key release- uint8_t '%i', to context.window %u\n", code, context->window);
+    printf("xcwm.c received key event - uint8_t '%i', to context.window %u\n", code, context->window);
 }
 
 void

@@ -198,8 +198,9 @@
     // FIXME: Uses a 'magic number' for offset into keymap - should a
     // #define or gotten programmatically.
     dispatch_async(xcwmDispatchQueue, 
-                   ^{ xcwm_input_key_press(rootContext, 
-                                           aChar + 8) ;});
+                   ^{ xcwm_input_key_event(rootContext, 
+                                           aChar + 8,
+                                           1) ;});
 }
 
 - (void) keyUpInView: (NSNotification *) aNotification
@@ -211,8 +212,9 @@
 
     // FIXME: Uses a 'magic number' for offset.
     dispatch_async(xcwmDispatchQueue, 
-                   ^{ xcwm_input_key_release(rootContext, 
-                                     aChar + 8) ;});
+                   ^{ xcwm_input_key_event(rootContext, 
+                                           aChar + 8,
+                                           0) ;});
 }
  
 

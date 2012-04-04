@@ -160,21 +160,13 @@ void
 xcwm_close(void);
 
 /**
- * function
+ * Send key event to the X server.
  * @param context xcwm_context_t 
  * @param window The window that the key press was made in.
- * @param keyCode The key pressed.
+ * @param state 1 if key has been pressed, 0 if key released.
  */
 void
-xcwm_input_key_press (xcwm_context_t *context, uint8_t code);
-
-/**
- * function
- * @param context xcwm_context_t 
- * @param keyCode The key released.
- */
-void
-xcwm_input_key_release (xcwm_context_t *context, uint8_t code);
+xcwm_input_key_event (xcwm_context_t *context, uint8_t code, int state);
 
 /**
  * Uses the XTEST protocol to send input events to the X Server (The X Server
