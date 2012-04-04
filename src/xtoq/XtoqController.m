@@ -83,11 +83,10 @@
 	rootContext->local_data = xcwmWindow;
     // Make the menu
     [self makeMenu];
-    
-    //create an XtoqImageRep with the information from X
-    //libImageT = xcwm_get_image(rootContext);
-    //image = [[XtoqImageRep alloc] initWithData:libImageT x:0 y:0];  
-    //draw the image into a rect
+
+    // FIXME: Since this is the root window, should be getting width
+    // and height from the size of the root window, not hard-coded
+    // values.
     imageRec = NSMakeRect(0, 0, 1028,768);//[image getWidth], [image getHeight]);
     // create a view, init'ing it with our rect
     ourView = [[XtoqView alloc] initWithFrame:imageRec];
@@ -95,15 +94,8 @@
 
     // add view to its window
     [xcwmWindow setContentView: ourView];  
-    // set the initial image in the window
-    //[ourView setImage:image];
-
-   // originalWidth = [image getWidth];
-   // originalHeight = [image getHeight];
-    //[ourView setPartialImage:imageNew];
     
-    NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
-    
+    NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];    
     
     // Register for the key down notifications from the view
     [nc addObserver: self
@@ -136,13 +128,7 @@
 		   selector: @selector(destroy:)
 		       name: @"XTOQdestroyTheWindow"
 		     object: nil];
-    
-  /*  // regester for window will/did movement notification
-    [nc addObserver:self 
-		   selector:@selector(windowWillMove:) 
-		       name:NSWindowWillMoveNotification 
-		     object:nil];
-  */  
+
     [nc addObserver:self 
 		   selector:@selector(windowDidMove:) 
 		       name:NSWindowDidMoveNotification 
@@ -153,11 +139,6 @@
 		   selector:@selector(windowDidResize:) 
 		       name:NSWindowDidResizeNotification 
 		     object:nil];
-   /* [nc addObserver:self
-	         selector:@selector(applicationWillTerminate:)
-			     name:NSApplicationWillTerminateNotification object:nil]; */
-    
-    
 
     xcwmDispatchQueue = dispatch_queue_create("xcwm.dispatch.queue", NULL);
 
@@ -171,7 +152,9 @@
     
     const char *spawn[4];
     pid_t child;
-     
+
+    // FIXME: This clobbers all instantances of the xserver. Not what
+    // we want to do.
     spawn[0] = "/usr/bin/killall";
     spawn[1] = "-9";
     spawn[2] = "Xorg";
@@ -201,8 +184,6 @@
                                          height - WINDOWBAR - [yNum intValue], 
                                          (int)[event windowNumber],
                                          0);;});
-
-    
 }
 
 - (void) keyDownInView: (NSNotification *) aNotification
@@ -519,11 +500,7 @@
 	XtoqView *localView = (XtoqView *)[(XtoqWindow *)windowContext->local_data contentView];
     [ localView setPartialImage:newDamageRect];
 }
-/*
-- (void) windowWillMove:(NSNotification*)notification {
-    // do nothing
-}
-*/
+
 - (void) windowDidMove:(NSNotification*)notification {
     [self reshape];
 }
@@ -544,7 +521,7 @@
 					  windowHeight:moveContext->height] - WINDOWBAR;
         int width = (int)moveFrame.size.width;
         int height = (int)moveFrame.size.height - WINDOWBAR;
-    //    NSLog(@"Call xtoq_configure_window(moveContext, x = %i, y = %i, height = %i, width = %i)", x, y, height, width); 
+
         xcwm_configure_window(moveContext, x, y - height, height, width);
 		[[moveWindow contentView] setNeedsDisplay: YES];
     }    

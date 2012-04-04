@@ -71,11 +71,6 @@ id referenceToSelf;
     int originalHeight;
     int originalWidth;
     NSRect imageRec;
-    
-//    NSString *keyFirst;
-//    int originalHeight;
-//    int originalWidth;
-    
 }
 
 /**
