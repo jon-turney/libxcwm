@@ -33,8 +33,8 @@
 /**
  * Used for initialization of a window.
  */
--(id) initWithContentRect:(NSRect)contentRect styleMask:(NSUInteger)aStyle 
-                  backing:(NSBackingStoreType)bufferingType defer:(BOOL)flag;
+-(id) initWithContentRect: (NSRect)contentRect styleMask: (NSUInteger)aStyle 
+                  backing: (NSBackingStoreType)bufferingType defer: (BOOL)flag;
 
 /*
  * Orders a specific window to the front and makes it key window.
@@ -54,17 +54,17 @@
 /**
  * Catches the close event from clicking the red button or from preformClose.
  */
-- (BOOL)windowShouldClose:(id)sender;
+- (BOOL) windowShouldClose: (id)sender;
 
 /**
  * Catches the event that a window gains focus
  */
--(void)windowDidBecomeKey:(NSNotification *)note;
+-(void) windowDidBecomeKey: (NSNotification *)note;
 
 /**
  * Handler for mouse movement events.
  * @param event The mouse movement event.
  */
--(void) mouseMoved:(NSEvent *)event;
+-(void) mouseMoved: (NSEvent *)event;
 
 @end

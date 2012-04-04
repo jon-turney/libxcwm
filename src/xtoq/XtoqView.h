@@ -45,25 +45,25 @@ SOFTWARE.
  * Intialize the view given its bounds
  * @param an NSRect with the bounds (size) of the view 
  */
-- (id)initWithFrame:(NSRect)frame;
+- (id)initWithFrame: (NSRect)frame;
 
 /**
  * Set the context associated with this view.
  * @param context The context
  */
--(void)setContext:(xcwm_context_t *)context;
+-(void)setContext: (xcwm_context_t *)context;
 
 /**
  * The OS X magic loop which is responsible for drawing content to the screen
  * @param a "fake" NSRect which is not actually used within the body of the 
  * method
  */
--(void)drawRect:(NSRect)dirtyRect;
+-(void)drawRect: (NSRect)dirtyRect;
 
 /**
  * Set the partial image contents in the view
  * @param newDamageRect The area of the image that needs to be redrawn
  */
-- (void)setPartialImage:(NSRect)newDamageRect;
+- (void)setPartialImage: (NSRect)newDamageRect;
 
 @end

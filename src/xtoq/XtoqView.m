@@ -33,7 +33,7 @@
  *  This is the initializer.
  */
 - (id)
-initWithFrame:(NSRect)frame {
+initWithFrame: (NSRect)frame {
     self = [super initWithFrame:frame];
     
     if (self) {
@@ -51,7 +51,7 @@ initWithFrame:(NSRect)frame {
 // Overridden by subclasses to draw the receiver’s image within the
 // passed-in rectangle.
 -(void)
-drawRect:(NSRect)dirtyRect {
+drawRect: (NSRect)dirtyRect {
     xcwm_image_t *imageT;
 	float y_transformed;
 	XtoqImageRep *imageNew;
@@ -75,71 +75,8 @@ drawRect:(NSRect)dirtyRect {
 	xcwm_release_event_thread_lock();
 }
 
-
-
-//This is necessary for accepting input.
-/*- (BOOL)
-acceptsFirstResponder {
-    return YES;
-}
-
-- (BOOL)acceptsMouseMovedEvents {
-    return YES;
-}*/
-
-/*- (void)mouseEntered:(NSEvent *)theEvent {
-
-}
-
-- (void)mouseExited:(NSEvent *)theEvent {
-
-}
- 
-- (void)rightMouseDown:(NSEvent *)theEvent 
-
-}*/
-
-/**
- *  Capture keyboard events
- */
-// - (void)
-// keyDown:(NSEvent *)theEvent {      
-//     NSDictionary * dictionary = [NSDictionary dictionaryWithObject:theEvent 
-//                                                             forKey:@"1"];
-//     [notificationCenter postNotificationName:@"XTOQviewKeyDownEvent" 
-//                                       object:self 
-//                                     userInfo:dictionary];
-// }
-
-// -(void)
-// mouseDown:(NSEvent *)mouseEvent {
-//     CGFloat f = [self bounds].size.height;
-//     NSNumber *n = [[NSNumber alloc] initWithFloat:f];
-//     //NSLog(@"mouseevent %i", [mouseEvent mouseLocation]->x);
-//    // NSLog(@"mouse event bound %f location %f", CGRectGetHeight(bnd), [mouseEvent locationInWindow].y );
-//     NSMutableDictionary *twoInfoDict = [[NSMutableDictionary alloc] initWithCapacity:2];
-//     [twoInfoDict setObject:mouseEvent forKey:@"1"];
-//     [twoInfoDict setObject:n forKey:@"2"];
-
-//     //NSLog(@"bound %f location %f", CGRectGetHeight(bnd), [mouseEvent locationInWindow].y );
-//     [notificationCenter postNotificationName:@"XTOQmouseButtonDownEvent" 
-//                                       object:self 
-//                                     userInfo:twoInfoDict];
-// }
-
-// - (void)mouseUp:(NSEvent *)theEvent {
-// 	CGFloat f = [self bounds].size.height;
-//     NSNumber *n = [[NSNumber alloc] initWithFloat:f];
-//     NSMutableDictionary *twoInfoDict = [[NSMutableDictionary alloc] initWithCapacity:2];
-//     [twoInfoDict setObject:theEvent forKey:@"1"];
-//     [twoInfoDict setObject:n forKey:@"2"];
-//     [notificationCenter postNotificationName:@"XTOQmouseButtonReleaseEvent" 
-//                                       object:self 
-//                                     userInfo:twoInfoDict];
-// }
-
-- (void)setPartialImage:(NSRect)newDamageRect {    
-    [self setNeedsDisplayInRect:newDamageRect];
+- (void)setPartialImage: (NSRect)newDamageRect {    
+    [self setNeedsDisplayInRect: newDamageRect];
 }
 
 - (BOOL)isOpaque{
