@@ -47,6 +47,7 @@
                                         styleMask:aStyle
                                           backing:bufferingType
                                             defer:flag];
+	[self setAcceptsMouseMovedEvents: YES];
     return result;
 }
 
@@ -79,6 +80,31 @@
     
     xcwm_set_input_focus(winContext);
     xcwm_set_window_to_top(winContext);
+}
+
+
+-(void) mouseMoved:(NSEvent *) event {
+    NSMutableDictionary *InfoDict;
+    NSNumber *xNum, *yNum;
+
+	NSPoint location = [event locationInWindow];
+	NSRect frame = [self frame];
+
+	location.x += frame.origin.x;
+	location.y += frame.origin.y;
+            
+	xNum = [[NSNumber alloc] initWithFloat:location.x];
+	yNum = [[NSNumber alloc] initWithFloat:location.y];
+            
+	InfoDict = [[NSMutableDictionary alloc] initWithCapacity:3];
+	[InfoDict setObject:event forKey:@"1"];
+	[InfoDict setObject:xNum forKey:@"2"];
+	[InfoDict setObject:yNum forKey:@"3"];
+            
+	[[NSNotificationCenter defaultCenter]
+	  postNotificationName:@"MouseMovedEvent" 
+	                object:self 
+                  userInfo:InfoDict];
 }
 
 @end
