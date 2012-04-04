@@ -53,3 +53,7 @@ autom4te.cache
 config.sub
 depcomp
 missing
+
+# Merge and patch files to ignore
+*.orig
+*.patch
