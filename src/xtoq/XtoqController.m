@@ -178,12 +178,12 @@
     int height = [[NSScreen mainScreen] frame].size.height;
         
     dispatch_async(xcwmDispatchQueue, 
-                   ^{ xcwm_mouse_motion (rootContext,
-                                         [xNum intValue], 
-                                         //Converting OSX coordinates to X11
-                                         height - WINDOWBAR - [yNum intValue], 
-                                         (int)[event windowNumber],
-                                         0);;});
+                   ^{ xcwm_input_mouse_motion
+                       (rootContext,
+                        [xNum intValue], 
+                        //Converting OSX coordinates to X11
+                        height - WINDOWBAR - [yNum intValue],
+                        0);});
 }
 
 - (void) keyDownInView: (NSNotification *) aNotification
@@ -196,10 +196,11 @@
     const char* charcharstar = [charNSString UTF8String];
 
     NSLog(@"%s pressed", charcharstar);
+    // FIXME: Uses a 'magic number' for offset into keymap - should a
+    // #define or gotten programmatically.
     dispatch_async(xcwmDispatchQueue, 
-                   ^{ xcwm_key_press(rootContext, 
-                                     (int)[event windowNumber],
-                                     aChar + 8) ;});
+                   ^{ xcwm_input_key_press(rootContext, 
+                                           aChar + 8) ;});
 }
 
 - (void) keyUpInView: (NSNotification *) aNotification
@@ -209,9 +210,9 @@
     NSEvent * event = [keyInfo objectForKey: @"1"];
     unsigned short aChar = [event keyCode];
 
+    // FIXME: Uses a 'magic number' for offset.
     dispatch_async(xcwmDispatchQueue, 
-                   ^{ xcwm_key_release(rootContext, 
-                                     (int)[event windowNumber],
+                   ^{ xcwm_input_key_release(rootContext, 
                                      aChar + 8) ;});
 }
  
@@ -232,14 +233,12 @@
     NSNumber * mouseButton = [NSNumber alloc];
     mouseButton = [mouseDownInfo objectForKey:@"3"];
     int buttonInt = [mouseButton intValue];
-    //NSLog(@"Mouse Info: %@", [mouseDownInfo objectForKey: @"2"]);
     
     dispatch_async(xcwmDispatchQueue, 
-                   ^{ xcwm_button_press (rootContext,
-                                         0,
-                                         0, 
-                                         (int)[event windowNumber],
-                                         buttonInt);;});
+                   ^{ xcwm_input_button_press (rootContext,
+                                               0,
+                                               0, 
+                                               buttonInt);;});
 }
 
 // on this side all I have is a xcwm_context , on the library side I need
@@ -248,24 +247,20 @@
 {
     CGFloat heightFloat;
     NSDictionary *mouseReleaseInfo = [aNotification userInfo];
-    // NSLog(@"Controller Got a XTOQmouseButtonDownEvent");
     NSEvent * event = [mouseReleaseInfo objectForKey: @"1"];
-    //NSRect bnd = NSMakeRect(0,0,512,386);
     NSNumber * heightAsNumber =  [NSNumber alloc];
     heightAsNumber = [mouseReleaseInfo objectForKey: @"2"];
     heightFloat = [heightAsNumber floatValue];
-    //NSLog(@"Mouse Info: %@", [mouseDownInfo objectForKey: @"2"]);
     
     NSNumber * mouseButton = [NSNumber alloc];
     mouseButton = [mouseReleaseInfo objectForKey:@"3"];
     int buttonInt = [mouseButton intValue];
     
     dispatch_async(xcwmDispatchQueue, 
-                   ^{ xcwm_button_release (rootContext,
-                                           0,
-                                           0,
-                                           (int)[event windowNumber],
-                                           buttonInt);;});
+                   ^{ xcwm_input_button_release (rootContext,
+                                                 0,
+                                                 0,
+                                                 buttonInt);;});
 }
 
 

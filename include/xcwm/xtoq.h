@@ -166,16 +166,15 @@ xcwm_close(void);
  * @param keyCode The key pressed.
  */
 void
-xcwm_key_press (xcwm_context_t *context, int window, uint8_t code);
+xcwm_input_key_press (xcwm_context_t *context, uint8_t code);
 
 /**
  * function
  * @param context xcwm_context_t 
- * @param window The window that the key press was made in.
  * @param keyCode The key released.
  */
 void
-xcwm_key_release (xcwm_context_t *context, int window, uint8_t code);
+xcwm_input_key_release (xcwm_context_t *context, uint8_t code);
 
 /**
  * Uses the XTEST protocol to send input events to the X Server (The X Server
@@ -185,10 +184,9 @@ xcwm_key_release (xcwm_context_t *context, int window, uint8_t code);
  * @param context xcwm_context_t 
  * @param x - x coordinate
  * @param y - y coordinate
- * @param window The window that the key press was made in.
  */
 void
-xcwm_button_press (xcwm_context_t *context, long x, long y, int window, int button);
+xcwm_input_button_press (xcwm_context_t *context, long x, long y, int button);
 
 /**
  * Uses the XTEST protocol to send input events to the X Server (The X Server
@@ -198,20 +196,19 @@ xcwm_button_press (xcwm_context_t *context, long x, long y, int window, int butt
  * @param context xcwm_context_t 
  * @param x - x coordinate
  * @param y - y coordinate
- * @param window The window that the key release was made in.
+ * @param button The id of the button pressed.
  */
 void
-xcwm_button_release (xcwm_context_t *context, long x, long y, int window, int button);
+xcwm_input_button_release (xcwm_context_t *context, long x, long y, int button);
 
 /**
  * function
  * @param context xcwm_context_t 
  * @param x - x coordinate
  * @param y - y coordinate
- * @param window The window that the key release was made in.
  */
 void
-xcwm_mouse_motion (xcwm_context_t *context, long x, long y, int window, int button);
+xcwm_input_mouse_motion (xcwm_context_t *context, long x, long y, int button);
 
 /****************
  * window.c
