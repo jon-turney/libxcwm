@@ -39,7 +39,6 @@ SOFTWARE.
     NSPoint currentPoint;
     
     NSNotificationCenter * notificationCenter;
-    NSTrackingArea * trackingArea;
 }
 
 /**
