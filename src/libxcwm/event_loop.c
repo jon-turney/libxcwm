@@ -42,9 +42,6 @@ pthread_t _event_thread = 0;
 
 pthread_mutex_t _event_thread_lock;
 
-/* Mutex lock supplied to clients */
-/* pthread_mutex_t _event_thread_lock = 0; */
-
 /* Functions only called within event_loop.c */
 void
 *run_event_loop(void *thread_arg_struct);
@@ -181,7 +178,9 @@ void *run_event_loop (void *thread_arg_struct)
 			case 0: {
 				/* Error case. Something very bad has happened. Spit
 				 * out some hopefully useful information and then
-				 * die. */
+				 * die.
+                 * FIXME: Decide under what circumstances we should
+                 * acutally kill the application. */
 				xcb_generic_error_t *err = (xcb_generic_error_t *)evt;
 				fprintf(stderr, "Error received in event loop.\n"
 						"Error code: %i\n",
@@ -196,9 +195,6 @@ void *run_event_loop (void *thread_arg_struct)
 							val_err->major_opcode,
 							val_err->minor_opcode);
 				}
-/* 				fprintf(stderr, "Exiting....\n"); */
-/* 				free(evt); */
-                /* exit(1); */
 				break;
 			}
             case XCB_EXPOSE: {
@@ -305,11 +301,13 @@ void *run_event_loop (void *thread_arg_struct)
     return NULL;
 }
 
-int xcwm_event_get_type(xcwm_event_t const *event) {
+int
+xcwm_event_get_type(xcwm_event_t const *event) {
     return event->event_type;
 }
 
-xcwm_context_t * xcwm_event_get_context(xcwm_event_t const *event) {
+xcwm_context_t *
+xcwm_event_get_context(xcwm_event_t const *event) {
     return event->context;
 }
 

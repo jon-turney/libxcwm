@@ -56,7 +56,8 @@ xcwm_set_window_to_top(xcwm_context_t *context) {
     const static uint32_t values[] = { XCB_STACK_MODE_ABOVE };
     
     /* Move the window on the top of the stack */
-    xcb_configure_window (context->conn, context->window, XCB_CONFIG_WINDOW_STACK_MODE, values);
+    xcb_configure_window (context->conn, context->window,
+                          XCB_CONFIG_WINDOW_STACK_MODE, values);
 }
 
 /* Set window to the bottom of the stack */
@@ -66,7 +67,8 @@ xcwm_set_window_to_bottom(xcwm_context_t *context) {
     const static uint32_t values[] = { XCB_STACK_MODE_BELOW };
     
     /* Move the window on the top of the stack */
-    xcb_configure_window (context->conn, context->window, XCB_CONFIG_WINDOW_STACK_MODE, values);
+    xcb_configure_window (context->conn, context->window,
+                          XCB_CONFIG_WINDOW_STACK_MODE, values);
 }
 
 /* Set input focus to window */ 
@@ -75,13 +77,16 @@ xcwm_set_input_focus(xcwm_context_t *context) {
     
     // Test -- David
     xcb_get_input_focus_cookie_t cookie = xcb_get_input_focus(context->conn);
-    xcb_get_input_focus_reply_t *reply = xcb_get_input_focus_reply(context->conn, cookie, NULL);
-    printf("Focus was in window #%d, now in #%d (window.c)\n", reply->focus, context->window);
+    xcb_get_input_focus_reply_t *reply =
+        xcb_get_input_focus_reply(context->conn, cookie, NULL);
+    printf("Focus was in window #%d, now in #%d (window.c)\n",
+           reply->focus, context->window);
     free(reply);
     
     // End test -- David
     
-    xcb_set_input_focus(context->conn, XCB_INPUT_FOCUS_PARENT, context->window, XCB_CURRENT_TIME);
+    xcb_set_input_focus(context->conn, XCB_INPUT_FOCUS_PARENT,
+                        context->window, XCB_CURRENT_TIME);
 	xcb_flush(context->conn);
 }
 
@@ -126,7 +131,8 @@ _xcwm_window_created(xcb_connection_t * conn, xcb_map_request_event_t *event) {
 xcwm_context_t *
 _xcwm_destroy_window(xcb_destroy_notify_event_t *event) {
     
-    xcwm_context_t *context = _xcwm_get_context_node_by_window_id(event->window);
+    xcwm_context_t *context =
+        _xcwm_get_context_node_by_window_id(event->window);
     if (!context) {
 		/* Window isn't being managed */
 		return NULL;
@@ -150,10 +156,16 @@ xcwm_configure_window(xcwm_context_t *context, int x, int y, int height, int wid
     context->width = width;
     context->height = height;
     
-    uint32_t values[] = {(uint32_t)x, (uint32_t)y, (uint32_t)width, (uint32_t)height };
+    uint32_t values[] = {(uint32_t)x, (uint32_t)y,
+                         (uint32_t)width, (uint32_t)height };
     
-    xcb_configure_window (context->conn, context->window, XCB_CONFIG_WINDOW_X 
-                          | XCB_CONFIG_WINDOW_Y | XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT, values);
+    xcb_configure_window (context->conn,
+                          context->window,
+                          XCB_CONFIG_WINDOW_X |
+                          XCB_CONFIG_WINDOW_Y |
+                          XCB_CONFIG_WINDOW_WIDTH |
+                          XCB_CONFIG_WINDOW_HEIGHT,
+                          values);
 
 	/* Set the damage area to the new window size so its redrawn properly */
 	context->damaged_width = width;
