@@ -60,11 +60,11 @@
     
     CGColorSpaceRef csp = CGColorSpaceCreateDeviceRGB();
     CGBitmapInfo bitmapInfo = kCGImageAlphaNoneSkipFirst | kCGBitmapByteOrder32Host;
-    cgImage = CGImageCreate (imageT->width,// size_t width,
+    cgImage = CGImageCreate (imageT->width,  // size_t width,
                              imageT->height, //size_t height,
-                             8, //size_t bitsPerComponent,
-                             32,//size_t bitsPerPixel,
-                             imageT->stride,//size_t bytesPerRow,
+                             8,  //size_t bitsPerComponent,
+                             32, //size_t bitsPerPixel,
+                             imageT->stride, //size_t bytesPerRow,
                              csp, //CGColorSpaceRef colorspace,
                              bitmapInfo,
                              cgdat,//CGDataProviderRef provider,
@@ -89,7 +89,6 @@
         NSLog(@"No image");
 		return NO;
 	}
-    //    CGContextDrawImage(contextMac, CGRectMake(imageX, imageY, width, height), cgImage);
     CGContextDrawImage(contextMac, CGRectMake(imageX, imageY, width, height), cgImage);
     
 	return YES;
@@ -124,9 +123,11 @@
 - (float)imageX{
     return imageX;
 }
+
 - (float)imageY{
     return imageY;
 }
+
 - (void)destroy{
     if (imageParent) {
         xcwm_image_destroy(imageParent);
