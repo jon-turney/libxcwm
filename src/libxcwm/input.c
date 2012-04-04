@@ -53,22 +53,22 @@ xcwm_input_key_release (xcwm_context_t *context, uint8_t code)
 }
 
 void
-xcwm_input_button_press (xcwm_context_t *context, long x, long y, int button)
+xcwm_input_mouse_button_event (xcwm_context_t *context,
+                               long x, long y,
+                               int button, int state)
 {
-    //xcb_window_t none = { XCB_NONE };
-    xcb_test_fake_input (context->conn, XCB_BUTTON_PRESS, button, XCB_CURRENT_TIME,
-                         context->window, 0, 0, 0);
-	xcb_flush(context->conn);
-    printf("button down received by xtoq.c - (%ld,%ld)\n", x, y);
-}
+    int button_state;
 
-void
-xcwm_input_button_release (xcwm_context_t *context, long x, long y, int button)
-{
-    xcb_test_fake_input (context->conn, XCB_BUTTON_RELEASE, button, XCB_CURRENT_TIME,
+    if (state) {
+        button_state = XCB_BUTTON_PRESS;
+    } else {
+        button_state = XCB_BUTTON_RELEASE;
+    }
+    xcb_test_fake_input (context->conn, button_state, button, XCB_CURRENT_TIME,
                          context->window, 0, 0, 0);
 	xcb_flush(context->conn);
-    printf("button release received by xcwm.c - (%ld,%ld)\n", x, y);
+    printf("Mouse event received by xtoq.c - (%ld,%ld), state: %d\n",
+           x, y, state);
 }
 
 void

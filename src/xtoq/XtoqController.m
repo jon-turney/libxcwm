@@ -171,9 +171,8 @@
 
     //CGFloat heightFloat;
     NSDictionary *mouseMoveInfo = [aNotification userInfo];
-    NSEvent * event = [mouseMoveInfo objectForKey: @"1"];
-    NSNumber *xNum =  [mouseMoveInfo objectForKey: @"2"];
-    NSNumber *yNum =  [mouseMoveInfo objectForKey: @"3"];
+    NSNumber *xNum =  [mouseMoveInfo objectForKey: @"1"];
+    NSNumber *yNum =  [mouseMoveInfo objectForKey: @"2"];
     
     int height = [[NSScreen mainScreen] frame].size.height;
         
@@ -235,10 +234,11 @@
     int buttonInt = [mouseButton intValue];
     
     dispatch_async(xcwmDispatchQueue, 
-                   ^{ xcwm_input_button_press (rootContext,
-                                               0,
-                                               0, 
-                                               buttonInt);;});
+                   ^{ xcwm_input_mouse_button_event (rootContext,
+                                                     0,
+                                                     0, 
+                                                     buttonInt,
+                                                     1);;});
 }
 
 // on this side all I have is a xcwm_context , on the library side I need
@@ -257,10 +257,11 @@
     int buttonInt = [mouseButton intValue];
     
     dispatch_async(xcwmDispatchQueue, 
-                   ^{ xcwm_input_button_release (rootContext,
-                                                 0,
-                                                 0,
-                                                 buttonInt);;});
+                   ^{ xcwm_input_mouse_button_event (rootContext,
+                                                     0,
+                                                     0,
+                                                     buttonInt,
+                                                     0);;});
 }
 
 

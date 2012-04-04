@@ -184,22 +184,12 @@ xcwm_input_key_release (xcwm_context_t *context, uint8_t code);
  * @param context xcwm_context_t 
  * @param x - x coordinate
  * @param y - y coordinate
+ * @param button The mouse button pressed.
+ * @param state 1 if the mouse button is pressed down, 0 if released.
  */
 void
-xcwm_input_button_press (xcwm_context_t *context, long x, long y, int button);
-
-/**
- * Uses the XTEST protocol to send input events to the X Server (The X Server
- * is usually in the position of sending input events to a client). The client
- * will often choose to send coordinates through mouse motion and set the params 
- * x & y to 0 here.
- * @param context xcwm_context_t 
- * @param x - x coordinate
- * @param y - y coordinate
- * @param button The id of the button pressed.
- */
-void
-xcwm_input_button_release (xcwm_context_t *context, long x, long y, int button);
+xcwm_input_mouse_button_event (xcwm_context_t *context, long x, long y,
+                               int button, int state);
 
 /**
  * function

@@ -96,10 +96,9 @@
 	xNum = [[NSNumber alloc] initWithFloat: location.x];
 	yNum = [[NSNumber alloc] initWithFloat: location.y];
             
-	InfoDict = [[NSMutableDictionary alloc] initWithCapacity:3];
-	[InfoDict setObject: event forKey:@"1"];
-	[InfoDict setObject: xNum forKey:@"2"];
-	[InfoDict setObject: yNum forKey:@"3"];
+	InfoDict = [[NSMutableDictionary alloc] initWithCapacity: 2];
+	[InfoDict setObject: xNum forKey: @"1"];
+	[InfoDict setObject: yNum forKey: @"2"];
             
 	[[NSNotificationCenter defaultCenter]
 	  postNotificationName: @"MouseMovedEvent" 

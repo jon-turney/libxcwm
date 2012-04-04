@@ -188,14 +188,13 @@ int XtoqApplicationMain(int argc, char** argv){
             xNum = [[NSNumber alloc] initWithFloat:ns_location.x];
             yNum = [[NSNumber alloc] initWithFloat:ns_location.y];
             
-            InfoDict = [[NSMutableDictionary alloc] initWithCapacity:3];
-            [InfoDict setObject:e forKey:@"1"];
-            [InfoDict setObject:xNum forKey:@"2"];
-            [InfoDict setObject:yNum forKey:@"3"];
+            InfoDict = [[NSMutableDictionary alloc] initWithCapacity: 2];
+            [InfoDict setObject:xNum forKey: @"1"];
+            [InfoDict setObject:yNum forKey: @"2"];
             
-            [notificationCenter postNotificationName:@"MouseMovedEvent" 
-                                              object:self 
-                                            userInfo:InfoDict];
+            [notificationCenter postNotificationName: @"MouseMovedEvent" 
+                                              object: self 
+                                            userInfo: InfoDict];
             break;
         }
         case NSKeyDown: case NSKeyUp: {
