@@ -61,7 +61,7 @@
     
 }
 
-- (void)applicationWillFinishLaunching:(NSNotification *)aNotification {
+- (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
   
     // setup X connection and get the initial image from the server
     rootContext = xcwm_init(screen);
@@ -160,7 +160,9 @@
     
 
     xcwmDispatchQueue = dispatch_queue_create("xcwm.dispatch.queue", NULL);
-    
+
+    // Start the event loop and set the handler function
+	xcwm_start_event_loop(rootContext, (void *) eventHandler);    
 }
 
 - (void)applicationWillTerminate:(NSNotification *)aNotification
@@ -178,10 +180,8 @@
     posix_spawn(&child, spawn[0], NULL, NULL, (char * const*)spawn, environ);
 }
 
-- (void) applicationDidFinishLaunching: (NSNotification *) aNotification
+- (void) applicationWillFinishLaunching: (NSNotification *) aNotification
 {
-    // Start the event loop and set the handler function
-	xcwm_start_event_loop(rootContext, (void *) eventHandler);
 }
 
 - (void) mouseMovedInApp: (NSNotification *) aNotification {
@@ -389,6 +389,7 @@
     pid_t child;
     const char *file_name = [filename UTF8String];
     const char *newargv[6];
+	char *exec_path;
     
     // Xman Special case
     if ([filename isEqualToString:@"xman"]) {
@@ -396,7 +397,10 @@
         setenv("MANPATH", manpath, 1);
     }
     
-    newargv[0] = file_name;
+	// FIXME: Doesn't seem like we should be relying on an absolute path,
+	// but just sending the executable name doesn't always work.
+	asprintf(&exec_path, "/usr/X11/bin/%s", file_name);
+    newargv[0] = exec_path;
     newargv[1] = "-display";
     newargv[2] = screen;
     
@@ -409,7 +413,8 @@
         newargv[3] = NULL;
     }
     
-    status = posix_spawnp(&child, newargv[0], NULL, NULL, (char * const *) newargv, environ);
+    status = posix_spawnp(&child, newargv[0], NULL, NULL,
+						  (char * const *) newargv, environ);
     if(status) {
         NSLog(@"Error spawning file for launch.");
     }
