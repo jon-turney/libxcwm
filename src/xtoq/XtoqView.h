@@ -32,39 +32,40 @@
 #import <xcwm/xcwm.h>
 
 @interface XtoqView : NSView {
-    xcwm_context_t *viewContext;
-
+    xcwm_window_t *viewXcwmWindow;
+    xcwm_context_t *viewXcwmContext;
     //mouse event
     NSPoint downPoint;
     NSPoint currentPoint;
 
     NSNotificationCenter * notificationCenter;
-    NSTrackingArea * trackingArea;
 }
 
 /**
  * Intialize the view given its bounds
  * @param an NSRect with the bounds (size) of the view
  */
-- (id)initWithFrame:(NSRect)frame;
+- (id)initWithFrame: (NSRect)frame;
 
 /**
- * Set the context associated with this view.
- * @param context The context
+ * Set the xcwm_window_t and xcwm_context_t associated with this view.
+ * @param xcwmWindow The xcwm_window_t for this view.
+ * @param xcwmContext The xcwm_context_t for this view.
  */
--(void)setContext:(xcwm_context_t *)context;
+-(void)setXcwmWindow: (xcwm_window_t *)xcwmWindow
+      andXcwmContext: (xcwm_context_t *)xcwmContext;
 
 /**
  * The OS X magic loop which is responsible for drawing content to the screen
  * @param a "fake" NSRect which is not actually used within the body of the
  * method
  */
--(void)drawRect:(NSRect)dirtyRect;
+-(void)drawRect: (NSRect)dirtyRect;
 
 /**
  * Set the partial image contents in the view
  * @param newDamageRect The area of the image that needs to be redrawn
  */
-- (void)setPartialImage:(NSRect)newDamageRect;
+- (void)setPartialImage: (NSRect)newDamageRect;
 
 @end

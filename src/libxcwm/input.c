@@ -29,82 +29,51 @@
 #include "xcwm_internal.h"
 
 void
-xcwm_key_press(xcwm_context_t *context, int window, uint8_t code)
+xcwm_input_key_event(xcwm_context_t *context, uint8_t code, int state)
 {
-    xcb_generic_error_t *err;
-    xcb_void_cookie_t cookie;
     xcb_window_t none = { XCB_NONE };
+    int key_state;
 
-    cookie = xcb_test_fake_input(context->conn, XCB_KEY_PRESS, code,
-                                 XCB_CURRENT_TIME, none, 0, 0, 1);
-
-    err = xcb_request_check(context->conn, cookie);
-    if (err) {
-        printf("err ");
-        free(err);
+    if (state) {
+        key_state = XCB_KEY_PRESS;
     }
-    xcb_flush(context->conn);
-    printf(
-        "xcwm.c received key down - uint8_t '%i', from Mac window #%i to context.window %u\n",
-        code, window, context->window);
-}
+    else {
+        key_state = XCB_KEY_RELEASE;
+    }
 
-void
-xcwm_key_release(xcwm_context_t *context, int window, uint8_t code)
-{
-    xcb_generic_error_t *err;
-    xcb_void_cookie_t cookie;
-    xcb_window_t none = { XCB_NONE };
-
-    xcb_test_fake_input(context->conn, XCB_KEY_RELEASE, code,
+    xcb_test_fake_input(context->conn, key_state, code,
                         XCB_CURRENT_TIME, none, 0, 0, 1);
 
-    err = xcb_request_check(context->conn, cookie);
-    if (err) {
-        printf("err ");
-        free(err);
+    xcb_flush(context->conn);
+    printf("xcwm.c received key event - uint8_t '%i'\n", code);
+}
+
+void
+xcwm_input_mouse_button_event(xcwm_context_t *context, xcwm_window_t *window,
+                              long x, long y,
+                              int button, int state)
+{
+    int button_state;
+
+    if (state) {
+        button_state = XCB_BUTTON_PRESS;
     }
+    else {
+        button_state = XCB_BUTTON_RELEASE;
+    }
+    /* FIXME: Why are we passing a specifing window ID here, when
+     * other handlers use either the root window or none. */
+    xcb_test_fake_input(context->conn, button_state, button, XCB_CURRENT_TIME,
+                        window->window_id, 0, 0, 0);
     xcb_flush(context->conn);
-    printf(
-        "xcwm.c received key release- uint8_t '%i', from Mac window #%i to context.window %u\n",
-        code, window, context->window);
+    printf("Mouse event received by xtoq.c - (%ld,%ld), state: %d\n",
+           x, y, state);
 }
 
 void
-xcwm_button_press(xcwm_context_t *context, long x, long y, int window,
-                  int button)
-{
-    //xcb_window_t none = { XCB_NONE };
-    xcb_test_fake_input(context->conn, XCB_BUTTON_PRESS, 1, XCB_CURRENT_TIME,
-                        context->window, 0, 0, 0);
-    xcb_flush(context->conn);
-    printf("button down received by xcwm.c - (%ld,%ld) in Mac window #%i\n",
-           x, y,
-           window);
-}
-
-void
-xcwm_button_release(xcwm_context_t *context, long x, long y, int window,
-                    int button)
-{
-    xcb_test_fake_input(context->conn, XCB_BUTTON_RELEASE, 1,
-                        XCB_CURRENT_TIME,
-                        context->window, 0, 0,
-                        0);
-    xcb_flush(context->conn);
-    printf(
-        "button release received by xcwm.c - (%ld,%ld) in Mac window #%i\n",
-        x, y,
-        window);
-}
-
-void
-xcwm_mouse_motion(xcwm_context_t *context, long x, long y, int window,
-                  int button)
+xcwm_input_mouse_motion(xcwm_context_t *context, long x, long y, int button)
 {
     xcb_test_fake_input(context->conn, XCB_MOTION_NOTIFY, 0, XCB_CURRENT_TIME,
-                        root_context->window //root_context->window//none//context->parent
-                        , x, y, 0);
+                        context->root_window->window_id, x, y, 0);
     xcb_flush(context->conn);
-    //printf("mouse motion received by xcwm.c - (%ld,%ld) in Mac window #%i\n", x, y, window);
 }

@@ -55,6 +55,14 @@ xcwm_context_t *
 xcwm_event_get_context(xcwm_event_t const *event);
 
 /**
+ * Return the window for the given event.
+ * @param event The event
+ * @return The window connected to the event.
+ */
+xcwm_window_t *
+xcwm_event_get_window(xcwm_event_t const *event);
+
+/**
  * Starts the event loop and listens on the connection specified in
  * the given xcwm_context_t. Uses callback as the function to call
  * when an event of interest is received. Callback must be able to

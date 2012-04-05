@@ -27,10 +27,10 @@
 
 @implementation XtoqWindow
 
--(id) initWithContentRect:(NSRect)contentRect
-                styleMask:(NSUInteger)aStyle
-                  backing:(NSBackingStoreType)bufferingType
-                    defer:(BOOL)flag
+-(id) initWithContentRect: (NSRect)contentRect
+                styleMask: (NSUInteger)aStyle
+                  backing: (NSBackingStoreType)bufferingType
+                    defer: (BOOL)flag
 {
 
     notificationCenter = [NSNotificationCenter defaultCenter];
@@ -44,47 +44,74 @@
      object: self];
     // End Hack job -- David
 
-    XtoqWindow *result = [super initWithContentRect:contentRect
-                                          styleMask:aStyle
-                                            backing:bufferingType
-                                              defer:flag];
+    XtoqWindow *result = [super initWithContentRect: contentRect
+                                          styleMask: aStyle
+                                            backing: bufferingType
+                                              defer: flag];
+    [self setAcceptsMouseMovedEvents: YES];
     return result;
 }
 
--(void) makeKeyAndOrderFront:(id)sender
+-(void) makeKeyAndOrderFront: (id)sender
 {
-    [super makeKeyAndOrderFront:sender];
+    [super makeKeyAndOrderFront: sender];
 }
 
--(void) setContext:(xcwm_context_t *)aContext
+-(void) setXcwmWindow: (xcwm_window_t *) aWindow
+       andXcwmContext: (xcwm_context_t *) aContext
 {
-    winContext = aContext;
+    xcwmWindow = aWindow;
+    xcwmContext = aContext;
 }
 
--(xcwm_context_t *) getContext
+-(xcwm_window_t *) getXcwmWindow
 {
-    return winContext;
+    return xcwmWindow;
 }
 
-- (BOOL) windowShouldClose:(id)sender
+- (BOOL) windowShouldClose: (id)sender
 {
     // send notification to controller to close the window
     XtoqWindow * aWindow = self;
-    NSDictionary * dictionary = [NSDictionary dictionaryWithObject:aWindow
-                                                            forKey:@"1"];
-    [notificationCenter postNotificationName:@"XTOQdestroyTheWindow"
-                                      object:self
-                                    userInfo:dictionary];
+    NSDictionary * dictionary = [NSDictionary dictionaryWithObject: aWindow
+                                                            forKey: @"1"];
+    [notificationCenter postNotificationName: @"XTOQdestroyTheWindow"
+                                      object: self
+                                    userInfo: dictionary];
 
     // keep window from closing till server tells it to
     return NO;
 }
 
--(void)windowDidBecomeKey:(NSNotification *)note
+-(void)windowDidBecomeKey: (NSNotification *)note
 {
 
-    xcwm_set_input_focus(winContext);
-    xcwm_set_window_to_top(winContext);
+    xcwm_set_input_focus(xcwmContext, xcwmWindow);
+    xcwm_set_window_to_top(xcwmContext, xcwmWindow);
+}
+
+-(void) mouseMoved: (NSEvent *) event
+{
+    NSMutableDictionary *InfoDict;
+    NSNumber *xNum, *yNum;
+
+    NSPoint location = [event locationInWindow];
+    NSRect frame = [self frame];
+
+    location.x += frame.origin.x;
+    location.y += frame.origin.y;
+
+    xNum = [[NSNumber alloc] initWithFloat: location.x];
+    yNum = [[NSNumber alloc] initWithFloat: location.y];
+
+    InfoDict = [[NSMutableDictionary alloc] initWithCapacity: 2];
+    [InfoDict setObject: xNum forKey: @"1"];
+    [InfoDict setObject: yNum forKey: @"2"];
+
+    [[NSNotificationCenter defaultCenter]
+     postNotificationName: @"MouseMovedEvent"
+                   object: self
+                 userInfo: InfoDict];
 }
 
 @end

@@ -35,7 +35,6 @@
 #import "XtoqController.h"
 
 #define WINDOWBAR 22
-#define FILEBAR   23
 
 @implementation XtoqController
 
@@ -64,7 +63,7 @@
 
 }
 
-- (void)applicationWillFinishLaunching:(NSNotification *)aNotification
+- (void)applicationDidFinishLaunching:(NSNotification *)aNotification
 {
 
     // setup X connection and get the initial image from the server
@@ -74,10 +73,12 @@
      setImageInterpolation:NSImageInterpolationHigh];
 
     xcwmWindow = [[XtoqWindow alloc]
-                  initWithContentRect: NSMakeRect(rootContext->x,
-                                                  rootContext->y,
-                                                  rootContext->width,
-                                                  rootContext->height)
+                  initWithContentRect: NSMakeRect(rootContext->root_window->x,
+                                                  rootContext->root_window->y,
+                                                  rootContext->root_window->
+                                                  width,
+                                                  rootContext->root_window->
+                                                  height)
                   styleMask: (NSTitledWindowMask |
                               NSClosableWindowMask |
                               NSMiniaturizableWindowMask |
@@ -85,28 +86,23 @@
                   backing: NSBackingStoreBuffered
                   defer: YES];
 
-    [xcwmWindow setContext: rootContext];
-    rootContext->local_data = xcwmWindow;
+    [xcwmWindow setXcwmWindow: rootContext->root_window
+               andXcwmContext: rootContext];
+    rootContext->root_window->local_data = xcwmWindow;
     // Make the menu
     [self makeMenu];
 
-    //create an XtoqImageRep with the information from X
-    //libImageT = xcwm_get_image(rootContext);
-    //image = [[XtoqImageRep alloc] initWithData:libImageT x:0 y:0];
-    //draw the image into a rect
-    imageRec = NSMakeRect(0, 0, 1028, 768); //[image getWidth], [image getHeight]);
+    // FIXME: Since this is the root window, should be getting width
+    // and height from the size of the root window, not hard-coded
+    // values.
+    imageRec = NSMakeRect(0, 0, 1028, 768);
     // create a view, init'ing it with our rect
     ourView = [[XtoqView alloc] initWithFrame:imageRec];
-    [ourView setContext: rootContext];
+    [ourView setXcwmWindow: rootContext->root_window
+            andXcwmContext: rootContext];
 
     // add view to its window
     [xcwmWindow setContentView: ourView];
-    // set the initial image in the window
-    //[ourView setImage:image];
-
-    originalWidth = [image getWidth];
-    originalHeight = [image getHeight];
-    //[ourView setPartialImage:imageNew];
 
     NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
 
@@ -114,6 +110,11 @@
     [nc addObserver: self
            selector: @selector(keyDownInView:)
                name: @"XTOQviewKeyDownEvent"
+             object: nil];
+
+    [nc addObserver: self
+           selector: @selector(keyUpInView:)
+               name: @"XTOQviewKeyUpEvent"
              object: nil];
 
     [nc addObserver: self
@@ -130,18 +131,11 @@
            selector: @selector(mouseMovedInApp:)
                name: @"MouseMovedEvent"
              object: nil];
-
     // register for destroy event
     [nc addObserver: self
            selector: @selector(destroy:)
                name: @"XTOQdestroyTheWindow"
              object: nil];
-
-    // regester for window will/did movement notification
-    [nc addObserver:self
-           selector:@selector(windowWillMove:)
-               name:NSWindowWillMoveNotification
-             object:nil];
 
     [nc addObserver:self
            selector:@selector(windowDidMove:)
@@ -153,22 +147,22 @@
            selector:@selector(windowDidResize:)
                name:NSWindowDidResizeNotification
              object:nil];
-    /* [nc addObserver:self
-                  selector:@selector(applicationWillTerminate:)
-                              name:NSApplicationWillTerminateNotification object:nil]; */
 
     xcwmDispatchQueue = dispatch_queue_create("xcwm.dispatch.queue", NULL);
 
+    // Start the event loop and set the handler function
+    xcwm_start_event_loop(rootContext, (void *)eventHandler);
 }
 
 - (void)applicationWillTerminate:(NSNotification *)aNotification
 {
-    xcwm_close();
+    xcwm_close(rootContext);
 
     const char *spawn[4];
     pid_t child;
-    int error = 0;
 
+    // FIXME: This clobbers all instantances of the xserver. Not what
+    // we want to do.
     spawn[0] = "/usr/bin/killall";
     spawn[1] = "-9";
     spawn[2] = "Xorg";
@@ -177,44 +171,27 @@
     posix_spawn(&child, spawn[0], NULL, NULL, (char *const *)spawn, environ);
 }
 
-- (void) applicationDidFinishLaunching: (NSNotification *) aNotification
-{
-    [xcwmWindow makeKeyAndOrderFront: self];
-
-    //hide window
-    [xcwmWindow orderOut:self];
-
-    // Start the event loop and set the handler function
-    xcwm_start_event_loop(rootContext, (void *)eventHandler);
-}
+- (void) applicationWillFinishLaunching: (NSNotification *) aNotification
+{}
 
 - (void) mouseMovedInApp: (NSNotification *) aNotification
 {
 
     //CGFloat heightFloat;
     NSDictionary *mouseMoveInfo = [aNotification userInfo];
-    NSEvent * event = [mouseMoveInfo objectForKey: @"1"];
-    NSNumber * xVal = [NSNumber alloc];
-    NSNumber * yVal = [NSNumber alloc];
-    xVal = [mouseMoveInfo objectForKey: @"2"];
-    yVal = [mouseMoveInfo objectForKey: @"3"];
+    NSNumber *xNum = [mouseMoveInfo objectForKey: @"1"];
+    NSNumber *yNum = [mouseMoveInfo objectForKey: @"2"];
 
-    float height = [[NSScreen mainScreen] frame].size.height;
-
-    int yInt = height - FILEBAR - [yVal intValue];
-    yVal = [[NSNumber alloc] initWithInt:yInt];
-
-    NSLog(@"Mouse x = %i, y = %i", [xVal intValue], [yVal intValue]);
+    int height = [[NSScreen mainScreen] frame].size.height;
 
     dispatch_async(xcwmDispatchQueue,
-                   ^{ xcwm_mouse_motion (rootContext,
-                                         [xVal intValue],
-                                         [yVal intValue],
-                                         (int)[event windowNumber],
-                                         0);
-                      ;
+                   ^{ xcwm_input_mouse_motion
+                      (rootContext,
+                       [xNum intValue],
+                       //Converting OSX coordinates to X11
+                       height - WINDOWBAR - [yNum intValue],
+                       0);
                    });
-
 }
 
 - (void) keyDownInView: (NSNotification *) aNotification
@@ -227,15 +204,27 @@
     const char* charcharstar = [charNSString UTF8String];
 
     NSLog(@"%s pressed", charcharstar);
+    // FIXME: Uses a 'magic number' for offset into keymap - should a
+    // #define or gotten programmatically.
     dispatch_async(xcwmDispatchQueue,
-                   ^{ xcwm_key_press (rootContext,
-                                      (int)[event windowNumber],
-                                      aChar + 8);
+                   ^{ xcwm_input_key_event (rootContext,
+                                            aChar + 8,
+                                            1);
                    });
+}
+
+- (void) keyUpInView: (NSNotification *) aNotification
+{
+    NSDictionary *keyInfo = [aNotification userInfo];
+    // note this keyInfo is the key in <key, value> not the key pressed
+    NSEvent * event = [keyInfo objectForKey: @"1"];
+    unsigned short aChar = [event keyCode];
+
+    // FIXME: Uses a 'magic number' for offset.
     dispatch_async(xcwmDispatchQueue,
-                   ^{ xcwm_key_release (rootContext,
-                                        (int)[event windowNumber],
-                                        aChar + 8);
+                   ^{ xcwm_input_key_event (rootContext,
+                                            aChar + 8,
+                                            0);
                    });
 }
 
@@ -247,20 +236,23 @@
     NSDictionary *mouseDownInfo = [aNotification userInfo];
     // NSLog(@"Controller Got a XTOQmouseButtonDownEvent");
     NSEvent * event = [mouseDownInfo objectForKey: @"1"];
+    xcwm_window_t *window = [(XtoqWindow *)[event window] getXcwmWindow];
 
     NSNumber * heightAsNumber = [NSNumber alloc];
     heightAsNumber = [mouseDownInfo objectForKey: @"2"];
     heightFloat = [heightAsNumber floatValue];
-    //NSLog(@"Mouse Info: %@", [mouseDownInfo objectForKey: @"2"]);
 
-    float height = [[NSScreen mainScreen] frame].size.height;
+    NSNumber * mouseButton = [NSNumber alloc];
+    mouseButton = [mouseDownInfo objectForKey:@"3"];
+    int buttonInt = [mouseButton intValue];
 
     dispatch_async(xcwmDispatchQueue,
-                   ^{ xcwm_button_press (rootContext,
-                                         0,
-                                         0,
-                                         (int)[event windowNumber],
-                                         0);
+                   ^{ xcwm_input_mouse_button_event (rootContext,
+                                                     window,
+                                                     0,
+                                                     0,
+                                                     buttonInt,
+                                                     1);
                       ;
                    });
 }
@@ -271,29 +263,33 @@
 {
     CGFloat heightFloat;
     NSDictionary *mouseReleaseInfo = [aNotification userInfo];
-    // NSLog(@"Controller Got a XTOQmouseButtonDownEvent");
     NSEvent * event = [mouseReleaseInfo objectForKey: @"1"];
-    //NSRect bnd = NSMakeRect(0,0,512,386);
+    xcwm_window_t *window = [(XtoqWindow *)[event window] getXcwmWindow];
+
     NSNumber * heightAsNumber = [NSNumber alloc];
     heightAsNumber = [mouseReleaseInfo objectForKey: @"2"];
     heightFloat = [heightAsNumber floatValue];
-    //NSLog(@"Mouse Info: %@", [mouseDownInfo objectForKey: @"2"]);
 
-    float height = [[NSScreen mainScreen] frame].size.height;
+    NSNumber * mouseButton = [NSNumber alloc];
+    mouseButton = [mouseReleaseInfo objectForKey:@"3"];
+    int buttonInt = [mouseButton intValue];
 
     dispatch_async(xcwmDispatchQueue,
-                   ^{ xcwm_button_release (rootContext,
-                                           0,
-                                           0,
-                                           (int)[event windowNumber],
-                                           0);
+                   ^{ xcwm_input_mouse_button_event (rootContext,
+                                                     window,
+                                                     0,
+                                                     0,
+                                                     buttonInt,
+                                                     0);
                       ;
                    });
 }
 
 - (void) setScreen:(char *)scrn
 {
-    screen = scrn;
+    free(screen);
+    screen = strdup(scrn);
+    setenv("DISPLAY", screen, 1);
 }
 
 - (void) makeMenu
@@ -372,6 +368,15 @@
     [startXMenu addItem:xtermMenuItem];
     [startXApps setSubmenu:startXMenu];
 
+    // Run Xman
+    NSMenuItem *xmanMenuItem;
+    xTitle = @"Run Xman";
+    xmanMenuItem = [[NSMenuItem alloc] initWithTitle:xTitle
+                                              action:@selector(runXman:)
+                                       keyEquivalent:@""];
+    [startXMenu addItem:xmanMenuItem];
+    [startXApps setSubmenu:startXMenu];
+
     // Adding all the menu items to the main menu for XtoQ.
     [menubar addItem:appMenuItem];
     [menubar addItem:startXApps];
@@ -383,16 +388,34 @@
     int status;
     pid_t child;
     const char *file_name = [filename UTF8String];
-    const char *newargv[4];
+    const char *newargv[6];
+    char *exec_path;
 
-    asprintf(&newargv[0], "/usr/X11/bin/%s", file_name);
+    // Xman Special case
+    if ([filename isEqualToString:@"xman"]) {
+        const char *manpath =
+            "/opt/local/share/man:/usr/share/man:/usr/local/share/man:/opt/X11/share/man:/usr/X11/man:/usr/local/git/share/man";
+        setenv("MANPATH", manpath, 1);
+    }
+
+    // FIXME: Doesn't seem like we should be relying on an absolute path,
+    // but just sending the executable name doesn't always work.
+    asprintf(&exec_path, "/usr/X11/bin/%s", file_name);
+    newargv[0] = exec_path;
     newargv[1] = "-display";
     newargv[2] = screen;
-    newargv[3] = NULL;
 
-    status =
-        posix_spawn(&child, newargv[0], NULL, NULL, (char *const *)newargv,
-                    environ);
+    if ([filename isEqualToString:@"xclock"]) {
+        newargv[3] = "-update";
+        newargv[4] = "1";
+        newargv[5] = NULL;
+    }
+    else {
+        newargv[3] = NULL;
+    }
+
+    status = posix_spawnp(&child, newargv[0], NULL, NULL,
+                          (char *const *)newargv, environ);
     if (status) {
         NSLog(@"Error spawning file for launch.");
     }
@@ -414,9 +437,13 @@
 {
     [self launch_client:@"xterm"];
 }
+-(void) runXman:(id) sender
+{
+    [self launch_client:@"xman"];
+}
 
 // create a new window
-- (void) createNewWindow: (xcwm_context_t *) windowContext
+- (void) createNewWindow: (xcwm_window_t *) window
 {
 
     XtoqWindow   *newWindow;
@@ -424,30 +451,29 @@
     xcwm_image_t *xcbImage;
     XtoqImageRep *imageRep;
 
-    int y =
-        [self xserverToOSX:windowContext->y windowHeight:windowContext->
-         height];
+    int y = [self xserverToOSX: window->y windowHeight:window->height];
 
     newWindow = [[XtoqWindow alloc]
-                 initWithContentRect: NSMakeRect(windowContext->x, y,
-                                                 windowContext->width,
-                                                 windowContext->height)
-                 styleMask: (NSTitledWindowMask |
+                 initWithContentRect: NSMakeRect(window->x, y,
+                                                 window->width,
+                                                 window->height)
+                           styleMask: (NSTitledWindowMask |
                              NSClosableWindowMask |
                              NSMiniaturizableWindowMask |
                              NSResizableWindowMask)
-                 backing: NSBackingStoreBuffered
-                 defer: YES];
+                             backing: NSBackingStoreBuffered
+                               defer: YES];
 
-    // save context in window
-    [newWindow setContext:windowContext];
+    // save xcwm_window_t in the XtoqWindow
+    [newWindow setXcwmWindow: window
+              andXcwmContext: rootContext];
 
     // save the newWindow pointer into the context
-    windowContext->local_data = (id)newWindow;
+    window->local_data = (id)newWindow;
 
     // get image to darw
-    xcbImage = xcwm_get_image(windowContext);
-    imageRep = [[XtoqImageRep alloc] initWithData:xcbImage x: 0 y: 0];
+    xcbImage = test_xcwm_get_image(rootContext, window);
+    imageRep = [[XtoqImageRep alloc] initWithData: xcbImage x: 0 y: 0];
 
     // draw the image into a rect
     NSRect imgRec = NSMakeRect(0, 0, [imageRep getWidth],
@@ -455,28 +481,27 @@
 
     // create a view, init'ing it with our rect
     newView = [[XtoqView alloc] initWithFrame:imgRec];
-    [newView setContext:windowContext];
+    [newView setXcwmWindow: window
+            andXcwmContext: rootContext];
 
     // add view to its window
     [newWindow setContentView: newView];
 
     // set title
     NSString *winTitle;
-    winTitle =
-        [NSString stringWithCString:windowContext->name encoding:
-         NSUTF8StringEncoding
-        ];
-    [newWindow setTitle:winTitle];
+    winTitle = [NSString stringWithCString: window->name
+                                  encoding: NSUTF8StringEncoding];
+    [newWindow setTitle: winTitle];
 
     //shows the window
-    [newWindow makeKeyAndOrderFront:self];
+    [newWindow makeKeyAndOrderFront: self];
 
 }
 
-- (void) destroyWindow:(xcwm_context_t *) windowContext
+- (void) destroyWindow:(xcwm_window_t *) window
 {
     // set the window to be closed
-    XtoqWindow *destWindow = windowContext->local_data;
+    XtoqWindow *destWindow = window->local_data;
     //close window
     [destWindow close];
 }
@@ -486,33 +511,28 @@
 
     NSDictionary *contextInfo = [aNotification userInfo];
     XtoqWindow *aWindow = [contextInfo objectForKey: @"1"];
-    xcwm_context_t *theContext = [aWindow getContext];
 
     //use dispatch_async() to handle the actual close
     dispatch_async(xcwmDispatchQueue, ^{
                        NSLog (@"Call xcwm_request_close(theContext)");
-                       xcwm_request_close (theContext);
+                       xcwm_request_close (rootContext,
+                                           [aWindow getXcwmWindow]);
                    });
 }
 
-- (void) windowWillMove:(NSNotification *)notification
-{
-    //NSLog(@"window will move");
-}
-- (void) updateImage:(xcwm_context_t *) windowContext
+- (void) updateImage:(xcwm_window_t *) window
 {
     float y_transformed;
     NSRect newDamageRect;
 
-    y_transformed =
-        (windowContext->height - windowContext->damaged_y -
-         windowContext->damaged_height) / 1.0;
-    newDamageRect = NSMakeRect(windowContext->damaged_x,
+    y_transformed = (window->height - window->damaged_y
+                     - window->damaged_height) / 1.0;
+    newDamageRect = NSMakeRect(window->damaged_x,
                                y_transformed,
-                               windowContext->damaged_width,
-                               windowContext->damaged_height);
+                               window->damaged_width,
+                               window->damaged_height);
     XtoqView *localView =
-        (XtoqView *)[(XtoqWindow *)windowContext->local_data contentView];
+        (XtoqView *)[(XtoqWindow *)window->local_data contentView];
     [localView setPartialImage:newDamageRect];
 }
 
@@ -532,17 +552,17 @@
     XtoqWindow *moveWindow = (XtoqWindow *)[NSApp mainWindow];
 
     if (moveWindow != nil) {
-        xcwm_context_t *moveContext = [moveWindow getContext];
+        xcwm_window_t *window = [moveWindow getXcwmWindow];
         NSRect moveFrame = [moveWindow frame];
         int x = (int)moveFrame.origin.x;
-        int y = [self osxToXserver:(int)moveFrame.origin.y
-                      windowHeight:moveContext->height] - WINDOWBAR;
+        int y = [self osxToXserver: (int)moveFrame.origin.y
+                      windowHeight: window->height] - WINDOWBAR;
         int width = (int)moveFrame.size.width;
         int height = (int)moveFrame.size.height - WINDOWBAR;
-        NSLog(
-            @"Call xcwm_configure_window(moveContext, x = %i, y = %i, height = %i, width = %i)",
-            x, y, height, width);
-        xcwm_configure_window(moveContext, x, y - height, height, width);
+
+        xcwm_configure_window(rootContext, window,
+                              x, y - height, height, width);
+        [[moveWindow contentView] setNeedsDisplay: YES];
     }
 }
 
@@ -551,20 +571,20 @@
 void
 eventHandler(xcwm_event_t *event)
 {
-    xcwm_context_t *context = xcwm_event_get_context(event);
+    xcwm_window_t *window = xcwm_event_get_window(event);
     if (xcwm_event_get_type(event) == XTOQ_DAMAGE) {
-        [referenceToSelf updateImage: context];
+        [referenceToSelf updateImage: window];
     }
     else if (xcwm_event_get_type(event) == XTOQ_CREATE) {
         NSLog(@"Window was created");
-        [referenceToSelf createNewWindow: context];
+        [referenceToSelf createNewWindow: window];
     }
     else if (xcwm_event_get_type(event) == XTOQ_DESTROY) {
         NSLog(@"Window was destroyed");
-        [referenceToSelf destroyWindow: context];
+        [referenceToSelf destroyWindow: window];
     }
     else {
-        NSLog(@"Hey I'm Not damage!");
+        NSLog(@"Unknown event type received.");
     }
     free(event);
 }

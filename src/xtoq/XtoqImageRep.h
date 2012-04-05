@@ -56,14 +56,14 @@
  * @param imageData The image from the Xserver that you want drawn
  * @return No if image from the xserver is null else Yes
  */
-- (BOOL)canInitWithData:(xcb_image_t *)imageData;
+- (BOOL)canInitWithData: (xcb_image_t *)imageData;
 
 /**
  * Return the image it has constructed from the imageData
  * @param imageData The image from the Xserver that you want drawn
  * @return id It returns its own id
  */
-- (id)initWithData:(xcwm_image_t *)imageData x:(int)x y:(int)y;
+- (id)initWithData: (xcwm_image_t *)imageData x:(int)x y:(int)y;
 
 /**
  * Return whether the window was drawn
@@ -81,7 +81,7 @@
 - (CGFloat)getWidth;
 
 - (CGFloat)getHeight;
-- (BOOL)drawInRect:(NSRect)rect;
+- (BOOL)drawInRect: (NSRect)rect;
 
 - (void)destroy;
 

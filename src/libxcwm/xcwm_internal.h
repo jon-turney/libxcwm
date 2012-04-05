@@ -143,9 +143,8 @@ xcb_query_extension_reply_t *
 _xcwm_init_extension(xcb_connection_t *conn, char *extension_name);
 
 /**
- * Initializes damage on a window contained in a context.
- * The context will likely contain the root window.
- * @param contxt A context containing a window
+ * Initializes the damage extension.
+ * @param contxt  The context containing.
  */
 void
 _xcwm_init_damage(xcwm_context_t *contxt);
@@ -201,38 +200,38 @@ _xcwm_stop_event_loop(void);
  * A structure (doubly linked list) to hold
  * pointers to the contexts
  */
-typedef struct _xcwm_context_node {
-    struct xcwm_context_t *context;   /**< Pointer to a context */
-    struct _xcwm_context_node * next; /**< Pointer to the next context node */
-    struct _xcwm_context_node * prev; /**< Pointer to the previous context node */
-} _xcwm_context_node;
+typedef struct _xcwm_window_node {
+    struct xcwm_window_t *window;   /**< Pointer to a window */
+    struct _xcwm_window_node * next; /**< Pointer to the next window node */
+    struct _xcwm_window_node * prev; /**< Pointer to the previous window node */
+} _xcwm_window_node;
 
 /* this is the head pointer */
-extern _xcwm_context_node *_xcwm_window_list_head;
+extern _xcwm_window_node *_xcwm_window_list_head;
 
 /**
- * Add a newly created context to the context_list.
- * @param context The context to be added to the linked list
- * @return Pointer to context added to the list.
+ * Add a newly created window to the context_list.
+ * @param window The window to be added to the linked list
+ * @return Pointer to window added to the list.
  */
-xcwm_context_t *
-_xcwm_add_context_t(struct xcwm_context_t *context);
+xcwm_window_t *
+_xcwm_add_window(xcwm_window_t *window);
 
 /**
  * Remove a context to the context_list using the window's id.
- * @param window_id The window_id of the context which should
+ * @param window_id The window_id of the window which should
  * be removed from the context_list
  */
 void
-_xcwm_remove_context_node(xcb_window_t window_id);
+_xcwm_remove_window_node(xcb_window_t window_id);
 
 /**
  * Find a context in the doubly linked list using its window_id.
  * @param window_id The window_id of the context which should
- * @return Pointer to context (if found), NULL if not found.
+ * @return Pointer to window (if found), NULL if not found.
  */
-xcwm_context_t *
-_xcwm_get_context_node_by_window_id(xcb_window_t window_id);
+xcwm_window_t *
+_xcwm_get_window_node_by_window_id(xcb_window_t window_id);
 
 /****************
 * window.c
@@ -242,20 +241,22 @@ _xcwm_get_context_node_by_window_id(xcb_window_t window_id);
  * Create a new context for the window specified in the event.
  * @param conn The connection to xserver
  * @param evt The map event for the window
- * @return Pointer to new context. NULL if window already exists.
+ * @return Pointer to new window. NULL if window already exists.
  */
-xcwm_context_t *
+xcwm_window_t *
 _xcwm_window_created(xcb_connection_t * conn, xcb_map_request_event_t *evt);
+
 /**
  * Destroy the damage object associated with the window.
  * Call the remove function in context_list.c
  * @param conn The connection to xserver
  * @param event The destroy notify event for the window
- * @return Pointer to the context that was removed from the list, NULL if
- * window isn't being managed by context_list
+ * @return Pointer to the window that was removed from the list, NULL if
+ * window isn't being managed
  */
-xcwm_context_t *
-_xcwm_destroy_window(xcb_destroy_notify_event_t *event);
+xcwm_window_t *
+_xcwm_destroy_window(xcb_connection_t *conn,
+                     xcb_destroy_notify_event_t *event);
 
 /**
  * Resize the window to given width and height.
@@ -270,9 +271,10 @@ _xcwm_resize_window(xcb_connection_t *conn, xcb_window_t window, int width,
 
 /**
  * Map the given window.
- * @param context The context of the window to map
+ * @param conn The connection to xserver
+ * @param window The window to map
  */
 void
-_xcwm_map_window(xcwm_context_t *context);
+_xcwm_map_window(xcb_connection_t *conn, xcwm_window_t *window);
 
 #endif  /* _XTOQ_INTERNAL_H_ */

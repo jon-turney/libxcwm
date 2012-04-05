@@ -29,6 +29,7 @@
 
 struct xcwm_event_t {
     xcwm_context_t *context;
+    xcwm_window_t *window;
     int event_type;
 };
 
