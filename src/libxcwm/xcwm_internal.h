@@ -178,12 +178,12 @@ _xcwm_get_wm_atoms(xcwm_context_t *contxt);
 /**
  * Starts the event loop thread which listens on the given connection and
  * calls event_callback if an event is caught.
- * @param *conn The connection to listen for X events on
+ * @param context The context to listen for X events on
  * @param event_callback The callback function to call when a event is caught.
  * @return 0 on success, nonzero on failure.
  */
 int
-_xcwm_start_event_loop(xcb_connection_t *conn, xcwm_event_cb_t event_callback);
+_xcwm_start_event_loop(xcwm_context_t *context, xcwm_event_cb_t event_callback);
 
 /**
  * Stops the thread running the event loop.
@@ -239,12 +239,12 @@ _xcwm_get_window_node_by_window_id(xcb_window_t window_id);
 
 /**
  * Create a new context for the window specified in the event.
- * @param conn The connection to xserver
- * @param evt The map event for the window
+ * @param context The context window was created in.
+ * @param evt The map event for the window.
  * @return Pointer to new window. NULL if window already exists.
  */
 xcwm_window_t *
-_xcwm_window_created(xcb_connection_t * conn, xcb_map_request_event_t *evt);
+_xcwm_window_created(xcwm_context_t *context, xcb_map_request_event_t *evt);
 
 /**
  * Destroy the damage object associated with the window.

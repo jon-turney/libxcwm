@@ -33,7 +33,7 @@
 
 @interface XtoqView : NSView {
     xcwm_window_t *viewXcwmWindow;
-    xcwm_context_t *viewXcwmContext;
+
     //mouse event
     NSPoint downPoint;
     NSPoint currentPoint;
@@ -50,10 +50,8 @@
 /**
  * Set the xcwm_window_t and xcwm_context_t associated with this view.
  * @param xcwmWindow The xcwm_window_t for this view.
- * @param xcwmContext The xcwm_context_t for this view.
  */
--(void)setXcwmWindow: (xcwm_window_t *)xcwmWindow
-      andXcwmContext: (xcwm_context_t *)xcwmContext;
+-(void)setXcwmWindow: (xcwm_window_t *)xcwmWindow;
 
 /**
  * The OS X magic loop which is responsible for drawing content to the screen

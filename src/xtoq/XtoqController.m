@@ -86,8 +86,7 @@
                   backing: NSBackingStoreBuffered
                   defer: YES];
 
-    [xcwmWindow setXcwmWindow: rootContext->root_window
-               andXcwmContext: rootContext];
+    [xcwmWindow setXcwmWindow: rootContext->root_window];
     rootContext->root_window->local_data = xcwmWindow;
     // Make the menu
     [self makeMenu];
@@ -98,9 +97,8 @@
     imageRec = NSMakeRect(0, 0, 1028, 768);
     // create a view, init'ing it with our rect
     ourView = [[XtoqView alloc] initWithFrame:imageRec];
-    [ourView setXcwmWindow: rootContext->root_window
-            andXcwmContext: rootContext];
-
+    [ourView setXcwmWindow: rootContext->root_window];
+    
     // add view to its window
     [xcwmWindow setContentView: ourView];
 
@@ -247,8 +245,7 @@
     int buttonInt = [mouseButton intValue];
 
     dispatch_async(xcwmDispatchQueue,
-                   ^{ xcwm_input_mouse_button_event (rootContext,
-                                                     window,
+                   ^{ xcwm_input_mouse_button_event (window,
                                                      0,
                                                      0,
                                                      buttonInt,
@@ -275,13 +272,11 @@
     int buttonInt = [mouseButton intValue];
 
     dispatch_async(xcwmDispatchQueue,
-                   ^{ xcwm_input_mouse_button_event (rootContext,
-                                                     window,
+                   ^{ xcwm_input_mouse_button_event (window,
                                                      0,
                                                      0,
                                                      buttonInt,
                                                      0);
-                      ;
                    });
 }
 
@@ -465,14 +460,13 @@
                                defer: YES];
 
     // save xcwm_window_t in the XtoqWindow
-    [newWindow setXcwmWindow: window
-              andXcwmContext: rootContext];
+    [newWindow setXcwmWindow: window];
 
     // save the newWindow pointer into the context
     window->local_data = (id)newWindow;
 
     // get image to darw
-    xcbImage = test_xcwm_get_image(rootContext, window);
+    xcbImage = test_xcwm_get_image(window);
     imageRep = [[XtoqImageRep alloc] initWithData: xcbImage x: 0 y: 0];
 
     // draw the image into a rect
@@ -481,8 +475,7 @@
 
     // create a view, init'ing it with our rect
     newView = [[XtoqView alloc] initWithFrame:imgRec];
-    [newView setXcwmWindow: window
-            andXcwmContext: rootContext];
+    [newView setXcwmWindow: window];
 
     // add view to its window
     [newWindow setContentView: newView];

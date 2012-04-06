@@ -48,10 +48,8 @@
 }
 
 -(void) setXcwmWindow: (xcwm_window_t *) xcwmWindow
-       andXcwmContext: (xcwm_context_t *) xcwmContext
 {
     viewXcwmWindow = xcwmWindow;
-    viewXcwmContext = xcwmContext;
 }
 
 // Overridden by subclasses to draw the receiver’s image within the
@@ -64,7 +62,7 @@
     XtoqImageRep *imageNew;
 
     xcwm_get_event_thread_lock();
-    imageT = test_xcwm_get_image(viewXcwmContext, viewXcwmWindow);
+    imageT = test_xcwm_get_image(viewXcwmWindow);
     if (imageT->image) {
         y_transformed = (viewXcwmWindow->height
                          - viewXcwmWindow->damaged_y
@@ -77,7 +75,7 @@
         [imageNew destroy];
 
         // Remove the damage
-        xcwm_remove_window_damage(viewXcwmContext, viewXcwmWindow);
+        xcwm_remove_window_damage(viewXcwmWindow);
     }
     xcwm_release_event_thread_lock();
 }

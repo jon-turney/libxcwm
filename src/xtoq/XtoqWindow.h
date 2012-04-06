@@ -26,7 +26,6 @@
 #import "XtoqView.h"
 
 @interface XtoqWindow : NSWindow {
-    xcwm_context_t *xcwmContext;  // The context of the window.
     xcwm_window_t *xcwmWindow;    // The xcwm window assoicated with this one
     NSNotificationCenter * notificationCenter;
 }
@@ -49,9 +48,7 @@
  * @param aWindow The xcwm_window_t for this window.
  * @param aContext The xcwm_context_t for this window.
  */
--(void)setXcwmWindow: (xcwm_window_t *)aWindow
-      andXcwmContext: (xcwm_context_t *)aContext;
-;
+-(void)setXcwmWindow: (xcwm_window_t *)aWindow;
 
 /**
  * Function for getting the xcwm_window_t associated with this window.

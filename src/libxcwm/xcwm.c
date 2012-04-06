@@ -155,18 +155,18 @@ xcwm_start_event_loop(xcwm_context_t *context,
                       xcwm_event_cb_t callback)
 {
     /* Simply call our internal function to do the actual setup */
-    return _xcwm_start_event_loop(context->conn, callback);
+    return _xcwm_start_event_loop(context, callback);
 }
 
 xcwm_image_t *
-test_xcwm_get_image(xcwm_context_t *context, xcwm_window_t *window)
+test_xcwm_get_image(xcwm_window_t *window)
 {
 
     xcb_image_t *image;
 
-    xcb_flush(context->conn);
+    xcb_flush(window->context->conn);
     /* Get the image of the root window */
-    image = xcb_image_get(context->conn,
+    image = xcb_image_get(window->context->conn,
                           window->window_id,
                           window->damaged_x,
                           window->damaged_y,
@@ -197,9 +197,9 @@ xcwm_image_destroy(xcwm_image_t * xcwm_image)
 }
 
 void
-xcwm_remove_window_damage(xcwm_context_t *context, xcwm_window_t *window)
+xcwm_remove_window_damage(xcwm_window_t *window)
 {
-    xcb_xfixes_region_t region = xcb_generate_id(context->conn);
+    xcb_xfixes_region_t region = xcb_generate_id(window->context->conn);
     xcb_rectangle_t rect;
     xcb_void_cookie_t cookie;
 
@@ -212,17 +212,17 @@ xcwm_remove_window_damage(xcwm_context_t *context, xcwm_window_t *window)
     rect.width = window->damaged_width;
     rect.height = window->damaged_height;
 
-    xcb_xfixes_create_region(context->conn,
+    xcb_xfixes_create_region(window->context->conn,
                              region,
                              1,
                              &rect);
 
-    cookie = xcb_damage_subtract_checked(context->conn,
+    cookie = xcb_damage_subtract_checked(window->context->conn,
                                          window->damage,
                                          region,
                                          0);
 
-    if (!(_xcwm_request_check(context->conn, cookie,
+    if (!(_xcwm_request_check(window->context->conn, cookie,
                               "Failed to subtract damage"))) {
         window->damaged_x = 0;
         window->damaged_y = 0;

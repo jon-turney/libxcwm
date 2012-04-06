@@ -33,7 +33,7 @@
 #include "xcwm_internal.h"
 
 typedef struct _connection_data {
-    xcb_connection_t *conn;
+    xcwm_context_t *context;
     xcwm_event_cb_t callback;
 } _connection_data;
 
@@ -43,8 +43,7 @@ pthread_t _event_thread = 0;
 pthread_mutex_t _event_thread_lock;
 
 /* Functions only called within event_loop.c */
-void
-*
+void *
 run_event_loop(void *thread_arg_struct);
 
 /* Functions included in xcwm.h */
@@ -63,7 +62,7 @@ xcwm_release_event_thread_lock(void)
 /* Functions included in xcwm_internal.h */
 
 int
-_xcwm_start_event_loop(xcb_connection_t *conn,
+_xcwm_start_event_loop(xcwm_context_t *context,
                        xcwm_event_cb_t event_callback)
 {
     _connection_data *conn_data;
@@ -73,7 +72,7 @@ _xcwm_start_event_loop(xcb_connection_t *conn,
     conn_data = malloc(sizeof(_connection_data));
     assert(conn_data);
 
-    conn_data->conn = conn;
+    conn_data->context = context;
     conn_data->callback = event_callback;
 
     pthread_mutex_init(&_event_thread_lock, NULL);
@@ -102,13 +101,15 @@ void *
 run_event_loop(void *thread_arg_struct)
 {
     _connection_data *conn_data;
+    xcwm_context_t *context;
     xcb_connection_t *event_conn;
     xcb_generic_event_t *evt;
     xcwm_event_t *return_evt;
     xcwm_event_cb_t callback_ptr;
 
     conn_data = thread_arg_struct;
-    event_conn = conn_data->conn;
+    context = conn_data->context;
+    event_conn = context->conn;
     callback_ptr = conn_data->callback;
 
     free(thread_arg_struct);
@@ -255,7 +256,7 @@ run_event_loop(void *thread_arg_struct)
                 xcb_map_request_event_t *request =
                     (xcb_map_request_event_t *)evt;
                 return_evt = malloc(sizeof(xcwm_event_t));
-                return_evt->window = _xcwm_window_created(event_conn, request);
+                return_evt->window = _xcwm_window_created(context, request);
                 if (!return_evt->window) {
                     free(return_evt);
                     break;

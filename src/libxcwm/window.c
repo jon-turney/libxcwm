@@ -50,50 +50,51 @@ init_damage_on_window(xcb_connection_t *conn, xcwm_window_t *window);
 
 /* Set window to the top of the stack */
 void
-xcwm_set_window_to_top(xcwm_context_t *context, xcwm_window_t *window)
+xcwm_set_window_to_top(xcwm_window_t *window)
 {
 
     const static uint32_t values[] = { XCB_STACK_MODE_ABOVE };
 
     /* Move the window on the top of the stack */
-    xcb_configure_window(context->conn, window->window_id,
+    xcb_configure_window(window->context->conn, window->window_id,
                          XCB_CONFIG_WINDOW_STACK_MODE, values);
 }
 
 /* Set window to the bottom of the stack */
 void
-xcwm_set_window_to_bottom(xcwm_context_t *context, xcwm_window_t *window)
+xcwm_set_window_to_bottom(xcwm_window_t *window)
 {
 
     const static uint32_t values[] = { XCB_STACK_MODE_BELOW };
 
     /* Move the window on the top of the stack */
-    xcb_configure_window(context->conn, window->window_id,
+    xcb_configure_window(window->context->conn, window->window_id,
                          XCB_CONFIG_WINDOW_STACK_MODE, values);
 }
 
 /* Set input focus to window */
 void
-xcwm_set_input_focus(xcwm_context_t *context, xcwm_window_t *window)
+xcwm_set_input_focus(xcwm_window_t *window)
 {
 
     // Test -- David
-    xcb_get_input_focus_cookie_t cookie = xcb_get_input_focus(context->conn);
+    xcb_get_input_focus_cookie_t cookie =
+        xcb_get_input_focus(window->context->conn);
     xcb_get_input_focus_reply_t *reply =
-        xcb_get_input_focus_reply(context->conn, cookie, NULL);
+        xcb_get_input_focus_reply(window->context->conn, cookie, NULL);
     printf("Focus was in window #%d, now in #%d (window.c)\n",
            reply->focus, window->window_id);
     free(reply);
 
     // End test -- David
 
-    xcb_set_input_focus(context->conn, XCB_INPUT_FOCUS_PARENT,
+    xcb_set_input_focus(window->context->conn, XCB_INPUT_FOCUS_PARENT,
                         window->window_id, XCB_CURRENT_TIME);
-    xcb_flush(context->conn);
+    xcb_flush(window->context->conn);
 }
 
 xcwm_window_t *
-_xcwm_window_created(xcb_connection_t * conn, xcb_map_request_event_t *event)
+_xcwm_window_created(xcwm_context_t *context, xcb_map_request_event_t *event)
 {
 
     /* Check to see if the window is already created */
@@ -105,10 +106,11 @@ _xcwm_window_created(xcb_connection_t * conn, xcb_map_request_event_t *event)
     xcwm_window_t *window = malloc(sizeof(xcwm_window_t));
 
     xcb_get_geometry_reply_t *geom;
-    geom = _xcwm_get_window_geometry(conn, event->window);
+    geom = _xcwm_get_window_geometry(context->conn, event->window);
 
     /* set any available values from xcb_create_notify_event_t object pointer
        and geom pointer */
+    window->context = context;
     window->window_id = event->window;
     window->x = geom->x;
     window->y = geom->y;
@@ -121,10 +123,10 @@ _xcwm_window_created(xcb_connection_t * conn, xcb_map_request_event_t *event)
     free(geom);
 
     /* Set the ICCCM properties we care about */
-    set_icccm_properties(conn, window);
+    set_icccm_properties(context->conn, window);
 
     /* register for damage */
-    init_damage_on_window(conn, window);
+    init_damage_on_window(context->conn, window);
 
     /* add context to context_list */
     window = _xcwm_add_window(window);

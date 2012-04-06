@@ -45,9 +45,18 @@
 #include <xcb/xcb_keysyms.h>
 
 /* Abstract types for xcwm data types */
+struct xcwm_window_t;
+typedef struct xcwm_window_t xcwm_window_t;
+
+struct xcwm_context_t {
+    xcb_connection_t *conn;
+    xcwm_window_t *root_window;
+};
+typedef struct xcwm_context_t xcwm_context_t;
 
 struct xcwm_window_t {
     xcb_drawable_t window_id;
+    xcwm_context_t *context;
     struct xcwm_window_t *parent;
     xcb_damage_damage_t damage;
     int x;
@@ -62,13 +71,6 @@ struct xcwm_window_t {
     int wm_delete_set;  /* Flag for WM_DELETE_WINDOW, 1 if set */
     void *local_data;   /* Area for data client cares about */
 };
-typedef struct xcwm_window_t xcwm_window_t;
-
-struct xcwm_context_t {
-    xcb_connection_t *conn;
-    xcwm_window_t *root_window;
-};
-typedef struct xcwm_context_t xcwm_context_t;
 
 struct image_data_t {
     uint8_t *data;
@@ -105,12 +107,11 @@ xcwm_get_image(xcwm_context_t *context, xcwm_window_t *window);
 /**
  * Intended for servicing to a client's reaction to a damage notification
  * this window returns the modified subrectangle of a window
- * @param context The context of the window
  * @param window The window to get image from
  * @return an xcwm_image_t with partial image window contents
  */
 xcwm_image_t *
-test_xcwm_get_image(xcwm_context_t *context, xcwm_window_t *window);
+test_xcwm_get_image(xcwm_window_t *window);
 
 /**
  * free the memory used by an xcwm_image_t created
@@ -122,35 +123,30 @@ xcwm_image_destroy(xcwm_image_t * xcwm_image);
 
 /**
  * Set input focus to the window in context
- * @param context The context containing the window
  * @param window The window to set focus to
  */
 void
-xcwm_set_input_focus(xcwm_context_t *context, xcwm_window_t *window);
+xcwm_set_input_focus(xcwm_window_t *window);
 
 /**
  * Set a window to the bottom of the window stack.
- * @param context The context containing the window
  * @param window The window to move to bottom
  */
 void
-xcwm_set_window_to_bottom(xcwm_context_t *context, xcwm_window_t *window);
-
+xcwm_set_window_to_bottom(xcwm_window_t *window);
 /**
  * Set a window to the top of the window stack.
- * @param context The context containing the window.
  * @param window The window to move.
  */
 void
-xcwm_set_window_to_top(xcwm_context_t *context, xcwm_window_t *window);
+xcwm_set_window_to_top(xcwm_window_t *window);
 
 /**
  * Remove the damage from a given window.
- * @param context The context of the window.
  * @param window The window to remove damage from
  */
 void
-xcwm_remove_window_damage(xcwm_context_t *context, xcwm_window_t *window);
+xcwm_remove_window_damage(xcwm_window_t *window);
 
 /**
  * Closes the windows open on the X Server, the connection, and the event
@@ -162,8 +158,8 @@ xcwm_close(xcwm_context_t *context);
 
 /**
  * Send key event to the X server.
- * @param context xcwm_context_t
- * @param window The window that the key press was made in.
+ * @param context The context the event occured in.
+ * @param code The keycode of event.
  * @param state 1 if key has been pressed, 0 if key released.
  */
 void
@@ -174,7 +170,6 @@ xcwm_input_key_event(xcwm_context_t *context, uint8_t code, int state);
  * is usually in the position of sending input events to a client). The client
  * will often choose to send coordinates through mouse motion and set the params
  * x & y to 0 here.
- * @param context xcwm_context_t
  * @param window The window the event occured in.
  * @param x - x coordinate
  * @param y - y coordinate
@@ -182,12 +177,12 @@ xcwm_input_key_event(xcwm_context_t *context, uint8_t code, int state);
  * @param state 1 if the mouse button is pressed down, 0 if released.
  */
 void
-xcwm_input_mouse_button_event(xcwm_context_t *context, xcwm_window_t *window,
+xcwm_input_mouse_button_event(xcwm_window_t *window,
                               long x, long y, int button,
                               int state);
 
 /**
- * function
+ * Handler for mouse motion event.
  * @param context xcwm_context_t
  * @param x - x coordinate
  * @param y - y coordinate

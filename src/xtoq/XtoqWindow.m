@@ -58,10 +58,8 @@
 }
 
 -(void) setXcwmWindow: (xcwm_window_t *) aWindow
-       andXcwmContext: (xcwm_context_t *) aContext
 {
     xcwmWindow = aWindow;
-    xcwmContext = aContext;
 }
 
 -(xcwm_window_t *) getXcwmWindow
@@ -86,8 +84,8 @@
 -(void)windowDidBecomeKey: (NSNotification *)note
 {
 
-    xcwm_set_input_focus(xcwmContext, xcwmWindow);
-    xcwm_set_window_to_top(xcwmContext, xcwmWindow);
+    xcwm_set_input_focus(xcwmWindow);
+    xcwm_set_window_to_top(xcwmWindow);
 }
 
 -(void) mouseMoved: (NSEvent *) event
