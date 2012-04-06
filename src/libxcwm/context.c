@@ -27,6 +27,9 @@
 #include <config.h>
 #endif
 
+#include <xcb/xcb.h>
+#include <xcb/xcb_aux.h>
+#include <xcb/xcb_keysyms.h>
 #include <xcwm/xcwm.h>
 #include "xcwm_internal.h"
 #include "X11/keysym.h"
@@ -39,7 +42,7 @@ xcb_key_symbols_t *syms = NULL;
 // This init function needs set the window to be registered for events!
 // First one we should handle is damage
 xcwm_context_t *
-xcwm_init(char *display)
+xcwm_context_open(char *display)
 {
 
     xcwm_context_t *root_context;
@@ -113,128 +116,9 @@ xcwm_init(char *display)
 
     return root_context;
 }
-
-xcwm_image_t *
-xcwm_get_image(xcwm_context_t *context, xcwm_window_t *window)
-{
-
-    xcb_get_geometry_reply_t *geom_reply;
-
-    xcb_image_t *image;
-
-    geom_reply = _xcwm_get_window_geometry(context->conn, window->window_id);
-
-    //FIXME - right size
-    xcwm_image_t * xcwm_image =
-        (xcwm_image_t *)malloc(10 * sizeof(xcwm_image_t));
-
-    xcb_flush(context->conn);
-    /* Get the full image of the window */
-    image = xcb_image_get(context->conn,
-                          window->window_id,
-                          geom_reply->x,
-                          geom_reply->y,
-                          geom_reply->width,
-                          geom_reply->height,
-                          (unsigned int)~0L,
-                          XCB_IMAGE_FORMAT_Z_PIXMAP);
-
-    xcwm_image->image = image;
-    xcwm_image->x = geom_reply->x;
-    xcwm_image->y = geom_reply->y;
-    xcwm_image->width = geom_reply->width;
-    xcwm_image->height = geom_reply->height;
-
-    free(geom_reply);
-
-    return xcwm_image;
-}
-
-int
-xcwm_start_event_loop(xcwm_context_t *context,
-                      xcwm_event_cb_t callback)
-{
-    /* Simply call our internal function to do the actual setup */
-    return _xcwm_start_event_loop(context, callback);
-}
-
-xcwm_image_t *
-test_xcwm_get_image(xcwm_window_t *window)
-{
-
-    xcb_image_t *image;
-
-    xcb_flush(window->context->conn);
-    /* Get the image of the root window */
-    image = xcb_image_get(window->context->conn,
-                          window->window_id,
-                          window->damaged_x,
-                          window->damaged_y,
-                          window->damaged_width,
-                          window->damaged_height,
-                          (unsigned int)~0L,
-                          XCB_IMAGE_FORMAT_Z_PIXMAP);
-
-    //FIXME - Calculate memory size correctly
-    xcwm_image_t * xcwm_image =
-        (xcwm_image_t *)malloc(10 * sizeof(xcwm_image_t));
-
-    xcwm_image->image = image;
-    xcwm_image->x = window->damaged_x;
-    xcwm_image->y = window->damaged_y;
-    xcwm_image->width = window->damaged_width;
-    xcwm_image->height = window->damaged_height;
-
-    return xcwm_image;
-}
-
-void
-xcwm_image_destroy(xcwm_image_t * xcwm_image)
-{
-
-    xcb_image_destroy(xcwm_image->image);
-    free(xcwm_image);
-}
-
-void
-xcwm_remove_window_damage(xcwm_window_t *window)
-{
-    xcb_xfixes_region_t region = xcb_generate_id(window->context->conn);
-    xcb_rectangle_t rect;
-    xcb_void_cookie_t cookie;
-
-    if (!window) {
-        return;
-    }
-
-    rect.x = window->damaged_x;
-    rect.y = window->damaged_y;
-    rect.width = window->damaged_width;
-    rect.height = window->damaged_height;
-
-    xcb_xfixes_create_region(window->context->conn,
-                             region,
-                             1,
-                             &rect);
-
-    cookie = xcb_damage_subtract_checked(window->context->conn,
-                                         window->damage,
-                                         region,
-                                         0);
-
-    if (!(_xcwm_request_check(window->context->conn, cookie,
-                              "Failed to subtract damage"))) {
-        window->damaged_x = 0;
-        window->damaged_y = 0;
-        window->damaged_width = 0;
-        window->damaged_height = 0;
-    }
-    return;
-}
-
 /* Close all windows, the connection, as well as the event loop */
 void
-xcwm_close(xcwm_context_t *context)
+xcwm_context_close(xcwm_context_t *context)
 {
 
     _xcwm_window_node *head = _xcwm_window_list_head;
@@ -243,14 +127,14 @@ xcwm_close(xcwm_context_t *context)
 
     // Close all windows
     while (head) {
-        xcwm_request_close(context, head->window);
+        xcwm_window_request_close(head->window);
         _xcwm_window_list_head = head->next;
         free(head);
         head = _xcwm_window_list_head;
     }
 
     // Terminate the event loop
-    if (_xcwm_stop_event_loop() != 1) {
+    if (_xcwm_event_stop_loop() != 1) {
         printf("Event loop failed to close\n");
     }
 
@@ -258,5 +142,4 @@ xcwm_close(xcwm_context_t *context)
     xcb_disconnect(context->conn);
 
     return;
-
 }

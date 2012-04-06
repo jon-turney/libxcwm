@@ -30,6 +30,12 @@
 #include "xcwm_internal.h"
 #include <xcb/xcb.h>
 
+/* Locally used structure */
+struct image_data_t {
+    uint8_t *data;
+    int length;
+};
+
 xcb_get_window_attributes_reply_t *
 _xcwm_get_window_attributes(xcb_connection_t *conn, xcb_window_t window)
 {

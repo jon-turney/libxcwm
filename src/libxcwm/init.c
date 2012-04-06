@@ -28,9 +28,13 @@
 #endif
 
 #include <string.h>
+#include <xcb/damage.h>
+#include <xcb/composite.h>
+#include <xcb/xtest.h>
+#include <xcb/xfixes.h>
+#include <xcwm/xcwm.h>
 #include "xcwm_internal.h"
 
-int _damage_event = 0;
 
 xcwm_wm_atoms *_wm_atoms = NULL;
 
@@ -68,7 +72,7 @@ _xcwm_init_damage(xcwm_context_t *contxt)
     xcb_damage_query_version_reply_t* version_reply =
         xcb_damage_query_version_reply(contxt->conn, version_cookie, NULL);
 
-    _damage_event = reply->first_event + XCB_DAMAGE_NOTIFY;
+    contxt->damage_event_mask = reply->first_event + XCB_DAMAGE_NOTIFY;
 
     free(version_reply);
     free(reply);

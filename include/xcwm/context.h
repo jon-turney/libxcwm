@@ -1,7 +1,6 @@
 /* Copyright (c) 2012 Jess VanDerwalker <washu@sonic.net>
- * All rights reserved.
  *
- * data.h
+ * xcwm/context.h
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -24,16 +23,43 @@
  * SOFTWARE.
  */
 
-#ifndef _DATA_H_
-#define _DATA_H_
+#ifndef _XCWM_CONTEXT_H_
+#define _XCWM_CONTEXT_H_
 
-struct xcwm_event_t {
-    xcwm_context_t *context;
-    xcwm_window_t *window;
-    int event_type;
-};
-
-/* FIXME: We should not be using a global for this */
-extern int _damage_event;
-
+#ifndef __XCWM_INDIRECT__
+#error "Please #include <xcwm/xcwm.h> instead of this file directly."
 #endif
+
+#include <xcb/xcb.h>
+#include <xcb/damage.h>
+
+/* Abstract types for context data types 
+ * FIXME: Move this to window.h once accessor API functions in place */
+struct xcwm_window_t;
+typedef struct xcwm_window_t xcwm_window_t;
+
+/* Structure to hold connection data */
+struct xcwm_context_t {
+    xcb_connection_t *conn;
+    xcwm_window_t *root_window;
+    int damage_event_mask;
+};
+typedef struct xcwm_context_t xcwm_context_t;
+
+/**
+ * Sets up the connection and grabs the root window from the specified screen
+ * @param display the display to connect to
+ * @return The root context which contains the root window
+ */
+xcwm_context_t *
+xcwm_context_open (char *display);
+
+/**
+ * Closes the windows open on the X Server, the connection, and the event
+ * loop.
+ * @param context The context to close.
+ */
+void
+xcwm_context_close(xcwm_context_t *context);
+
+#endif  /* _XCWM_CONTEXT_H_ */

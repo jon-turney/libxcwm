@@ -84,8 +84,8 @@
 -(void)windowDidBecomeKey: (NSNotification *)note
 {
 
-    xcwm_set_input_focus(xcwmWindow);
-    xcwm_set_window_to_top(xcwmWindow);
+    xcwm_window_set_input_focus(xcwmWindow);
+    xcwm_window_set_to_top(xcwmWindow);
 }
 
 -(void) mouseMoved: (NSEvent *) event

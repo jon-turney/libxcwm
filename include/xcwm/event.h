@@ -71,11 +71,10 @@ xcwm_event_get_window(xcwm_event_t const *event);
  * for events on.
  * @param callback The function to call when an event of interest is
  * received.
- * @return Uses the return value of the call to pthread_create as
- * the return value.
+ * @return 0 on success, otherwise non-zero
  */
 int
-xcwm_start_event_loop(xcwm_context_t *context, xcwm_event_cb_t callback);
+xcwm_event_start_loop(xcwm_context_t *context, xcwm_event_cb_t callback);
 
 /**
  * Request a lock on the mutex for the event loop thread. Blocks
@@ -83,13 +82,13 @@ xcwm_start_event_loop(xcwm_context_t *context, xcwm_event_cb_t callback);
  * @return 0 if successful, otherwise non-zero
  */
 int
-xcwm_get_event_thread_lock(void);
+xcwm_event_get_thread_lock(void);
 
 /**
  * Release the lock on the mutex for the event loop thread.
  * @return 0 if successsful, otherwise non-zero
  */
 int
-xcwm_release_event_thread_lock(void);
+xcwm_event_release_thread_lock(void);
 
 #endif /* _XCWM_EVENT_H_ */

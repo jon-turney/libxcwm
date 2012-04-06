@@ -32,6 +32,14 @@
 #include <xcwm/xcwm.h>
 #include "xcwm_internal.h"
 
+/* Definition of abstract data type for event */
+struct xcwm_event_t {
+    xcwm_context_t *context;
+    xcwm_window_t *window;
+    int event_type;
+};
+
+/* Locally used data structure */
 typedef struct _connection_data {
     xcwm_context_t *context;
     xcwm_event_cb_t callback;
@@ -46,23 +54,21 @@ pthread_mutex_t _event_thread_lock;
 void *
 run_event_loop(void *thread_arg_struct);
 
-/* Functions included in xcwm.h */
+/* Functions included in event.h */
 int
-xcwm_get_event_thread_lock(void)
+xcwm_event_get_thread_lock(void)
 {
     return pthread_mutex_lock(&_event_thread_lock);
 }
 
 int
-xcwm_release_event_thread_lock(void)
+xcwm_event_release_thread_lock(void)
 {
     return pthread_mutex_unlock(&_event_thread_lock);
 }
 
-/* Functions included in xcwm_internal.h */
-
 int
-_xcwm_start_event_loop(xcwm_context_t *context,
+xcwm_event_start_loop(xcwm_context_t *context,
                        xcwm_event_cb_t event_callback)
 {
     _connection_data *conn_data;
@@ -89,7 +95,7 @@ _xcwm_start_event_loop(xcwm_context_t *context,
 }
 
 int
-_xcwm_stop_event_loop(void)
+_xcwm_event_stop_loop(void)
 {
     if (_event_thread) {
         return pthread_cancel(_event_thread);
@@ -118,7 +124,7 @@ run_event_loop(void *thread_arg_struct)
     xcb_flush(event_conn);
 
     while ((evt = xcb_wait_for_event(event_conn))) {
-        if ((evt->response_type & ~0x80) == _damage_event) {
+        if ((evt->response_type & ~0x80) == context->damage_event_mask) {
             xcb_damage_notify_event_t *dmgevnt =
                 (xcb_damage_notify_event_t *)evt;
             int old_x;
@@ -139,7 +145,7 @@ run_event_loop(void *thread_arg_struct)
              * area already marked - this should be set back to 0 by 0
              * when area is actually redrawn. This is likely to be
              * done in another thread that handles window redraws */
-            xcwm_get_event_thread_lock();
+            xcwm_event_get_thread_lock();
 
             old_x = return_evt->window->damaged_x;
             old_y = return_evt->window->damaged_y;
@@ -168,7 +174,7 @@ run_event_loop(void *thread_arg_struct)
                     return_evt->window->damaged_height = dmgevnt->area.height;
                 }
             }
-            xcwm_release_event_thread_lock();
+            xcwm_event_release_thread_lock();
 
             if (((old_x > dmgevnt->area.x) || (old_y > dmgevnt->area.y))
                 || ((old_width < dmgevnt->area.width)

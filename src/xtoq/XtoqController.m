@@ -67,7 +67,7 @@
 {
 
     // setup X connection and get the initial image from the server
-    rootContext = xcwm_init(screen);
+    rootContext = xcwm_context_open(screen);
 
     [[NSGraphicsContext currentContext]
      setImageInterpolation:NSImageInterpolationHigh];
@@ -149,12 +149,12 @@
     xcwmDispatchQueue = dispatch_queue_create("xcwm.dispatch.queue", NULL);
 
     // Start the event loop and set the handler function
-    xcwm_start_event_loop(rootContext, (void *)eventHandler);
+    xcwm_event_start_loop(rootContext, (void *)eventHandler);
 }
 
 - (void)applicationWillTerminate:(NSNotification *)aNotification
 {
-    xcwm_close(rootContext);
+    xcwm_context_close(rootContext);
 
     const char *spawn[4];
     pid_t child;
@@ -466,7 +466,7 @@
     window->local_data = (id)newWindow;
 
     // get image to darw
-    xcbImage = test_xcwm_get_image(window);
+    xcbImage = xcwm_image_copy_damaged(window);
     imageRep = [[XtoqImageRep alloc] initWithData: xcbImage x: 0 y: 0];
 
     // draw the image into a rect
@@ -508,8 +508,7 @@
     //use dispatch_async() to handle the actual close
     dispatch_async(xcwmDispatchQueue, ^{
                        NSLog (@"Call xcwm_request_close(theContext)");
-                       xcwm_request_close (rootContext,
-                                           [aWindow getXcwmWindow]);
+                       xcwm_window_request_close ([aWindow getXcwmWindow]);
                    });
 }
 
@@ -553,7 +552,7 @@
         int width = (int)moveFrame.size.width;
         int height = (int)moveFrame.size.height - WINDOWBAR;
 
-        xcwm_configure_window(rootContext, window,
+        xcwm_window_configure(window,
                               x, y - height, height, width);
         [[moveWindow contentView] setNeedsDisplay: YES];
     }

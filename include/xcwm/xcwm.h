@@ -30,7 +30,10 @@
 #define __XCWM_INDIRECT__
 #endif
 
-#include <xcwm/xtoq.h>
+#include <xcwm/context.h>
+#include <xcwm/window.h>
 #include <xcwm/event.h>
+#include <xcwm/input.h>
+#include <xcwm/image.h>
 
 #endif /* _XCWM_XCWM_H_ */

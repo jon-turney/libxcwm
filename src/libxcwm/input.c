@@ -25,7 +25,7 @@
 
 #include <stdio.h>
 #include <xcwm/xcwm.h>
-
+#include <xcb/xtest.h>
 #include "xcwm_internal.h"
 
 void

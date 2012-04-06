@@ -54,15 +54,14 @@
 
 // Overridden by subclasses to draw the receiver’s image within the
 // passed-in rectangle.
--(void)
-   drawRect: (NSRect)dirtyRect
+-(void) drawRect: (NSRect)dirtyRect
 {
     xcwm_image_t *imageT;
     float y_transformed;
     XtoqImageRep *imageNew;
 
-    xcwm_get_event_thread_lock();
-    imageT = test_xcwm_get_image(viewXcwmWindow);
+    xcwm_event_get_thread_lock();
+    imageT = xcwm_image_copy_damaged(viewXcwmWindow);
     if (imageT->image) {
         y_transformed = (viewXcwmWindow->height
                          - viewXcwmWindow->damaged_y
@@ -75,9 +74,9 @@
         [imageNew destroy];
 
         // Remove the damage
-        xcwm_remove_window_damage(viewXcwmWindow);
+        xcwm_window_remove_damage(viewXcwmWindow);
     }
-    xcwm_release_event_thread_lock();
+    xcwm_event_release_thread_lock();
 }
 
 - (void)setPartialImage: (NSRect)newDamageRect

@@ -38,8 +38,6 @@
 #include <xcb/xcb_atom.h>
 #include <xcwm/xcwm.h>
 
-#include "data.h"
-
 /**
  * Strucuture used to pass nesessary data to xcwm_start_event_loop.
  */
@@ -55,6 +53,11 @@ typedef struct xcwm_wm_atoms {
     xcb_atom_t wm_protocols_atom;
     xcb_atom_t wm_delete_window_atom;
 } xcwm_wm_atoms;
+
+/**
+ * Local data type for image data.
+ */
+typedef struct image_data_t image_data_t;
 
 /**
  * Global for the atoms needed
@@ -176,21 +179,11 @@ _xcwm_get_wm_atoms(xcwm_context_t *contxt);
 ****************/
 
 /**
- * Starts the event loop thread which listens on the given connection and
- * calls event_callback if an event is caught.
- * @param context The context to listen for X events on
- * @param event_callback The callback function to call when a event is caught.
- * @return 0 on success, nonzero on failure.
- */
-int
-_xcwm_start_event_loop(xcwm_context_t *context, xcwm_event_cb_t event_callback);
-
-/**
  * Stops the thread running the event loop.
  * @return 0 on success, otherwise zero.
  */
 int
-_xcwm_stop_event_loop(void);
+_xcwm_event_stop_loop(void);
 
 /****************
 * context_list.c

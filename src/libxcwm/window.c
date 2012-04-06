@@ -27,8 +27,11 @@
 #include <config.h>
 #endif
 
+#include <xcb/xfixes.h>
+#include <xcb/damage.h>
 #include <xcwm/xcwm.h>
 #include "xcwm_internal.h"
+
 
 /* Functions only used within this file */
 
@@ -50,7 +53,7 @@ init_damage_on_window(xcb_connection_t *conn, xcwm_window_t *window);
 
 /* Set window to the top of the stack */
 void
-xcwm_set_window_to_top(xcwm_window_t *window)
+xcwm_window_set_to_top(xcwm_window_t *window)
 {
 
     const static uint32_t values[] = { XCB_STACK_MODE_ABOVE };
@@ -62,7 +65,7 @@ xcwm_set_window_to_top(xcwm_window_t *window)
 
 /* Set window to the bottom of the stack */
 void
-xcwm_set_window_to_bottom(xcwm_window_t *window)
+xcwm_window_set_to_bottom(xcwm_window_t *window)
 {
 
     const static uint32_t values[] = { XCB_STACK_MODE_BELOW };
@@ -74,7 +77,7 @@ xcwm_set_window_to_bottom(xcwm_window_t *window)
 
 /* Set input focus to window */
 void
-xcwm_set_input_focus(xcwm_window_t *window)
+xcwm_window_set_input_focus(xcwm_window_t *window)
 {
 
     // Test -- David
@@ -156,8 +159,7 @@ _xcwm_destroy_window(xcb_connection_t *conn,
     return window;
 }
 void
-xcwm_configure_window(xcwm_context_t *context, xcwm_window_t *window,
-                      int x, int y,
+xcwm_window_configure(xcwm_window_t *window, int x, int y,
                       int height, int width)
 {
 
@@ -172,7 +174,7 @@ xcwm_configure_window(xcwm_context_t *context, xcwm_window_t *window,
         (uint32_t)width, (uint32_t)height
     };
 
-    xcb_configure_window(context->conn,
+    xcb_configure_window(window->context->conn,
                          window->window_id,
                          XCB_CONFIG_WINDOW_X |
                          XCB_CONFIG_WINDOW_Y |
@@ -184,12 +186,49 @@ xcwm_configure_window(xcwm_context_t *context, xcwm_window_t *window,
     window->damaged_width = width;
     window->damaged_height = height;
 
-    xcb_flush(context->conn);
+    xcb_flush(window->context->conn);
+    return;
+}
+
+
+void
+xcwm_window_remove_damage(xcwm_window_t *window)
+{
+    xcb_xfixes_region_t region = xcb_generate_id(window->context->conn);
+    xcb_rectangle_t rect;
+    xcb_void_cookie_t cookie;
+
+    if (!window) {
+        return;
+    }
+
+    rect.x = window->damaged_x;
+    rect.y = window->damaged_y;
+    rect.width = window->damaged_width;
+    rect.height = window->damaged_height;
+
+    xcb_xfixes_create_region(window->context->conn,
+                             region,
+                             1,
+                             &rect);
+
+    cookie = xcb_damage_subtract_checked(window->context->conn,
+                                         window->damage,
+                                         region,
+                                         0);
+
+    if (!(_xcwm_request_check(window->context->conn, cookie,
+                              "Failed to subtract damage"))) {
+        window->damaged_x = 0;
+        window->damaged_y = 0;
+        window->damaged_width = 0;
+        window->damaged_height = 0;
+    }
     return;
 }
 
 void
-xcwm_request_close(xcwm_context_t *context, xcwm_window_t *window)
+xcwm_window_request_close(xcwm_window_t *window)
 {
 
     /* check to see if the context is in the list */
@@ -199,8 +238,8 @@ xcwm_request_close(xcwm_context_t *context, xcwm_window_t *window)
 
     /* kill using xcb_kill_client */
     if (!window->wm_delete_set == 1) {
-        xcb_kill_client(context->conn, window->window_id);
-        xcb_flush(context->conn);
+        xcb_kill_client(window->context->conn, window->window_id);
+        xcb_flush(window->context->conn);
         return;
     }
     /* kill using WM_DELETE_WINDOW */
@@ -216,15 +255,15 @@ xcwm_request_close(xcwm_context_t *context, xcwm_window_t *window)
         event.data.data32[0] = _wm_atoms->wm_delete_window_atom;
         event.data.data32[1] = XCB_CURRENT_TIME;
 
-        xcb_send_event(context->conn, 0, window->window_id,
+        xcb_send_event(window->context->conn, 0, window->window_id,
                        XCB_EVENT_MASK_NO_EVENT,
                        (char *)&event);
-        xcb_flush(context->conn);
+        xcb_flush(window->context->conn);
         return;
-
     }
     return;
 }
+
 
 /* Resize the window on server side */
 void
