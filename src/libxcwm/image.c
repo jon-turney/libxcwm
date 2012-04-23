@@ -81,10 +81,10 @@ xcwm_image_copy_damaged(xcwm_window_t *window)
     /* Get the image of the root window */
     image = xcb_image_get(window->context->conn,
                           window->window_id,
-                          window->damaged_x,
-                          window->damaged_y,
-                          window->damaged_width,
-                          window->damaged_height,
+                          window->dmg_bounds->x,
+                          window->dmg_bounds->y,
+                          window->dmg_bounds->width,
+                          window->dmg_bounds->height,
                           (unsigned int)~0L,
                           XCB_IMAGE_FORMAT_Z_PIXMAP);
 
@@ -93,10 +93,10 @@ xcwm_image_copy_damaged(xcwm_window_t *window)
         (xcwm_image_t *)malloc(10 * sizeof(xcwm_image_t));
 
     xcwm_image->image = image;
-    xcwm_image->x = window->damaged_x;
-    xcwm_image->y = window->damaged_y;
-    xcwm_image->width = window->damaged_width;
-    xcwm_image->height = window->damaged_height;
+    xcwm_image->x = window->dmg_bounds->x;
+    xcwm_image->y = window->dmg_bounds->y;
+    xcwm_image->width = window->dmg_bounds->width;
+    xcwm_image->height = window->dmg_bounds->height;
 
     return xcwm_image;
 }

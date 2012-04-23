@@ -147,31 +147,31 @@ run_event_loop(void *thread_arg_struct)
              * done in another thread that handles window redraws */
             xcwm_event_get_thread_lock();
 
-            old_x = return_evt->window->damaged_x;
-            old_y = return_evt->window->damaged_y;
-            old_width = return_evt->window->damaged_width;
-            old_height = return_evt->window->damaged_height;
+            old_x = return_evt->window->dmg_bounds->x;
+            old_y = return_evt->window->dmg_bounds->y;
+            old_width = return_evt->window->dmg_bounds->width;
+            old_height = return_evt->window->dmg_bounds->height;
 
-            if (return_evt->window->damaged_width == 0) {
+            if (return_evt->window->dmg_bounds->width == 0) {
                 /* We know something is damaged */
-                return_evt->window->damaged_x = dmgevnt->area.x;
-                return_evt->window->damaged_y = dmgevnt->area.y;
-                return_evt->window->damaged_width = dmgevnt->area.width;
-                return_evt->window->damaged_height = dmgevnt->area.height;
+                return_evt->window->dmg_bounds->x = dmgevnt->area.x;
+                return_evt->window->dmg_bounds->y = dmgevnt->area.y;
+                return_evt->window->dmg_bounds->width = dmgevnt->area.width;
+                return_evt->window->dmg_bounds->height = dmgevnt->area.height;
             }
             else {
                 /* Is the new damage bigger than the old */
                 if (old_x > dmgevnt->area.x) {
-                    return_evt->window->damaged_x = dmgevnt->area.x;
+                    return_evt->window->dmg_bounds->x = dmgevnt->area.x;
                 }
                 if (old_y > dmgevnt->area.y) {
-                    return_evt->window->damaged_y = dmgevnt->area.y;
+                    return_evt->window->dmg_bounds->y = dmgevnt->area.y;
                 }
                 if (old_width < dmgevnt->area.width) {
-                    return_evt->window->damaged_width = dmgevnt->area.width;
+                    return_evt->window->dmg_bounds->width = dmgevnt->area.width;
                 }
                 if (old_height < dmgevnt->area.height) {
-                    return_evt->window->damaged_height = dmgevnt->area.height;
+                    return_evt->window->dmg_bounds->height = dmgevnt->area.height;
                 }
             }
             xcwm_event_release_thread_lock();
@@ -253,6 +253,14 @@ run_event_loop(void *thread_arg_struct)
                 return_evt->window = window;
 
                 callback_ptr(return_evt);
+                /* FIXME: Should rework how windows are destroyed,
+                 * since its not making sense to do memory clean up
+                 * here. */
+                free(window->bounds);
+                free(window->dmg_bounds);
+                if (window->name) {
+                    free(window->name);
+                }
                 free(window);
                 break;
             }

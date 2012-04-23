@@ -62,4 +62,12 @@ xcwm_context_open (char *display);
 void
 xcwm_context_close(xcwm_context_t *context);
 
+/**
+ * Get the root window for this context.
+ * @param context The context to get root window from.
+ * @return The root window for this context.
+ */
+xcwm_window_t *
+xcwm_context_get_root_window(xcwm_context_t const *context);
+
 #endif  /* _XCWM_CONTEXT_H_ */

@@ -105,8 +105,13 @@ _xcwm_window_created(xcwm_context_t *context, xcb_map_request_event_t *event)
         return NULL;
     }
 
-    /* allocate memory for new xcwm_window_t */
+    /* allocate memory for new xcwm_window_t and rectangles */
     xcwm_window_t *window = malloc(sizeof(xcwm_window_t));
+    assert(window);
+    window->bounds = malloc(sizeof(xcwm_rect_t));
+    assert(window->bounds);
+    window->dmg_bounds = malloc(sizeof(xcwm_rect_t));
+    assert(window->dmg_bounds);
 
     xcb_get_geometry_reply_t *geom;
     geom = _xcwm_get_window_geometry(context->conn, event->window);
@@ -115,10 +120,10 @@ _xcwm_window_created(xcwm_context_t *context, xcb_map_request_event_t *event)
        and geom pointer */
     window->context = context;
     window->window_id = event->window;
-    window->x = geom->x;
-    window->y = geom->y;
-    window->width = geom->width;
-    window->height = geom->height;
+    window->bounds->x = geom->x;
+    window->bounds->y = geom->y;
+    window->bounds->width = geom->width;
+    window->bounds->height = geom->height;
 
     /* Find an set the parent */
     window->parent = _xcwm_get_window_node_by_window_id(event->parent);
@@ -158,16 +163,17 @@ _xcwm_destroy_window(xcb_connection_t *conn,
     /* Return the pointer for the context that was removed from the list. */
     return window;
 }
+
 void
 xcwm_window_configure(xcwm_window_t *window, int x, int y,
                       int height, int width)
 {
 
     /* Set values for xcwm_window_t */
-    window->x = x;
-    window->y = y;
-    window->width = width;
-    window->height = height;
+    window->bounds->x = x;
+    window->bounds->y = y;
+    window->bounds->width = width;
+    window->bounds->height = height;
 
     uint32_t values[] = {
         (uint32_t)x,     (uint32_t)y,
@@ -183,13 +189,12 @@ xcwm_window_configure(xcwm_window_t *window, int x, int y,
                          values);
 
     /* Set the damage area to the new window size so its redrawn properly */
-    window->damaged_width = width;
-    window->damaged_height = height;
+    window->dmg_bounds->width = width;
+    window->dmg_bounds->height = height;
 
     xcb_flush(window->context->conn);
     return;
 }
-
 
 void
 xcwm_window_remove_damage(xcwm_window_t *window)
@@ -202,10 +207,10 @@ xcwm_window_remove_damage(xcwm_window_t *window)
         return;
     }
 
-    rect.x = window->damaged_x;
-    rect.y = window->damaged_y;
-    rect.width = window->damaged_width;
-    rect.height = window->damaged_height;
+    rect.x = window->dmg_bounds->x;
+    rect.y = window->dmg_bounds->y;
+    rect.width = window->dmg_bounds->width;
+    rect.height = window->dmg_bounds->height;
 
     xcb_xfixes_create_region(window->context->conn,
                              region,
@@ -219,10 +224,10 @@ xcwm_window_remove_damage(xcwm_window_t *window)
 
     if (!(_xcwm_request_check(window->context->conn, cookie,
                               "Failed to subtract damage"))) {
-        window->damaged_x = 0;
-        window->damaged_y = 0;
-        window->damaged_width = 0;
-        window->damaged_height = 0;
+        window->dmg_bounds->x = 0;
+        window->dmg_bounds->y = 0;
+        window->dmg_bounds->width = 0;
+        window->dmg_bounds->height = 0;
     }
     return;
 }
@@ -265,11 +270,63 @@ xcwm_window_request_close(xcwm_window_t *window)
 }
 
 
+/* Accessor functions into xcwm_window_t */
+
+xcwm_context_t *
+xcwm_window_get_context(xcwm_window_t const *window)
+{
+
+    return window->context;
+}
+
+xcwm_window_t *
+xcwm_window_get_parent(xcwm_window_t const *window)
+{
+
+    return window->parent;
+}
+
+void *
+xcwm_window_get_local_data(xcwm_window_t const *window)
+{
+
+    return window->local_data;
+}
+
+void
+xcwm_window_set_local_data(xcwm_window_t *window, void *data_ptr)
+{
+
+    window->local_data = data_ptr;
+}
+
+xcwm_rect_t *
+xcwm_window_get_full_rect(xcwm_window_t const *window)
+{
+
+    return window->bounds;
+}
+
+xcwm_rect_t *
+xcwm_window_get_damaged_rect(xcwm_window_t const *window)
+{
+
+    return window->dmg_bounds;
+}
+
+char *
+xcwm_window_copy_name(xcwm_window_t const *window)
+{
+
+    return strdup(window->name);
+}
+
 /* Resize the window on server side */
 void
 _xcwm_resize_window(xcb_connection_t *conn, xcb_window_t window,
                     int width, int height)
 {
+
     uint32_t values[2] = { width, height };
 
     xcb_configure_window(conn,
@@ -391,8 +448,8 @@ init_damage_on_window(xcb_connection_t *conn, xcwm_window_t *window)
     window->damage = damage_id;
 
     /* Set the damage area in the context to zero */
-    window->damaged_x = 0;
-    window->damaged_y = 0;
-    window->damaged_width = 0;
-    window->damaged_height = 0;
+    window->dmg_bounds->x = 0;
+    window->dmg_bounds->y = 0;
+    window->dmg_bounds->width = 0;
+    window->dmg_bounds->height = 0;
 }

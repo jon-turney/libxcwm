@@ -30,6 +30,16 @@
 #error "Please #include <xcwm/xcwm.h> instead of this file directly."
 #endif
 
+/**
+ * Rectangle for defining area of image.
+ */
+struct xcwm_rect_t {
+    int x;
+    int y;
+    int width;
+    int height;
+};
+typedef struct xcwm_rect_t xcwm_rect_t;
 
 /* Structure for holding data for a window */
 struct xcwm_window_t {
@@ -37,14 +47,8 @@ struct xcwm_window_t {
     xcwm_context_t *context;
     struct xcwm_window_t *parent;
     xcb_damage_damage_t damage;
-    int x;
-    int y;
-    int width;
-    int height;
-    int damaged_x;
-    int damaged_y;
-    int damaged_width;
-    int damaged_height;
+    xcwm_rect_t *bounds;
+    xcwm_rect_t *dmg_bounds;
     char *name;         /* The name of the window */
     int wm_delete_set;  /* Flag for WM_DELETE_WINDOW, 1 if set */
     void *local_data;   /* Area for data client cares about */
@@ -97,5 +101,62 @@ xcwm_window_request_close(xcwm_window_t *window);
 void
 xcwm_window_configure(xcwm_window_t *window, int x, int y,
                       int height, int width);
+
+/**
+ * Get the context for this window.
+ * @param window The window to get context from.
+ * @return The context of the window.
+ */
+xcwm_context_t *
+xcwm_window_get_context(xcwm_window_t const *window);
+
+/**
+ * Get this window's parent window.
+ * @param window The child window.
+ * @return This window's parent.
+ */
+xcwm_window_t *
+xcwm_window_get_parent(xcwm_window_t const *window);
+
+/**
+ * Get the local data pointer for this window.
+ * @param window The window to get local data from.
+ * @return Local data pointer.
+ */
+void *
+xcwm_window_get_local_data(xcwm_window_t const *window);
+
+/**
+ * Set the local data pointer for window.
+ * @param window Window to assign pointer to.
+ * @param data_ptr Pointer to data client associates with this window.
+ */
+void
+xcwm_window_set_local_data(xcwm_window_t *window, void *data_ptr);
+
+/**
+ * Get the rectangle describing the size and position of the window.
+ * @param window Window to get rectangle from.
+ * @return The rectangle.
+ */
+xcwm_rect_t *
+xcwm_window_get_full_rect(xcwm_window_t const *window);
+
+/**
+ * Get the damaged area within the given window.
+ * @param window The window to get damage from.
+ * @return Rectangle describing damaged area.
+ */
+xcwm_rect_t *
+xcwm_window_get_damaged_rect(xcwm_window_t const *window);
+
+/**
+ * Get a copy of the name of the window. Client is responsible for freeing
+ * memory created for the copy.
+ * @param window The window to get name from.
+ * @return Name of window. 
+ */
+char *
+xcwm_window_copy_name(xcwm_window_t const *window);
 
 #endif  /* _XCWM_WINDOW_H_ */

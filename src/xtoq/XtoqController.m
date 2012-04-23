@@ -72,13 +72,13 @@
     [[NSGraphicsContext currentContext]
      setImageInterpolation:NSImageInterpolationHigh];
 
+    xcwm_window_t *rootWin = xcwm_context_get_root_window(rootContext);
+    xcwm_rect_t *winRect = xcwm_window_get_full_rect(rootWin);
     xcwmWindow = [[XtoqWindow alloc]
-                  initWithContentRect: NSMakeRect(rootContext->root_window->x,
-                                                  rootContext->root_window->y,
-                                                  rootContext->root_window->
-                                                  width,
-                                                  rootContext->root_window->
-                                                  height)
+                  initWithContentRect: NSMakeRect(winRect->x,
+                                                  winRect->y,
+                                                  winRect->width,
+                                                  winRect->height)
                   styleMask: (NSTitledWindowMask |
                               NSClosableWindowMask |
                               NSMiniaturizableWindowMask |
@@ -86,8 +86,8 @@
                   backing: NSBackingStoreBuffered
                   defer: YES];
 
-    [xcwmWindow setXcwmWindow: rootContext->root_window];
-    rootContext->root_window->local_data = xcwmWindow;
+    [xcwmWindow setXcwmWindow: rootWin];
+    xcwm_window_set_local_data(rootWin, xcwmWindow);
     // Make the menu
     [self makeMenu];
 
@@ -97,7 +97,7 @@
     imageRec = NSMakeRect(0, 0, 1028, 768);
     // create a view, init'ing it with our rect
     ourView = [[XtoqView alloc] initWithFrame:imageRec];
-    [ourView setXcwmWindow: rootContext->root_window];
+    [ourView setXcwmWindow: rootWin];
     
     // add view to its window
     [xcwmWindow setContentView: ourView];
@@ -446,12 +446,13 @@
     xcwm_image_t *xcbImage;
     XtoqImageRep *imageRep;
 
-    int y = [self xserverToOSX: window->y windowHeight:window->height];
+    xcwm_rect_t  *windowSize = xcwm_window_get_full_rect(window);
+    int y = [self xserverToOSX: windowSize->y windowHeight:windowSize->height];
 
     newWindow = [[XtoqWindow alloc]
-                 initWithContentRect: NSMakeRect(window->x, y,
-                                                 window->width,
-                                                 window->height)
+                 initWithContentRect: NSMakeRect(windowSize->x, y,
+                                                 windowSize->width,
+                                                 windowSize->height)
                            styleMask: (NSTitledWindowMask |
                              NSClosableWindowMask |
                              NSMiniaturizableWindowMask |
@@ -463,7 +464,7 @@
     [newWindow setXcwmWindow: window];
 
     // save the newWindow pointer into the context
-    window->local_data = (id)newWindow;
+    xcwm_window_set_local_data(window, (id)newWindow);
 
     // get image to darw
     xcbImage = xcwm_image_copy_damaged(window);
@@ -481,10 +482,12 @@
     [newWindow setContentView: newView];
 
     // set title
+    char *name = xcwm_window_copy_name(window);
     NSString *winTitle;
-    winTitle = [NSString stringWithCString: window->name
+    winTitle = [NSString stringWithCString: name
                                   encoding: NSUTF8StringEncoding];
     [newWindow setTitle: winTitle];
+    free(name);
 
     //shows the window
     [newWindow makeKeyAndOrderFront: self];
@@ -494,7 +497,7 @@
 - (void) destroyWindow:(xcwm_window_t *) window
 {
     // set the window to be closed
-    XtoqWindow *destWindow = window->local_data;
+  XtoqWindow *destWindow = xcwm_window_get_local_data(window);
     //close window
     [destWindow close];
 }
@@ -517,14 +520,18 @@
     float y_transformed;
     NSRect newDamageRect;
 
-    y_transformed = (window->height - window->damaged_y
-                     - window->damaged_height) / 1.0;
-    newDamageRect = NSMakeRect(window->damaged_x,
+    xcwm_rect_t *winRect = xcwm_window_get_full_rect(window);
+    xcwm_rect_t *dmgRect = xcwm_window_get_damaged_rect(window);
+
+    y_transformed = (winRect->height - dmgRect->y
+                     - dmgRect->height) / 1.0;
+    newDamageRect = NSMakeRect(dmgRect->x,
                                y_transformed,
-                               window->damaged_width,
-                               window->damaged_height);
+                               dmgRect->width,
+                               dmgRect->height);
     XtoqView *localView =
-        (XtoqView *)[(XtoqWindow *)window->local_data contentView];
+      (XtoqView *)[(XtoqWindow *)xcwm_window_get_local_data(window)
+                                 contentView];
     [localView setPartialImage:newDamageRect];
 }
 
@@ -548,7 +555,8 @@
         NSRect moveFrame = [moveWindow frame];
         int x = (int)moveFrame.origin.x;
         int y = [self osxToXserver: (int)moveFrame.origin.y
-                      windowHeight: window->height] - WINDOWBAR;
+                      windowHeight: xcwm_window_get_full_rect(window)->height]
+          - WINDOWBAR;
         int width = (int)moveFrame.size.width;
         int height = (int)moveFrame.size.height - WINDOWBAR;
 

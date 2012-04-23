@@ -59,17 +59,20 @@
     xcwm_image_t *imageT;
     float y_transformed;
     XtoqImageRep *imageNew;
-
+    xcwm_rect_t *winRect;
+    xcwm_rect_t *dmgRect;
+  
     xcwm_event_get_thread_lock();
     imageT = xcwm_image_copy_damaged(viewXcwmWindow);
     if (imageT->image) {
-        y_transformed = (viewXcwmWindow->height
-                         - viewXcwmWindow->damaged_y
-                         - viewXcwmWindow->damaged_height) / 1.0;
+        winRect = xcwm_window_get_full_rect(viewXcwmWindow);
+        dmgRect = xcwm_window_get_damaged_rect(viewXcwmWindow);
+        y_transformed = (winRect->height - dmgRect->y
+                         - dmgRect->height) / 1.0;
         imageNew = [[XtoqImageRep alloc]
-                    initWithData:imageT
-                               x:((viewXcwmWindow->damaged_x))
-                               y:y_transformed];
+                    initWithData: imageT
+                               x: dmgRect->x
+                               y: y_transformed];
         [imageNew draw];
         [imageNew destroy];
 
