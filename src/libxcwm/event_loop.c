@@ -253,15 +253,9 @@ run_event_loop(void *thread_arg_struct)
                 return_evt->window = window;
 
                 callback_ptr(return_evt);
-                /* FIXME: Should rework how windows are destroyed,
-                 * since its not making sense to do memory clean up
-                 * here. */
-                free(window->bounds);
-                free(window->dmg_bounds);
-                if (window->name) {
-                    free(window->name);
-                }
-                free(window);
+
+                // Release memory for the window
+                _xcwm_window_release(window);
                 break;
             }
 

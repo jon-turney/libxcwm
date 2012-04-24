@@ -81,7 +81,6 @@ xcwm_window_set_to_top(xcwm_window_t *window);
 void
 xcwm_window_remove_damage(xcwm_window_t *window);
 
-
 /**
  * kill the window, if possible using WM_DELETE_WINDOW (icccm)
  * otherwise using xcb_kill_client.

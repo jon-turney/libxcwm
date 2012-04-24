@@ -269,6 +269,23 @@ xcwm_window_request_close(xcwm_window_t *window)
     return;
 }
 
+void
+_xcwm_window_release(xcwm_window_t *window)
+{
+
+    if (!window) {
+        return;
+    }
+
+    free(window->bounds);
+    if (window->dmg_bounds) {
+        free(window->dmg_bounds);
+    }
+    if (window->name) {
+        free(window->name);
+    }
+    free(window);
+}
 
 /* Accessor functions into xcwm_window_t */
 

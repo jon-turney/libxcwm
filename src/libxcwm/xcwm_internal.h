@@ -252,6 +252,16 @@ _xcwm_destroy_window(xcb_connection_t *conn,
                      xcb_destroy_notify_event_t *event);
 
 /**
+ * Release the window and free its memory. Call after client has done
+ * necessary clean up of the window on its side after the window has
+ * been closed and a XCWM_DESTROY event has been received for the
+ * window.
+ * @param window The window to release.
+ */
+void
+_xcwm_window_release(xcwm_window_t *window);
+
+/**
  * Resize the window to given width and height.
  * @param conn The connection
  * @param window The id of window to resize
