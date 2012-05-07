@@ -39,15 +39,10 @@ xcwm_image_copy_full(xcwm_window_t *window)
 {
 
     xcb_get_geometry_reply_t *geom_reply;
-
     xcb_image_t *image;
 
     geom_reply = _xcwm_get_window_geometry(window->context->conn,
                                            window->window_id);
-
-    //FIXME - right size
-    xcwm_image_t * xcwm_image =
-        (xcwm_image_t *)malloc(10 * sizeof(xcwm_image_t));
 
     xcb_flush(window->context->conn);
     /* Get the full image of the window */
@@ -59,6 +54,12 @@ xcwm_image_copy_full(xcwm_window_t *window)
                           geom_reply->height,
                           (unsigned int)~0L,
                           XCB_IMAGE_FORMAT_Z_PIXMAP);
+
+    if (!image) {
+        return NULL;
+    }
+
+    xcwm_image_t * xcwm_image = malloc(sizeof(xcwm_image_t));
 
     xcwm_image->image = image;
     xcwm_image->x = geom_reply->x;
@@ -78,6 +79,12 @@ xcwm_image_copy_damaged(xcwm_window_t *window)
     xcb_image_t *image;
 
     xcb_flush(window->context->conn);
+
+    /* Return null if image is 0 by 0 */
+    if (window->dmg_bounds->width == 0 || window->dmg_bounds->height == 0) {
+        return NULL;
+    }
+
     /* Get the image of the root window */
     image = xcb_image_get(window->context->conn,
                           window->window_id,
@@ -88,9 +95,12 @@ xcwm_image_copy_damaged(xcwm_window_t *window)
                           (unsigned int)~0L,
                           XCB_IMAGE_FORMAT_Z_PIXMAP);
 
-    //FIXME - Calculate memory size correctly
-    xcwm_image_t * xcwm_image =
-        (xcwm_image_t *)malloc(10 * sizeof(xcwm_image_t));
+    /* Failed to get a valid image, return null */
+    if (!image) {
+        return NULL;
+    }
+
+    xcwm_image_t * xcwm_image = malloc(sizeof(xcwm_image_t));
 
     xcwm_image->image = image;
     xcwm_image->x = window->dmg_bounds->x;

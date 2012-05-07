@@ -57,7 +57,8 @@ xcwm_image_copy_full (xcwm_window_t *window);
  * Intended for servicing to a client's reaction to a damage notification
  * Returns the portion of the window's image that has been damaged.
  * @param window The window to get image from
- * @return an xcwm_image_t with partial image window contents
+ * @return an xcwm_image_t with partial image window contents or
+ * NULL if damaged area has zero width or height
  */
 xcwm_image_t *
 xcwm_image_copy_damaged(xcwm_window_t *window);

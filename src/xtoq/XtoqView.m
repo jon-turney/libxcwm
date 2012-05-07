@@ -64,7 +64,7 @@
   
     xcwm_event_get_thread_lock();
     imageT = xcwm_image_copy_damaged(viewXcwmWindow);
-    if (imageT->image) {
+    if (imageT) {
         winRect = xcwm_window_get_full_rect(viewXcwmWindow);
         dmgRect = xcwm_window_get_damaged_rect(viewXcwmWindow);
         y_transformed = (winRect->height - dmgRect->y

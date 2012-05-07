@@ -460,7 +460,7 @@
     xcwm_window_set_local_data(window, (id)newWindow);
 
     // get image to darw
-    xcbImage = xcwm_image_copy_damaged(window);
+    xcbImage = xcwm_image_copy_full(window);
     imageRep = [[XtoqImageRep alloc] initWithData: xcbImage x: 0 y: 0];
 
     // draw the image into a rect
