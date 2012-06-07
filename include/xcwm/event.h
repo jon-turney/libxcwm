@@ -37,22 +37,18 @@ typedef struct xcwm_event_t xcwm_event_t;
 typedef void (*xcwm_event_cb_t)(xcwm_event_t const *event);
 
 /* Event types */
-#define XTOQ_DAMAGE  0
-#define XTOQ_EXPOSE  1
-#define XTOQ_CREATE  2
-#define XTOQ_DESTROY 3
+typedef enum xcwm_event_type_t {
+    XCWM_EVENT_WINDOW_DAMAGE = 0,
+    XCWM_EVENT_WINDOW_EXPOSE,
+    XCWM_EVENT_WINDOW_CREATE,
+    XCWM_EVENT_WINDOW_DESTROY
+} xcwm_event_type_t;
 
 /**
  *  Return the event type for the given event.
  */
-int
+xcwm_event_type_t
 xcwm_event_get_type(xcwm_event_t const *event);
-
-/**
- * Return the context for the given event.
- */
-xcwm_context_t *
-xcwm_event_get_context(xcwm_event_t const *event);
 
 /**
  * Return the window for the given event.

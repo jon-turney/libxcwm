@@ -34,9 +34,8 @@
 
 /* Definition of abstract data type for event */
 struct xcwm_event_t {
-    xcwm_context_t *context;
     xcwm_window_t *window;
-    int event_type;
+    xcwm_event_type_t event_type;
 };
 
 /* Locally used data structure */
@@ -134,7 +133,7 @@ run_event_loop(void *thread_arg_struct)
             xcwm_rect_t dmg_area;
 
             return_evt = malloc(sizeof(xcwm_event_t));
-            return_evt->event_type = XTOQ_DAMAGE;
+            return_evt->event_type = XCWM_EVENT_WINDOW_DAMAGE;
             return_evt->window =
                 _xcwm_get_window_node_by_window_id(dmgevnt->drawable);
             if (!return_evt->window) {
@@ -237,7 +236,7 @@ run_event_loop(void *thread_arg_struct)
                        exevnt->height);
 
                 return_evt = malloc(sizeof(xcwm_event_t));
-                return_evt->event_type = XTOQ_EXPOSE;
+                return_evt->event_type = XCWM_EVENT_WINDOW_EXPOSE;
                 callback_ptr(return_evt);
                 break;
             }
@@ -263,7 +262,7 @@ run_event_loop(void *thread_arg_struct)
                 }
 
                 return_evt = malloc(sizeof(xcwm_event_t));
-                return_evt->event_type = XTOQ_DESTROY;
+                return_evt->event_type = XCWM_EVENT_WINDOW_DESTROY;
                 return_evt->window = window;
 
                 callback_ptr(return_evt);
@@ -286,7 +285,7 @@ run_event_loop(void *thread_arg_struct)
                     free(return_evt);
                     break;
                 }
-                return_evt->event_type = XTOQ_CREATE;
+                return_evt->event_type = XCWM_EVENT_WINDOW_CREATE;
                 callback_ptr(return_evt);
                 break;
             }
@@ -304,7 +303,7 @@ run_event_loop(void *thread_arg_struct)
                     break;
                 }
                 _xcwm_map_window(event_conn, return_evt->window);
-                return_evt->event_type = XTOQ_CREATE;
+                return_evt->event_type = XCWM_EVENT_WINDOW_CREATE;
                 callback_ptr(return_evt);
                 break;
             }
@@ -323,7 +322,7 @@ run_event_loop(void *thread_arg_struct)
                 }
 
                 return_evt = malloc(sizeof(xcwm_event_t));
-                return_evt->event_type = XTOQ_DESTROY;
+                return_evt->event_type = XCWM_EVENT_WINDOW_DESTROY;
                 return_evt->window = window;
 
                 callback_ptr(return_evt);
@@ -406,17 +405,10 @@ run_event_loop(void *thread_arg_struct)
     return NULL;
 }
 
-int
+xcwm_event_type_t
 xcwm_event_get_type(xcwm_event_t const *event)
 {
     return event->event_type;
-}
-
-/* FIXME: Do we still need a context in the event? Probably not... */
-xcwm_context_t *
-xcwm_event_get_context(xcwm_event_t const *event)
-{
-    return event->context;
 }
 
 xcwm_window_t *

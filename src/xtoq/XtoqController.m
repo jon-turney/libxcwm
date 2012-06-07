@@ -579,14 +579,14 @@ void
 eventHandler(xcwm_event_t *event)
 {
     xcwm_window_t *window = xcwm_event_get_window(event);
-    if (xcwm_event_get_type(event) == XTOQ_DAMAGE) {
+    if (xcwm_event_get_type(event) == XCWM_EVENT_WINDOW_DAMAGE) {
         [referenceToSelf updateImage: window];
     }
-    else if (xcwm_event_get_type(event) == XTOQ_CREATE) {
+    else if (xcwm_event_get_type(event) == XCWM_EVENT_WINDOW_CREATE) {
         NSLog(@"Window was created");
         [referenceToSelf createNewWindow: window];
     }
-    else if (xcwm_event_get_type(event) == XTOQ_DESTROY) {
+    else if (xcwm_event_get_type(event) == XCWM_EVENT_WINDOW_DESTROY) {
         NSLog(@"Window was destroyed");
         [referenceToSelf destroyWindow: window];
     }
