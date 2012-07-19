@@ -191,13 +191,15 @@ XtoqApplicationMain(int argc, char** argv)
     }
 
     case NSMouseMoved:
+    case NSLeftMouseDragged:
+    case NSRightMouseDragged:
+    case NSOtherMouseDragged:
     {
         if (ns_window != nil) {
             NSRect frame = [ns_window frame];
             ns_location.x += frame.origin.x;
             ns_location.y += frame.origin.y;
         }
-
         xNum = [[NSNumber alloc] initWithFloat:ns_location.x];
         yNum = [[NSNumber alloc] initWithFloat:ns_location.y];
 
