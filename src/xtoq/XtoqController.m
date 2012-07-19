@@ -44,7 +44,7 @@
 {
 
     int height = [[NSScreen mainScreen] frame].size.height;
-    return height - windowH + yValue;
+    return height - windowH - yValue;
 
 }
 
