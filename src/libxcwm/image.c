@@ -48,8 +48,8 @@ xcwm_image_copy_full(xcwm_window_t *window)
     /* Get the full image of the window */
     image = xcb_image_get(window->context->conn,
                           window->window_id,
-                          geom_reply->x,
-                          geom_reply->y,
+                          0,
+                          0,
                           geom_reply->width,
                           geom_reply->height,
                           (unsigned int)~0L,
