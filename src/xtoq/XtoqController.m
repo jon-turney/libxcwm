@@ -439,18 +439,32 @@
     XtoqView     *newView;
     xcwm_image_t *xcbImage;
     XtoqImageRep *imageRep;
+    NSUInteger winStyle;
 
     xcwm_rect_t  *windowSize = xcwm_window_get_full_rect(window);
     int y = [self xserverToOSX: windowSize->y windowHeight:windowSize->height];
 
+    if (xcwm_window_is_override_redirect(window)) {
+      winStyle = NSBorderlessWindowMask;
+      // Make up the width of the window bar
+      y = y - WINDOWBAR;
+    } else {
+        winStyle = (NSTitledWindowMask |
+                    NSClosableWindowMask |
+                    NSMiniaturizableWindowMask |
+                    NSResizableWindowMask);
+        // Move the window down by the height of the OSX menu bar
+        xcwm_window_configure(window, windowSize->x,
+                              windowSize->y + WINDOWBAR,
+                              windowSize->height,
+                              windowSize->width);
+    }
+    
     newWindow = [[XtoqWindow alloc]
                  initWithContentRect: NSMakeRect(windowSize->x, y,
                                                  windowSize->width,
                                                  windowSize->height)
-                           styleMask: (NSTitledWindowMask |
-                             NSClosableWindowMask |
-                             NSMiniaturizableWindowMask |
-                             NSResizableWindowMask)
+                           styleMask: winStyle
                              backing: NSBackingStoreBuffered
                                defer: YES];
 
@@ -485,7 +499,6 @@
 
     //shows the window
     [newWindow makeKeyAndOrderFront: self];
-
 }
 
 - (void) destroyWindow:(xcwm_window_t *) window
