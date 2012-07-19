@@ -28,3 +28,14 @@ xtoq_LDFLAGS =  \
 xtoq_LDADD = \
         $(top_builddir)/src/libxcwm/libxcwm.la
 
+bin_PROGRAMS = keymap
+keymap_SOURCES = \
+	keymap_main.c \
+	keymap.c \
+	keysym2ucs.c
+keymap_LDFLAGS = \
+	$(XCB_LIBS) \
+	-Wl,-framework,Cocoa \
+	-Wl,-framework,Carbon \
+	-Wl,-framework,IOKit
+

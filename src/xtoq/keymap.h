@@ -44,6 +44,6 @@ int
 XtoQModifierStringToNXMask(const char *string, int separatelr);
 
 void
-XtoQKeymapReSync(void);
+XtoQKeymapReSync(xcb_connection_t *conn);
 
 #endif /* XTOQ_KEYBOARD_H */

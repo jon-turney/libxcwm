@@ -52,6 +52,7 @@
 #include <assert.h>
 
 /* FIXME: Use xcb instead */
+#include <xcb/xcb.h>
 #include <X11/X.h>
 #include <X11/keysym.h>
 #include <X11/extensions/XKB.h>
@@ -88,7 +89,7 @@ enum {
 
 const static struct {
     unsigned short keycode;
-    KeySym keysym;
+    xcb_keysym_t keysym;
 } known_keys[] = {
     { 55,  XK_Meta_L        },
     { 56,  XK_Shift_L       },
@@ -125,7 +126,7 @@ const static struct {
 
 const static struct {
     unsigned short keycode;
-    KeySym normal, keypad;
+    xcb_keysym_t normal, keypad;
 } known_numeric_keys[] = {
     { 65, XK_period,   XK_KP_Decimal                              },
     { 67, XK_asterisk, XK_KP_Multiply                             },
@@ -161,7 +162,7 @@ const static unsigned short keycode_blacklist[] = { 66, 70, 72, 77 };
    FIXME: all the unicode keysyms (apart from circumflex) were guessed. */
 
 const static struct {
-    KeySym normal, dead;
+    xcb_keysym_t normal, dead;
 } dead_keys[] = {
     { XK_grave,       XK_dead_grave                                },
     { XK_apostrophe,  XK_dead_acute                                }, /* US:"=" on a Czech keyboard */
@@ -192,11 +193,15 @@ const static struct {
 typedef struct XtoQKeymapInfo_struct {
     // FIXME: Note that this will need to be a XModifierKeymap for use in client-space
     char modMap[MAP_LENGTH];
-    KeySym keyMap[MAP_LENGTH * GLYPHS_PER_KEY];
+    xcb_keysym_t keyMap[MAP_LENGTH * GLYPHS_PER_KEY];
     unsigned char modifierKeycodes[32][2];
 } XtoQKeymapInfo;
 
 XtoQKeymapInfo keyInfo;
+
+/* Internal function definitions. Silence compiler warnings */
+void
+XtoQKeyboardReloadHandler(xcb_connection_t *conn);
 
 //-----------------------------------------------------------------------------
 // Utility functions to help parse XtoQ keymap
@@ -211,7 +216,7 @@ static void
 XtoQBuildModifierMaps(XtoQKeymapInfo *info)
 {
     int i;
-    KeySym *k;
+    xcb_keysym_t *k;
 
     memset(info->modMap, NoSymbol, sizeof(info->modMap));
     memset(info->modifierKeycodes, 0, sizeof(info->modifierKeycodes));
@@ -370,7 +375,7 @@ XtoQKeyboardSetRepeat(DeviceIntPtr pDev, int initialKeyRepeatValue,
 #endif
 
 void
-XtoQKeyboardReloadHandler(void)
+XtoQKeyboardReloadHandler(xcb_connection_t *conn)
 {
     CFIndex initialKeyRepeatValue, keyRepeatValue;
     Boolean ok;
@@ -400,25 +405,29 @@ XtoQKeyboardReloadHandler(void)
     if (!ok)
         keyRepeatValue = 6;
 
-#if 0
+
     //FIXME: Use Xi's ChangeDeviceKeyMapping (note that this won't handle modMap).
     //       modMap needs to be sent using the core SetModifierMapping request,
     //       and it probably needs to be in a different format than it is currently.
+    //FIXME: Disabled XtoQKeyboardSetRepeat(darwinKeyboard, initialKeyRepeatValue, keyRepeatValue)
 
-    /* Initialize our keySyms */
-    KeySymsRec keySyms;
-    keySyms.map = keyInfo.keyMap;
-    keySyms.mapWidth = GLYPHS_PER_KEY;
-    keySyms.minKeyCode = MIN_KEYCODE;
-    keySyms.maxKeyCode = MAX_KEYCODE;
+    /* FIXME: Set the keymap through XCB call. Once this is and
+     * modifier mapping is working, this will be replaced by call to
+     * xcwm */
+    xcb_void_cookie_t cookie;
+    xcb_generic_error_t *error;
+    cookie = xcb_change_keyboard_mapping_checked(conn,
+                                                 NUM_KEYCODES,
+                                                 MIN_KEYCODE,
+                                                 GLYPHS_PER_KEY,
+                                                 keyInfo.keyMap);
 
-    // TODO: We should build the entire XkbDescRec and use XkbCopyKeymap
-    /* Apply the mappings to darwinKeyboard */
-    //XkbApplyMappingChange(darwinKeyboard, &keySyms, keySyms.minKeyCode,
-    //                      keySyms.maxKeyCode - keySyms.minKeyCode + 1,
-    //                      keyInfo.modMap, serverClient);
-    //FIXME: Disabled XtoQKeyboardSetRepeat(darwinKeyboard, initialKeyRepeatValue, keyRepeatValue);
-#endif
+    error = xcb_request_check(conn, cookie);
+    if (error) {
+        fprintf(stderr, "ERROR: Failed to change keyboard mapping");
+        fprintf(stderr, "\nError code: %d\n", error->error_code);
+    }
+    xcb_flush(conn);
 
 #if 0 /* FIXME: Don't worry about xmodmap until we're done with everything else */
       /* Modify with xmodmap */
@@ -743,8 +752,8 @@ macroman2ucs(unsigned char c)
     else return table[c - 128];
 }
 
-static KeySym
-make_dead_key(KeySym in)
+static xcb_keysym_t
+make_dead_key(xcb_keysym_t in)
 {
     int i;
 
@@ -766,7 +775,7 @@ XtoQReadSystemKeymap(XtoQKeymapInfo *info)
     UInt32 keyboard_type = LMGetKbdType();
     int i, j;
     OSStatus err;
-    KeySym *k;
+    xcb_keysym_t *k;
     CFDataRef currentKeyLayoutDataRef = NULL;
 
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= 1050
@@ -968,12 +977,12 @@ XtoQReadSystemKeymap(XtoQKeymapInfo *info)
 }
 
 void
-XtoQKeymapReSync(void)
+XtoQKeymapReSync(xcb_connection_t *conn)
 {
     /* Update keyInfo */
     memset(keyInfo.keyMap, 0, sizeof(keyInfo.keyMap));
     XtoQReadSystemKeymap(&keyInfo);
 
     /* Tell server thread to deal with new keyInfo */
-    XtoQKeyboardReloadHandler();
+    XtoQKeyboardReloadHandler(conn);
 }
