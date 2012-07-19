@@ -96,6 +96,8 @@ xcwm_context_open(char *display)
     root_context->conn = conn;
     root_context->root_window->parent = 0;
     root_context->root_window->window_id = root_window_id;
+    /* FIXME: Should we have a circular assignment like this? */
+    root_context->root_window->context = root_context;
 
     /* Set width, height, x, & y from root_screen into the xcwm_context_t */
     root_context->root_window->bounds->width = root_screen->width_in_pixels;
