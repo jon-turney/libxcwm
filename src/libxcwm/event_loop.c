@@ -131,6 +131,7 @@ run_event_loop(void *thread_arg_struct)
             int old_y;
             int old_height;
             int old_width;
+            xcwm_rect_t dmg_area;
 
             return_evt = malloc(sizeof(xcwm_event_t));
             return_evt->event_type = XTOQ_DAMAGE;
@@ -147,6 +148,20 @@ run_event_loop(void *thread_arg_struct)
              * done in another thread that handles window redraws */
             xcwm_event_get_thread_lock();
 
+            /* Initial damage events for override-redirect windows are
+             * reported relative to the root window, subsequent events
+             * are relative to the window itself. */
+            if (return_evt->window->initial_damage == 1) {
+                dmg_area.x = dmgevnt->area.x - dmgevnt->geometry.x;
+                dmg_area.y = dmgevnt->area.y - dmgevnt->geometry.y;
+                return_evt->window->initial_damage = 0;
+            } else {
+                dmg_area.x = dmgevnt->area.x;
+                dmg_area.y = dmgevnt->area.y;
+            }
+            dmg_area.width = dmgevnt->area.width;
+            dmg_area.height = dmgevnt->area.height;
+
             old_x = return_evt->window->dmg_bounds->x;
             old_y = return_evt->window->dmg_bounds->y;
             old_width = return_evt->window->dmg_bounds->width;
@@ -154,31 +169,31 @@ run_event_loop(void *thread_arg_struct)
 
             if (return_evt->window->dmg_bounds->width == 0) {
                 /* We know something is damaged */
-                return_evt->window->dmg_bounds->x = dmgevnt->area.x;
-                return_evt->window->dmg_bounds->y = dmgevnt->area.y;
-                return_evt->window->dmg_bounds->width = dmgevnt->area.width;
-                return_evt->window->dmg_bounds->height = dmgevnt->area.height;
+                return_evt->window->dmg_bounds->x = dmg_area.x;
+                return_evt->window->dmg_bounds->y = dmg_area.y;
+                return_evt->window->dmg_bounds->width = dmg_area.width;
+                return_evt->window->dmg_bounds->height = dmg_area.height;
             }
             else {
                 /* Is the new damage bigger than the old */
-                if (old_x > dmgevnt->area.x) {
-                    return_evt->window->dmg_bounds->x = dmgevnt->area.x;
+                if (old_x > dmg_area.x) {
+                    return_evt->window->dmg_bounds->x = dmg_area.x;
                 }
-                if (old_y > dmgevnt->area.y) {
-                    return_evt->window->dmg_bounds->y = dmgevnt->area.y;
+                if (old_y > dmg_area.y) {
+                    return_evt->window->dmg_bounds->y = dmg_area.y;
                 }
-                if (old_width < dmgevnt->area.width) {
-                    return_evt->window->dmg_bounds->width = dmgevnt->area.width;
+                if (old_width < dmg_area.width) {
+                    return_evt->window->dmg_bounds->width = dmg_area.width;
                 }
-                if (old_height < dmgevnt->area.height) {
-                    return_evt->window->dmg_bounds->height = dmgevnt->area.height;
+                if (old_height < dmg_area.height) {
+                    return_evt->window->dmg_bounds->height = dmg_area.height;
                 }
             }
             xcwm_event_release_thread_lock();
 
-            if (((old_x > dmgevnt->area.x) || (old_y > dmgevnt->area.y))
-                || ((old_width < dmgevnt->area.width)
-                    || (old_height < dmgevnt->area.height))) {
+            if (((old_x > dmg_area.x) || (old_y > dmg_area.y))
+                || ((old_width < dmg_area.width)
+                    || (old_height < dmg_area.height))) {
                 /* We should only reach here if this damage event
                  * actually increases that area of the window marked
                  * for damage. */
@@ -240,7 +255,7 @@ run_event_loop(void *thread_arg_struct)
                 xcb_destroy_notify_event_t *notify =
                     (xcb_destroy_notify_event_t *)evt;
                 xcwm_window_t *window =
-                    _xcwm_destroy_window(event_conn, notify);
+                    _xcwm_window_remove(event_conn, notify->window);
 
                 if (!window) {
                     /* Not a window in the list, don't try and destroy */
@@ -258,12 +273,32 @@ run_event_loop(void *thread_arg_struct)
                 break;
             }
 
+            case XCB_MAP_NOTIFY:
+            {
+                xcb_map_notify_event_t *notify =
+                    (xcb_map_notify_event_t *)evt;
+                return_evt = malloc(sizeof(xcwm_event_t));
+                /* notify->event holds parent of the window */
+                return_evt->window =
+                    _xcwm_window_create(context, notify->window,
+                                        notify->event);
+                if (!return_evt->window) {
+                    free(return_evt);
+                    break;
+                }
+                return_evt->event_type = XTOQ_CREATE;
+                callback_ptr(return_evt);
+                break;
+            }
+
             case XCB_MAP_REQUEST:
             {
                 xcb_map_request_event_t *request =
                     (xcb_map_request_event_t *)evt;
                 return_evt = malloc(sizeof(xcwm_event_t));
-                return_evt->window = _xcwm_window_created(context, request);
+                return_evt->window =
+                    _xcwm_window_create(context, request->window,
+                                        request->parent);
                 if (!return_evt->window) {
                     free(return_evt);
                     break;
@@ -271,6 +306,30 @@ run_event_loop(void *thread_arg_struct)
                 _xcwm_map_window(event_conn, return_evt->window);
                 return_evt->event_type = XTOQ_CREATE;
                 callback_ptr(return_evt);
+                break;
+            }
+
+            case XCB_UNMAP_NOTIFY:
+            {
+                xcb_unmap_notify_event_t *notify =
+                    (xcb_unmap_notify_event_t *)evt;
+                
+                xcwm_window_t *window =
+                    _xcwm_window_remove(event_conn, notify->window);
+
+                if (!window) {
+                    /* Not a window in the list, don't try and destroy */
+                    break;
+                }
+
+                return_evt = malloc(sizeof(xcwm_event_t));
+                return_evt->event_type = XTOQ_DESTROY;
+                return_evt->window = window;
+
+                callback_ptr(return_evt);
+
+                // Release memory for the window
+                _xcwm_window_release(window);
                 break;
             }
 

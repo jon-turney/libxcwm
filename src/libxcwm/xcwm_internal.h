@@ -69,6 +69,7 @@ extern xcwm_wm_atoms *_wm_atoms;
  */
 extern pthread_mutex_t event_thread_lock;
 
+
 /* util.c */
 
 /**
@@ -233,14 +234,18 @@ _xcwm_get_window_node_by_window_id(xcb_window_t window_id);
 /**
  * Create a new context for the window specified in the event.
  * @param context The context window was created in.
- * @param evt The map event for the window.
+ * @param new_window ID of the window being created.
+ * @param parent ID of the new windows parent.
  * @return Pointer to new window. NULL if window already exists.
  */
 xcwm_window_t *
-_xcwm_window_created(xcwm_context_t *context, xcb_map_request_event_t *evt);
+_xcwm_window_create(xcwm_context_t *context, xcb_window_t new_window,
+                    xcb_window_t parent);
 
 /**
- * Destroy the damage object associated with the window.
+ * Destroy the damage object associated with the window and
+ * remove the window from the list of managed windows. Memory allocated
+ * to the window must be removed with a call to _xcwm_window_release().
  * Call the remove function in context_list.c
  * @param conn The connection to xserver
  * @param event The destroy notify event for the window
@@ -248,9 +253,8 @@ _xcwm_window_created(xcwm_context_t *context, xcb_map_request_event_t *evt);
  * window isn't being managed
  */
 xcwm_window_t *
-_xcwm_destroy_window(xcb_connection_t *conn,
-                     xcb_destroy_notify_event_t *event);
-
+_xcwm_window_remove(xcb_connection_t *conn,
+                    xcb_window_t window);
 /**
  * Release the window and free its memory. Call after client has done
  * necessary clean up of the window on its side after the window has

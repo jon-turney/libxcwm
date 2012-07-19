@@ -97,11 +97,12 @@ xcwm_window_set_input_focus(xcwm_window_t *window)
 }
 
 xcwm_window_t *
-_xcwm_window_created(xcwm_context_t *context, xcb_map_request_event_t *event)
+_xcwm_window_create(xcwm_context_t *context, xcb_window_t new_window,
+                     xcb_window_t parent)
 {
 
-    /* Check to see if the window is already created */
-    if (_xcwm_get_window_node_by_window_id(event->window)) {
+    /* Check to see if the window is already being managed */
+    if (_xcwm_get_window_node_by_window_id(new_window)) {
         return NULL;
     }
 
@@ -114,21 +115,35 @@ _xcwm_window_created(xcwm_context_t *context, xcb_map_request_event_t *event)
     assert(window->dmg_bounds);
 
     xcb_get_geometry_reply_t *geom;
-    geom = _xcwm_get_window_geometry(context->conn, event->window);
+    geom = _xcwm_get_window_geometry(context->conn, new_window);
 
     /* set any available values from xcb_create_notify_event_t object pointer
        and geom pointer */
     window->context = context;
-    window->window_id = event->window;
+    window->window_id = new_window;
     window->bounds->x = geom->x;
     window->bounds->y = geom->y;
     window->bounds->width = geom->width;
     window->bounds->height = geom->height;
 
     /* Find an set the parent */
-    window->parent = _xcwm_get_window_node_by_window_id(event->parent);
+    window->parent = _xcwm_get_window_node_by_window_id(parent);
 
     free(geom);
+    
+    /* Get value of override_redirect flag */
+    xcb_get_window_attributes_reply_t *attrs =
+        _xcwm_get_window_attributes(context->conn, new_window);
+    window->override_redirect = attrs->override_redirect;
+    /* FIXME: Workaround for initial damage reporting for
+     * override-redirect windows. Initial damage event is relative to
+     * root, not window */
+    if (window->override_redirect) {
+        window->initial_damage = 1;
+    } else {
+        window->initial_damage = 0;
+    }
+    free(attrs);
 
     /* Set the ICCCM properties we care about */
     set_icccm_properties(context->conn, window);
@@ -143,25 +158,24 @@ _xcwm_window_created(xcwm_context_t *context, xcb_map_request_event_t *event)
 }
 
 xcwm_window_t *
-_xcwm_destroy_window(xcb_connection_t *conn,
-                     xcb_destroy_notify_event_t *event)
+_xcwm_window_remove(xcb_connection_t *conn, xcb_window_t window)
 {
 
-    xcwm_window_t *window =
-        _xcwm_get_window_node_by_window_id(event->window);
-    if (!window) {
+    xcwm_window_t *removed =
+        _xcwm_get_window_node_by_window_id(window);
+    if (!removed) {
         /* Window isn't being managed */
         return NULL;
     }
 
     /* Destroy the damage object associated with the window. */
-    xcb_damage_destroy(conn, window->damage);
+    xcb_damage_destroy(conn, removed->damage);
 
     /* Call the remove function in context_list.c */
-    _xcwm_remove_window_node(window->window_id);
+    _xcwm_remove_window_node(removed->window_id);
 
     /* Return the pointer for the context that was removed from the list. */
-    return window;
+    return removed;
 }
 
 void
@@ -301,6 +315,13 @@ xcwm_window_get_parent(xcwm_window_t const *window)
 {
 
     return window->parent;
+}
+
+int
+xcwm_window_is_override_redirect(xcwm_window_t const *window)
+{
+
+    return window->override_redirect;
 }
 
 void *

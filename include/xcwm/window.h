@@ -51,6 +51,8 @@ struct xcwm_window_t {
     xcwm_rect_t *dmg_bounds;
     char *name;         /* The name of the window */
     int wm_delete_set;  /* Flag for WM_DELETE_WINDOW, 1 if set */
+    int override_redirect;
+    int initial_damage;         /* Set to 1 for override-redirect windows */
     void *local_data;   /* Area for data client cares about */
 };
 
@@ -116,6 +118,14 @@ xcwm_window_get_context(xcwm_window_t const *window);
  */
 xcwm_window_t *
 xcwm_window_get_parent(xcwm_window_t const *window);
+
+/**
+ * Determine if window has override redirect flag set.
+ * @param window
+ * @return 1 if override redirect set on window, else 0.
+ */
+int
+xcwm_window_is_override_redirect(xcwm_window_t const *window);
 
 /**
  * Get the local data pointer for this window.
