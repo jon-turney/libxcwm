@@ -148,18 +148,19 @@
 - (void)applicationWillTerminate:(NSNotification *)aNotification
 {
     xcwm_context_close(rootContext);
+ 
+    // TODO: Implement decent server shutdown on app termination.
+    // FIXME: This way of closing the server creates more problems than its
+    // currently worth.
+    // const char *spawn[4];
+    // pid_t child;
 
-    const char *spawn[4];
-    pid_t child;
+    // spawn[0] = "/usr/bin/killall";
+    // spawn[1] = "-9";
+    // spawn[2] = "Xorg";
+    // spawn[3] = NULL;
 
-    // FIXME: This clobbers all instantances of the xserver. Not what
-    // we want to do.
-    spawn[0] = "/usr/bin/killall";
-    spawn[1] = "-9";
-    spawn[2] = "Xorg";
-    spawn[3] = NULL;
-
-    posix_spawn(&child, spawn[0], NULL, NULL, (char *const *)spawn, environ);
+    // posix_spawn(&child, spawn[0], NULL, NULL, (char *const *)spawn, environ);
 }
 
 - (void) applicationWillFinishLaunching: (NSNotification *) aNotification
