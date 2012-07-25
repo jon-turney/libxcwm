@@ -497,6 +497,21 @@
     [newWindow setTitle: winTitle];
     free(name);
 
+    // Set the sizing for the window, if we have values.
+    xcwm_window_sizing_t const *sizing = xcwm_window_get_sizing(window);
+    if (sizing->min_width > 0 || sizing->min_height > 0) {
+        [newWindow setContentMinSize: NSMakeSize(sizing->min_width,
+                                                 sizing->min_height)];
+    }
+    if (sizing->max_width > 0 || sizing->max_height > 0) {
+        [newWindow setContentMaxSize: NSMakeSize(sizing->max_width,
+                                                 sizing->max_height)];
+    }
+    if (sizing->width_inc > 0 || sizing->height_inc > 0) {
+        [newWindow setContentResizeIncrements: NSMakeSize(sizing->width_inc,
+                                                          sizing->height_inc)];
+    }
+
     //shows the window
     [newWindow makeKeyAndOrderFront: self];
 }
