@@ -139,7 +139,7 @@ _xcwm_get_wm_atoms(xcwm_context_t *context)
     /* WM_PROTOCOLS */
     atom_cookie = xcb_intern_atom(context->conn,
                                   0,
-                                  12,
+                                  strlen("WM_PROTOCOLS"),
                                   "WM_PROTOCOLS");
     atom_reply = xcb_intern_atom_reply(context->conn,
                                        atom_cookie,
@@ -155,7 +155,7 @@ _xcwm_get_wm_atoms(xcwm_context_t *context)
     /* WM_DELETE_WINDOW atom */
     atom_cookie = xcb_intern_atom(context->conn,
                                   0,
-                                  16,
+                                  strlen("WM_DELETE_WINDOW"),
                                   "WM_DELETE_WINDOW");
     atom_reply = xcb_intern_atom_reply(context->conn,
                                        atom_cookie,
@@ -167,4 +167,5 @@ _xcwm_get_wm_atoms(xcwm_context_t *context)
         _wm_atoms->wm_delete_window_atom = atom_reply->atom;
         free(atom_reply);
     }
+
 }
