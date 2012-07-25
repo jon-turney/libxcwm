@@ -119,6 +119,8 @@ _xcwm_window_create(xcwm_context_t *context, xcb_window_t new_window,
     assert(window->bounds);
     window->dmg_bounds = malloc(sizeof(xcwm_rect_t));
     assert(window->dmg_bounds);
+    window->sizing = calloc(1, sizeof(*window->sizing));
+    assert(window->dmg_bounds);;
 
     xcb_get_geometry_reply_t *geom;
     geom = _xcwm_get_window_geometry(context->conn, new_window);
@@ -298,6 +300,7 @@ _xcwm_window_release(xcwm_window_t *window)
     }
 
     free(window->bounds);
+    free(window->sizing);
     if (window->dmg_bounds) {
         free(window->dmg_bounds);
     }
@@ -492,14 +495,9 @@ set_wm_size_hints_for_window(xcb_connection_t *conn, xcwm_window_t *window)
     xcb_get_property_cookie_t cookie;
     xcb_size_hints_t hints;
     
-    if (window->sizing) {
-        free(window->sizing);
-    }
-    window->sizing = malloc(sizeof(xcwm_window_sizing_t));
-    assert(window->sizing);
     cookie = xcb_icccm_get_wm_normal_hints(conn, window->window_id);
     if (!xcb_icccm_get_wm_normal_hints_reply(conn, cookie, &hints, NULL)) {
-        memset(window->sizing, 0, sizeof(*window->sizing);
+        /* Use 0 for all values (as set in calloc), or previous values */
         return;
     }
     window->sizing->min_width = hints.min_width;
