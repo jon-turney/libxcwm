@@ -353,6 +353,24 @@ run_event_loop(void *thread_arg_struct)
                 break;
             }
 
+            case XCB_PROPERTY_NOTIFY:
+            {
+                xcb_property_notify_event_t *notify =
+                    (xcb_property_notify_event_t *)evt;
+                xcwm_window_t *window =
+                    _xcwm_get_window_node_by_window_id(notify->window);
+                if (!window) {
+                    break;
+                }
+
+                /* If this is WM_PROTOCOLS, do not send event, just
+                 * handle internally */
+                if (notify->atom == _wm_atoms->wm_protocols_atom) {
+                    _xcwm_window_set_wm_delete(event_conn, window);
+                }
+                break;
+            }
+
             case XCB_KEY_PRESS:
             {
                 printf("X Key press from xserver-");

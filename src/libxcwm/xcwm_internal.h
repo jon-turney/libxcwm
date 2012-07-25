@@ -285,4 +285,13 @@ _xcwm_resize_window(xcb_connection_t *conn, xcb_window_t window, int width,
 void
 _xcwm_map_window(xcb_connection_t *conn, xcwm_window_t *window);
 
+/**
+ * Set the WM_DELETE ICCCM protocol for the window.
+ * @param conn The connection to xserver
+ * @param window The window to set wm_delete_set flag on.
+ */
+void
+_xcwm_window_set_wm_delete(xcb_connection_t *conn, xcwm_window_t *window);
+
+
 #endif  /* _XTOQ_INTERNAL_H_ */

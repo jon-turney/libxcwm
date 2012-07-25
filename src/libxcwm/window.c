@@ -41,13 +41,13 @@
 void
 set_icccm_properties(xcb_connection_t *conn, xcwm_window_t *window);
 
+/* Set the event masks on a window */
+void
+set_window_event_masks(xcb_connection_t *conn, xcwm_window_t *window);
+
 /* Set the WM_NAME property in context */
 void
 set_wm_name_in_context(xcb_connection_t *conn, xcwm_window_t *window);
-
-/* Find out of the WM_DELETE_WINDOW property is set */
-void
-set_wm_delete_win_in_context(xcb_connection_t *conn, xcwm_window_t *window);
 
 /* Determine values of window WM_SIZE_HINTS */
 void
@@ -152,6 +152,9 @@ _xcwm_window_create(xcwm_context_t *context, xcb_window_t new_window,
         window->initial_damage = 0;
     }
     free(attrs);
+
+    /* Set the event masks for the window */
+    set_window_event_masks(context->conn, window);
 
     /* Set the ICCCM properties we care about */
     set_icccm_properties(context->conn, window);
@@ -414,6 +417,15 @@ _xcwm_map_window(xcb_connection_t *conn, xcwm_window_t *window)
 }
 
 void
+set_window_event_masks(xcb_connection_t *conn, xcwm_window_t *window)
+{
+    uint32_t values[1] = { XCB_EVENT_MASK_PROPERTY_CHANGE };
+    
+    xcb_change_window_attributes(conn, window->window_id,
+                                 XCB_CW_EVENT_MASK, values);
+}
+
+void
 set_icccm_properties(xcb_connection_t *conn, xcwm_window_t *window)
 {
     xcb_get_property_cookie_t cookie;
@@ -422,7 +434,7 @@ set_icccm_properties(xcb_connection_t *conn, xcwm_window_t *window)
     uint8_t success;
 
     set_wm_name_in_context(conn, window);
-    set_wm_delete_win_in_context(conn, window);
+    _xcwm_window_set_wm_delete(conn, window);
     set_wm_size_hints_for_window(conn, window);
 
     /* Get the window this one is transient for */
@@ -461,7 +473,7 @@ set_wm_name_in_context(xcb_connection_t *conn, xcwm_window_t *window)
 }
 
 void
-set_wm_delete_win_in_context(xcb_connection_t *conn, xcwm_window_t *window)
+_xcwm_window_set_wm_delete(xcb_connection_t *conn, xcwm_window_t *window)
 {
     xcb_get_property_cookie_t cookie;
     xcb_icccm_get_wm_protocols_reply_t reply;
