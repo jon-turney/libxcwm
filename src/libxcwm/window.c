@@ -29,6 +29,8 @@
 
 #include <xcb/xfixes.h>
 #include <xcb/damage.h>
+#include <xcb/xcb_icccm.h>
+#include <xcb/xcb_ewmh.h>
 #include <xcwm/xcwm.h>
 #include "xcwm_internal.h"
 
@@ -46,6 +48,10 @@ set_wm_name_in_context(xcb_connection_t *conn, xcwm_window_t *window);
 /* Find out of the WM_DELETE_WINDOW property is set */
 void
 set_wm_delete_win_in_context(xcb_connection_t *conn, xcwm_window_t *window);
+
+/* Determine values of window WM_SIZE_HINTS */
+void
+set_wm_size_hints_for_window(xcb_connection_t *conn, xcwm_window_t *window);
 
 /* Initialize damage on a window */
 void
@@ -303,6 +309,13 @@ _xcwm_window_release(xcwm_window_t *window)
 
 /* Accessor functions into xcwm_window_t */
 
+xcwm_window_type_t
+xcwm_window_get_window_type(xcwm_window_t const *window)
+{
+
+    return window->type;
+}
+
 xcwm_context_t *
 xcwm_window_get_context(xcwm_window_t const *window)
 {
@@ -315,6 +328,13 @@ xcwm_window_get_parent(xcwm_window_t const *window)
 {
 
     return window->parent;
+}
+
+xcwm_window_t const *
+xcwm_window_get_transient_for(xcwm_window_t const *window)
+{
+
+    return window->transient_for;
 }
 
 int
@@ -359,6 +379,13 @@ xcwm_window_copy_name(xcwm_window_t const *window)
     return strdup(window->name);
 }
 
+xcwm_window_sizing_t const *
+xcwm_window_get_sizing(xcwm_window_t const *window)
+{
+
+    return window->sizing;
+}
+
 /* Resize the window on server side */
 void
 _xcwm_resize_window(xcb_connection_t *conn, xcb_window_t window,
@@ -386,78 +413,101 @@ _xcwm_map_window(xcb_connection_t *conn, xcwm_window_t *window)
 void
 set_icccm_properties(xcb_connection_t *conn, xcwm_window_t *window)
 {
+    xcb_get_property_cookie_t cookie;
+    xcb_window_t transient;
+    xcb_generic_error_t *error;
+    uint8_t success;
+
     set_wm_name_in_context(conn, window);
     set_wm_delete_win_in_context(conn, window);
+    set_wm_size_hints_for_window(conn, window);
+
+    /* Get the window this one is transient for */
+    cookie = xcb_icccm_get_wm_transient_for(conn, window->window_id);
+    success = xcb_icccm_get_wm_transient_for_reply(conn, cookie,
+                                                   &transient, &error);
+    if (success) {
+        window->transient_for = _xcwm_get_window_node_by_window_id(transient);
+        /* FIXME: Currently we assume that any window that is
+         * transient for another is a dialog. */
+        window->type = XCWM_WINDOW_TYPE_DIALOG;
+    } else {
+        window->transient_for = NULL;
+        window->type = XCWM_WINDOW_TYPE_NORMAL;
+    }
 }
 
 void
 set_wm_name_in_context(xcb_connection_t *conn, xcwm_window_t *window)
 {
     xcb_get_property_cookie_t cookie;
-    xcb_get_property_reply_t *reply;
+    xcb_icccm_get_text_property_reply_t reply;
     xcb_generic_error_t *error;
-    char *value;
-    int length;
 
-    cookie = xcb_get_property(conn,
-                              0,
-                              window->window_id,
-                              XCB_ATOM_WM_NAME,
-                              XCB_GET_PROPERTY_TYPE_ANY,
-                              0,
-                              128);
-    reply = xcb_get_property_reply(conn, cookie, &error);
-    if (!reply) {
-        window->name = NULL;
+    cookie = xcb_icccm_get_wm_name(conn, window->window_id);
+    if (!xcb_icccm_get_wm_name_reply(conn, cookie, &reply, &error)) {
+        window->name = malloc(sizeof(char));
+        window->name[0] = '\0';
         return;
     }
-    length = xcb_get_property_value_length(reply);
-    value = (char *)xcb_get_property_value(reply);
 
-    window->name = malloc(sizeof(char) * (length + 1));
-    strncpy(window->name, value, length);
-    window->name[length] = '\0';
+    window->name = malloc(sizeof(char) * (reply.name_len + 1));
+    strncpy(window->name, reply.name, reply.name_len);
+    window->name[reply.name_len] = '\0';
+    xcb_icccm_get_text_property_reply_wipe(&reply);
 }
 
 void
 set_wm_delete_win_in_context(xcb_connection_t *conn, xcwm_window_t *window)
 {
     xcb_get_property_cookie_t cookie;
-    xcb_get_property_reply_t *reply;
-    xcb_atom_t *prop_atoms;
-    int prop_length;
+    xcb_icccm_get_wm_protocols_reply_t reply;
     xcb_generic_error_t *error;
     int i;
 
     /* Get the WM_PROTOCOLS */
-    cookie = xcb_get_property(conn,
-                              0,
-                              window->window_id,
-                              _wm_atoms->wm_protocols_atom,
-                              XCB_ATOM_ATOM,
-                              0,
-                              UINT_MAX);
+    cookie = xcb_icccm_get_wm_protocols(conn, window->window_id,
+                                        _wm_atoms->wm_protocols_atom);
 
-    reply = xcb_get_property_reply(conn, cookie, &error);
-
-    if (!reply) {
+    if (xcb_icccm_get_wm_protocols_reply(conn, cookie, &reply, &error) == 1) {
+        /* See if the WM_DELETE_WINDOW is in WM_PROTOCOLS */
+        for (i = 0; i < reply.atoms_len; i++) {
+            if (reply.atoms[i] == _wm_atoms->wm_delete_window_atom) {
+                window->wm_delete_set = 1;
+                break;
+            } 
+        }
+    } else {
         window->wm_delete_set = 0;
         return;
     }
-    prop_length = xcb_get_property_value_length(reply);
-    prop_atoms = (xcb_atom_t *)xcb_get_property_value(reply);
-    free(reply);
-
-    /* See if the WM_DELETE_WINDOW is in WM_PROTOCOLS */
-    for (i = 0; i < prop_length; i++) {
-        if (prop_atoms[i] == _wm_atoms->wm_delete_window_atom) {
-            window->wm_delete_set = 1;
-            return;
-        }
-    }
-    window->wm_delete_set = 0;
+    xcb_icccm_get_wm_protocols_reply_wipe(&reply);
 
     return;
+}
+
+void
+set_wm_size_hints_for_window(xcb_connection_t *conn, xcwm_window_t *window)
+{
+    xcb_get_property_cookie_t cookie;
+    xcb_size_hints_t hints;
+    
+    if (window->sizing) {
+        free(window->sizing);
+    }
+    window->sizing = malloc(sizeof(xcwm_window_sizing_t));
+    assert(window->sizing);
+    cookie = xcb_icccm_get_wm_normal_hints(conn, window->window_id);
+    if (!xcb_icccm_get_wm_normal_hints_reply(conn, cookie, &hints, NULL)) {
+        memset(window->sizing, 0, sizeof(*window->sizing);
+        return;
+    }
+    window->sizing->min_width = hints.min_width;
+    window->sizing->min_height = hints.min_height;;
+    window->sizing->max_width = hints.max_width;
+    window->sizing->max_height = hints.max_height;
+    window->sizing->width_inc = hints.width_inc;
+    window->sizing->height_inc = hints.height_inc;
 }
 
 void

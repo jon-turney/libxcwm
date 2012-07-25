@@ -41,14 +41,53 @@ struct xcwm_rect_t {
 };
 typedef struct xcwm_rect_t xcwm_rect_t;
 
+/**
+ * Enumeration for different possible window types
+ */
+enum xcwm_window_type_t {
+    XCWM_WINDOW_TYPE_UNKNOWN = 0,
+    XCWM_WINDOW_TYPE_COMBO,
+    XCWM_WINDOW_TYPE_DESKTOP,
+    XCWM_WINDOW_TYPE_DIALOG,
+    XCWM_WINDOW_TYPE_DND,
+    XCWM_WINDOW_TYPE_DOCK,
+    XCWM_WINDOW_TYPE_DROPDOWN_MENU,
+    XCWM_WINDOW_TYPE_MENU,
+    XCWM_WINDOW_TYPE_NORMAL,
+    XCWM_WINDOW_TYPE_NOTIFICATION,
+    XCWM_WINDOW_TYPE_POPUP_MENU,
+    XCWM_WINDOW_TYPE_SPLASH,
+    XCWM_WINDOW_TYPE_TOOLBAR,
+    XCWM_WINDOW_TYPE_TOOLTIP,
+    XCWM_WINDOW_TYPE_UTILITY,
+};
+typedef enum xcwm_window_type_t xcwm_window_type_t;
+
+/**
+ * Structure defining min/max size for window and resizing
+ * increments. A value of 0 in any field implies the field is unset.
+ */
+struct xcwm_window_sizing_t {
+    uint32_t min_width;
+    uint32_t min_height;
+    uint32_t max_width;
+    uint32_t max_height;
+    uint32_t width_inc;
+    uint32_t height_inc;
+};
+typedef struct xcwm_window_sizing_t xcwm_window_sizing_t;
+
 /* Structure for holding data for a window */
 struct xcwm_window_t {
     xcb_drawable_t window_id;
     xcwm_context_t *context;
+    xcwm_window_type_t type;    /* The type of this window */
     struct xcwm_window_t *parent;
+    struct xcwm_window_t *transient_for; /* Window this one is transient for */
     xcb_damage_damage_t damage;
     xcwm_rect_t *bounds;
     xcwm_rect_t *dmg_bounds;
+    xcwm_window_sizing_t *sizing; /* Sizing information for the window */
     char *name;         /* The name of the window */
     int wm_delete_set;  /* Flag for WM_DELETE_WINDOW, 1 if set */
     int override_redirect;
@@ -104,6 +143,14 @@ xcwm_window_configure(xcwm_window_t *window, int x, int y,
                       int height, int width);
 
 /**
+ * Get the window's type.
+ * @param window Window to get type for.
+ * @return The type of the window.
+ */
+xcwm_window_type_t
+xcwm_window_get_window_type(xcwm_window_t const *window);
+
+/**
  * Get the context for this window.
  * @param window The window to get context from.
  * @return The context of the window.
@@ -118,6 +165,14 @@ xcwm_window_get_context(xcwm_window_t const *window);
  */
 xcwm_window_t *
 xcwm_window_get_parent(xcwm_window_t const *window);
+
+/**
+ * Get the window the given window is transient for.
+ * @param window
+ * @return This windows "transient for" window, NULL if none.
+ */
+xcwm_window_t const *
+xcwm_window_get_transient_for(xcwm_window_t const *window);
 
 /**
  * Determine if window has override redirect flag set.
@@ -167,5 +222,13 @@ xcwm_window_get_damaged_rect(xcwm_window_t const *window);
  */
 char *
 xcwm_window_copy_name(xcwm_window_t const *window);
+
+/**
+ * Get the sizing information for the window.
+ * @param window The window to get sizing data for.
+ * @return The structure containing the sizing data
+ */
+xcwm_window_sizing_t const *
+xcwm_window_get_sizing(xcwm_window_t const *window);
 
 #endif  /* _XCWM_WINDOW_H_ */

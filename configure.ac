@@ -20,7 +20,7 @@ AC_PROG_OBJC
 AC_PROG_INSTALL
 
 # Checks for libraries.
-PKG_CHECK_MODULES(XCB, xcb-damage xcb-composite xcb-event xcb-xtest xcb-image xcb-keysyms xcb-icccm xcb-atom)
+PKG_CHECK_MODULES(XCB, xcb-damage xcb-composite xcb-event xcb-xtest xcb-image xcb-keysyms xcb-icccm xcb-atom xcb-ewmh)
 
 AC_CHECK_FUNC(dispatch_async,
               AC_DEFINE([HAVE_LIBDISPATCH], 1, [Define to 1 if you have the libdispatch (GCD) available])

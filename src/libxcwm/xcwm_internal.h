@@ -52,6 +52,7 @@ typedef struct xcwm_event_connetion {
 typedef struct xcwm_wm_atoms {
     xcb_atom_t wm_protocols_atom;
     xcb_atom_t wm_delete_window_atom;
+    xcb_atom_t wm_transient_for_atom;
 } xcwm_wm_atoms;
 
 /**
