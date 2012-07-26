@@ -267,15 +267,17 @@ void
 _xcwm_window_release(xcwm_window_t *window);
 
 /**
- * Resize the window to given width and height.
+ * Resize the window to given x, y, width and height.
  * @param conn The connection
  * @param window The id of window to resize
+ * @param x The new x position of window, relative to root.
+ * @param y The new y position of window, relative to root.
  * @param width The new width
  * @param height The new height
  */
 void
-_xcwm_resize_window(xcb_connection_t *conn, xcb_window_t window, int width,
-                    int height);
+_xcwm_resize_window(xcb_connection_t *conn, xcb_window_t window,
+                    int x, int y, int width, int height);
 
 /**
  * Map the given window.

@@ -341,15 +341,16 @@ run_event_loop(void *thread_arg_struct)
             {
                 xcb_configure_request_event_t *request =
                     (xcb_configure_request_event_t *)evt;
-                printf("Got configure request: ");
-                printf("x = %i, y = %i, w = %i, h = %i\n", request->x,
-                       request->y,
-                       request->width,
-                       request->height);
-
-                /* Change the size of the window, but not its position */
-                _xcwm_resize_window(event_conn, request->window,
-                                    request->width, request->height);
+                xcwm_window_t *window =
+                    _xcwm_get_window_node_by_window_id(request->window);
+                if (!window) {
+                    /* Passing on requests for windows we aren't
+                     * managing seems to speed window future mapping
+                     * of window */
+                    _xcwm_resize_window(event_conn, request->window,
+                                        request->x, request->y,
+                                        request->width, request->height);
+                }
                 break;
             }
 

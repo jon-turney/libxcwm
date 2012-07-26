@@ -200,25 +200,11 @@ xcwm_window_configure(xcwm_window_t *window, int x, int y,
     window->bounds->width = width;
     window->bounds->height = height;
 
-    uint32_t values[] = {
-        (uint32_t)x,     (uint32_t)y,
-        (uint32_t)width, (uint32_t)height
-    };
-
-    xcb_configure_window(window->context->conn,
-                         window->window_id,
-                         XCB_CONFIG_WINDOW_X |
-                         XCB_CONFIG_WINDOW_Y |
-                         XCB_CONFIG_WINDOW_WIDTH |
-                         XCB_CONFIG_WINDOW_HEIGHT,
-                         values);
-
+    _xcwm_resize_window(window->context->conn, window->window_id,
+                        x, y, width, height);
     /* Set the damage area to the new window size so its redrawn properly */
     window->dmg_bounds->width = width;
     window->dmg_bounds->height = height;
-
-    xcb_flush(window->context->conn);
-    return;
 }
 
 void
@@ -395,13 +381,15 @@ xcwm_window_get_sizing(xcwm_window_t const *window)
 /* Resize the window on server side */
 void
 _xcwm_resize_window(xcb_connection_t *conn, xcb_window_t window,
-                    int width, int height)
+                    int x, int y, int width, int height)
 {
 
-    uint32_t values[2] = { width, height };
+    uint32_t values[] = { x, y, width, height };
 
     xcb_configure_window(conn,
                          window,
+                         XCB_CONFIG_WINDOW_X |
+                         XCB_CONFIG_WINDOW_Y |
                          XCB_CONFIG_WINDOW_WIDTH |
                          XCB_CONFIG_WINDOW_HEIGHT,
                          values);
