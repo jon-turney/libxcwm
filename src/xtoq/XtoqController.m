@@ -455,7 +455,7 @@
                     NSResizableWindowMask);
         // Move the window down by the height of the OSX menu bar
         xcwm_window_configure(window, windowSize->x,
-                              windowSize->y + WINDOWBAR,
+                              windowSize->y - WINDOWBAR,
                               windowSize->height,
                               windowSize->width);
     }
