@@ -192,10 +192,7 @@
     // note this keyInfo is the key in <key, value> not the key pressed
     NSEvent * event = [keyInfo objectForKey: @"1"];
     unsigned short aChar = [event keyCode];
-    NSString* charNSString = [event characters];
-    const char* charcharstar = [charNSString UTF8String];
 
-    NSLog(@"%s pressed", charcharstar);
     // FIXME: Uses a 'magic number' for offset into keymap - should a
     // #define or gotten programmatically.
     dispatch_async(xcwmDispatchQueue,

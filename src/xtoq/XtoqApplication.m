@@ -274,6 +274,55 @@ XtoqApplicationMain(int argc, char** argv)
         break;
     }
 
+    case NSFlagsChanged:
+    {
+        static int currentModFlags = 0;
+        int modFlags = [e modifierFlags];
+        BOOL key_pressed = NO;
+  
+        if (modFlags & NSAlphaShiftKeyMask) {
+          NSLog(@"Alpha key mask");
+        }
+
+        if ((modFlags & NSShiftKeyMask)
+            && !(currentModFlags & NSShiftKeyMask)) {
+            key_pressed = YES;
+        }
+
+        if ((modFlags & NSControlKeyMask)
+            && !(currentModFlags & NSControlKeyMask)) {
+            key_pressed = YES;
+        }
+
+        if ((modFlags & NSAlternateKeyMask)
+            && !(currentModFlags & NSAlternateKeyMask)) {
+            key_pressed = YES;
+        }
+
+        if ((modFlags & NSCommandKeyMask)
+            && !(currentModFlags & NSCommandKeyMask)) {
+            key_pressed = YES;
+        }
+
+        if (key_pressed) {
+            NSDictionary * dictionary =
+              [NSDictionary dictionaryWithObject:e
+                                          forKey:@"1"];
+            [notificationCenter postNotificationName:@"XTOQviewKeyDownEvent"
+                                              object:self
+                                            userInfo:dictionary];
+        } else {
+            NSDictionary * dictionary =
+              [NSDictionary dictionaryWithObject:e
+                                          forKey:@"1"];
+            [notificationCenter postNotificationName:@"XTOQviewKeyUpEvent"
+                                              object:self
+                                            userInfo:dictionary];
+        }
+        currentModFlags = modFlags;
+        break;
+    }
+
     default:
         break;
     }
