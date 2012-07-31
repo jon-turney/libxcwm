@@ -38,11 +38,18 @@
 struct xcwm_window_t;
 typedef struct xcwm_window_t xcwm_window_t;
 
+/**
+ * Struct to hold ICCCM/EWMH data for context.
+ */
+struct xcwm_wm_atoms_t;
+typedef struct xcwm_wm_atoms_t xcwm_wm_atoms_t;
+
 /* Structure to hold connection data */
 struct xcwm_context_t {
     xcb_connection_t *conn;
     xcwm_window_t *root_window;
     int damage_event_mask;
+    xcwm_wm_atoms_t *atoms;
 };
 typedef struct xcwm_context_t xcwm_context_t;
 

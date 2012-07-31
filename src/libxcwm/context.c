@@ -92,6 +92,8 @@ xcwm_context_open(char *display)
     root_context->root_window->dmg_bounds = malloc(sizeof(xcwm_rect_t));
     assert(root_context->root_window->bounds);
     assert(root_context->root_window->dmg_bounds);
+    root_context->atoms = malloc(sizeof(xcwm_wm_atoms_t));
+    assert(root_context->atoms);
 
     root_context->conn = conn;
     root_context->root_window->parent = 0;
@@ -118,7 +120,7 @@ xcwm_context_open(char *display)
     _xcwm_init_extension(conn, "XTEST");
     _xcwm_init_extension(conn, "XKEYBOARD");
 
-    _xcwm_get_wm_atoms(root_context);
+    _xcwm_atoms_init(root_context);
 
     return root_context;
 }
@@ -138,6 +140,8 @@ xcwm_context_close(xcwm_context_t *context)
         free(head);
         head = _xcwm_window_list_head;
     }
+
+    free(context->atoms);
 
     // Terminate the event loop
     if (_xcwm_event_stop_loop() != 1) {

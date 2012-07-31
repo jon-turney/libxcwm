@@ -366,8 +366,8 @@ run_event_loop(void *thread_arg_struct)
 
                 /* If this is WM_PROTOCOLS, do not send event, just
                  * handle internally */
-                if (notify->atom == _wm_atoms->wm_protocols_atom) {
-                    _xcwm_window_set_wm_delete(event_conn, window);
+                if (notify->atom == window->context->atoms->wm_protocols_atom) {
+                    _xcwm_atoms_set_wm_delete(window);
                 }
                 break;
             }

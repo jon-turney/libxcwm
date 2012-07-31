@@ -49,21 +49,16 @@ typedef struct xcwm_event_connetion {
 /**
  * Structure to hold WM_* atoms that we care about
  */
-typedef struct xcwm_wm_atoms {
+struct xcwm_wm_atoms_t {
     xcb_atom_t wm_protocols_atom;
     xcb_atom_t wm_delete_window_atom;
     xcb_atom_t wm_transient_for_atom;
-} xcwm_wm_atoms;
+};
 
 /**
  * Local data type for image data.
  */
 typedef struct image_data_t image_data_t;
-
-/**
- * Global for the atoms needed
- */
-extern xcwm_wm_atoms *_wm_atoms;
 
 /**
  * Mutex lock supplied to client to lock event loop thread
@@ -168,13 +163,6 @@ _xcwm_init_composite(xcwm_context_t *contxt);
  */
 void
 _xcwm_init_xfixes(xcwm_context_t *contxt);
-
-/**
- * Get the values for the WM_* atoms that we need.
- * @param contxt The context
- */
-void
-_xcwm_get_wm_atoms(xcwm_context_t *contxt);
 
 /****************
 * event_loop.c
@@ -287,13 +275,38 @@ _xcwm_resize_window(xcb_connection_t *conn, xcb_window_t window,
 void
 _xcwm_map_window(xcb_connection_t *conn, xcwm_window_t *window);
 
+
+/****************
+ * atoms.c
+ ****************/
+
 /**
- * Set the WM_DELETE ICCCM protocol for the window.
- * @param conn The connection to xserver
- * @param window The window to set wm_delete_set flag on.
+ * Get the values for the WM_* atoms that we need.
+ * @param context The context
  */
 void
-_xcwm_window_set_wm_delete(xcb_connection_t *conn, xcwm_window_t *window);
+_xcwm_atoms_init(xcwm_context_t *context);
 
+/**
+ * Get and set the initial values ICCCM/EWMH atoms for the given
+ * window.
+ * @param window The window to get and set atoms values for.
+ */
+void
+_xcwm_atoms_init_window(xcwm_window_t *window);
+
+/**
+ * Get and set the WM_NAME of the window.
+ * @param window The window
+ */
+void
+_xcwm_atoms_set_window_name(xcwm_window_t *window);
+
+/**
+ * Get the set the WM_DELETE_WINDOWatom for the winodw.
+ * @param window The window.
+ */
+void
+_xcwm_atoms_set_wm_delete(xcwm_window_t *window);
 
 #endif  /* _XTOQ_INTERNAL_H_ */

@@ -36,7 +36,6 @@
 #include "xcwm_internal.h"
 
 
-xcwm_wm_atoms *_wm_atoms = NULL;
 
 xcb_query_extension_reply_t *
 _xcwm_init_extension(xcb_connection_t *conn, char *extension_name)
@@ -128,44 +127,3 @@ _xcwm_init_xfixes(xcwm_context_t *contxt)
     free(reply);
 }
 
-void
-_xcwm_get_wm_atoms(xcwm_context_t *context)
-{
-    xcb_intern_atom_reply_t *atom_reply;
-    xcb_intern_atom_cookie_t atom_cookie;
-
-    _wm_atoms = malloc(sizeof(xcwm_wm_atoms));
-
-    /* WM_PROTOCOLS */
-    atom_cookie = xcb_intern_atom(context->conn,
-                                  0,
-                                  strlen("WM_PROTOCOLS"),
-                                  "WM_PROTOCOLS");
-    atom_reply = xcb_intern_atom_reply(context->conn,
-                                       atom_cookie,
-                                       NULL);
-    if (!atom_reply) {
-        _wm_atoms->wm_protocols_atom = 0;
-    }
-    else {
-        _wm_atoms->wm_protocols_atom = atom_reply->atom;
-        free(atom_reply);
-    }
-
-    /* WM_DELETE_WINDOW atom */
-    atom_cookie = xcb_intern_atom(context->conn,
-                                  0,
-                                  strlen("WM_DELETE_WINDOW"),
-                                  "WM_DELETE_WINDOW");
-    atom_reply = xcb_intern_atom_reply(context->conn,
-                                       atom_cookie,
-                                       NULL);
-    if (!atom_reply) {
-        _wm_atoms->wm_delete_window_atom = 0;
-    }
-    else {
-        _wm_atoms->wm_delete_window_atom = atom_reply->atom;
-        free(atom_reply);
-    }
-
-}

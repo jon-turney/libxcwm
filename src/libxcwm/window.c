@@ -29,17 +29,11 @@
 
 #include <xcb/xfixes.h>
 #include <xcb/damage.h>
-#include <xcb/xcb_icccm.h>
-#include <xcb/xcb_ewmh.h>
 #include <xcwm/xcwm.h>
 #include "xcwm_internal.h"
 
 
 /* Functions only used within this file */
-
-/* Sets the WM_* properties we care about in context */
-void
-set_icccm_properties(xcb_connection_t *conn, xcwm_window_t *window);
 
 /* Set the event masks on a window */
 void
@@ -157,7 +151,7 @@ _xcwm_window_create(xcwm_context_t *context, xcb_window_t new_window,
     set_window_event_masks(context->conn, window);
 
     /* Set the ICCCM properties we care about */
-    set_icccm_properties(context->conn, window);
+    _xcwm_atoms_init_window(window);
 
     /* register for damage */
     init_damage_on_window(context->conn, window);
@@ -266,9 +260,9 @@ xcwm_window_request_close(xcwm_window_t *window)
 
         event.response_type = XCB_CLIENT_MESSAGE;
         event.window = window->window_id;
-        event.type = _wm_atoms->wm_protocols_atom;
+        event.type = window->context->atoms->wm_protocols_atom;
         event.format = 32;
-        event.data.data32[0] = _wm_atoms->wm_delete_window_atom;
+        event.data.data32[0] = window->context->atoms->wm_delete_window_atom;
         event.data.data32[1] = XCB_CURRENT_TIME;
 
         xcb_send_event(window->context->conn, 0, window->window_id,
@@ -413,100 +407,6 @@ set_window_event_masks(xcb_connection_t *conn, xcwm_window_t *window)
                                  XCB_CW_EVENT_MASK, values);
 }
 
-void
-set_icccm_properties(xcb_connection_t *conn, xcwm_window_t *window)
-{
-    xcb_get_property_cookie_t cookie;
-    xcb_window_t transient;
-    xcb_generic_error_t *error;
-    uint8_t success;
-
-    set_wm_name_in_context(conn, window);
-    _xcwm_window_set_wm_delete(conn, window);
-    set_wm_size_hints_for_window(conn, window);
-
-    /* Get the window this one is transient for */
-    cookie = xcb_icccm_get_wm_transient_for(conn, window->window_id);
-    success = xcb_icccm_get_wm_transient_for_reply(conn, cookie,
-                                                   &transient, &error);
-    if (success) {
-        window->transient_for = _xcwm_get_window_node_by_window_id(transient);
-        /* FIXME: Currently we assume that any window that is
-         * transient for another is a dialog. */
-        window->type = XCWM_WINDOW_TYPE_DIALOG;
-    } else {
-        window->transient_for = NULL;
-        window->type = XCWM_WINDOW_TYPE_NORMAL;
-    }
-}
-
-void
-set_wm_name_in_context(xcb_connection_t *conn, xcwm_window_t *window)
-{
-    xcb_get_property_cookie_t cookie;
-    xcb_icccm_get_text_property_reply_t reply;
-    xcb_generic_error_t *error;
-
-    cookie = xcb_icccm_get_wm_name(conn, window->window_id);
-    if (!xcb_icccm_get_wm_name_reply(conn, cookie, &reply, &error)) {
-        window->name = malloc(sizeof(char));
-        window->name[0] = '\0';
-        return;
-    }
-
-    window->name = malloc(sizeof(char) * (reply.name_len + 1));
-    strncpy(window->name, reply.name, reply.name_len);
-    window->name[reply.name_len] = '\0';
-    xcb_icccm_get_text_property_reply_wipe(&reply);
-}
-
-void
-_xcwm_window_set_wm_delete(xcb_connection_t *conn, xcwm_window_t *window)
-{
-    xcb_get_property_cookie_t cookie;
-    xcb_icccm_get_wm_protocols_reply_t reply;
-    xcb_generic_error_t *error;
-    int i;
-
-    /* Get the WM_PROTOCOLS */
-    cookie = xcb_icccm_get_wm_protocols(conn, window->window_id,
-                                        _wm_atoms->wm_protocols_atom);
-
-    if (xcb_icccm_get_wm_protocols_reply(conn, cookie, &reply, &error) == 1) {
-        /* See if the WM_DELETE_WINDOW is in WM_PROTOCOLS */
-        for (i = 0; i < reply.atoms_len; i++) {
-            if (reply.atoms[i] == _wm_atoms->wm_delete_window_atom) {
-                window->wm_delete_set = 1;
-                break;
-            } 
-        }
-    } else {
-        window->wm_delete_set = 0;
-        return;
-    }
-    xcb_icccm_get_wm_protocols_reply_wipe(&reply);
-
-    return;
-}
-
-void
-set_wm_size_hints_for_window(xcb_connection_t *conn, xcwm_window_t *window)
-{
-    xcb_get_property_cookie_t cookie;
-    xcb_size_hints_t hints;
-    
-    cookie = xcb_icccm_get_wm_normal_hints(conn, window->window_id);
-    if (!xcb_icccm_get_wm_normal_hints_reply(conn, cookie, &hints, NULL)) {
-        /* Use 0 for all values (as set in calloc), or previous values */
-        return;
-    }
-    window->sizing->min_width = hints.min_width;
-    window->sizing->min_height = hints.min_height;;
-    window->sizing->max_width = hints.max_width;
-    window->sizing->max_height = hints.max_height;
-    window->sizing->width_inc = hints.width_inc;
-    window->sizing->height_inc = hints.height_inc;
-}
 
 void
 init_damage_on_window(xcb_connection_t *conn, xcwm_window_t *window)
