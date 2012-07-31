@@ -32,12 +32,7 @@
 #include <xcb/xcb_keysyms.h>
 #include <xcwm/xcwm.h>
 #include "xcwm_internal.h"
-#include "X11/keysym.h"
 #include <string.h>
-
-// aaron key stuff
-#define XK_Shift_L 0xffe1
-xcb_key_symbols_t *syms = NULL;
 
 // This init function needs set the window to be registered for events!
 // First one we should handle is damage
@@ -117,7 +112,6 @@ xcwm_context_open(char *display)
     /* Add the root window to our list of windows being managed */
     _xcwm_add_window(root_context->root_window);
 
-    syms = xcb_key_symbols_alloc(conn);
     _xcwm_init_extension(conn, "XTEST");
     _xcwm_init_extension(conn, "XKEYBOARD");
 
