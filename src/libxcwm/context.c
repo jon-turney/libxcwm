@@ -96,6 +96,7 @@ xcwm_context_open(char *display)
     assert(root_context->atoms);
 
     root_context->conn = conn;
+    root_context->conn_screen = conn_screen;
     root_context->root_window->parent = 0;
     root_context->root_window->window_id = root_window_id;
     /* FIXME: Should we have a circular assignment like this? */
@@ -141,6 +142,8 @@ xcwm_context_close(xcwm_context_t *context)
         head = _xcwm_window_list_head;
     }
 
+    /* Free atom related stuff */
+    _xcwm_atoms_release(context);
     free(context->atoms);
 
     // Terminate the event loop

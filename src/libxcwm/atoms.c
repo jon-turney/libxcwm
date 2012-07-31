@@ -47,22 +47,52 @@ _xcwm_atoms_init(xcwm_context_t *context)
 {
     xcb_intern_atom_reply_t *atom_reply;
     xcb_intern_atom_cookie_t atom_cookie;
+    xcb_intern_atom_cookie_t *atom_cookies;
 
-    /* WM_PROTOCOLS */
-    atom_cookie = xcb_intern_atom(context->conn,
-                                  0,
-                                  strlen("WM_PROTOCOLS"),
-                                  "WM_PROTOCOLS");
-    atom_reply = xcb_intern_atom_reply(context->conn,
-                                       atom_cookie,
-                                       NULL);
-    if (!atom_reply) {
-        context->atoms->wm_protocols_atom = 0;
-    }
-    else {
-        context->atoms->wm_protocols_atom = atom_reply->atom;
-        free(atom_reply);
-    }
+    /* Initialization for the xcb_ewmh connection and EWMH atoms */
+    atom_cookies = xcb_ewmh_init_atoms(context->conn,
+                                       &context->atoms->ewmh_conn);
+    xcb_ewmh_init_atoms_replies(&context->atoms->ewmh_conn,
+                                         atom_cookies,
+                                         NULL);
+    
+    /* Set the _NET_SUPPORTED atom for this context
+     * Most of these are defined ast MUSTs in the
+     * EWMH standards for window managers.
+     * NOTE: Starting with only a limited set of _NET_WM_STATE. This
+     * may be expanded. */
+    xcb_atom_t supported[] =
+        {
+            context->atoms->ewmh_conn.WM_PROTOCOLS,
+            context->atoms->ewmh_conn._NET_SUPPORTED,
+            context->atoms->ewmh_conn._NET_SUPPORTING_WM_CHECK,
+            context->atoms->ewmh_conn._NET_CLOSE_WINDOW,
+            context->atoms->ewmh_conn._NET_WM_NAME,
+            context->atoms->ewmh_conn._NET_WM_WINDOW_TYPE,
+            context->atoms->ewmh_conn._NET_WM_WINDOW_TYPE_TOOLBAR,
+            context->atoms->ewmh_conn._NET_WM_WINDOW_TYPE_MENU,
+            context->atoms->ewmh_conn._NET_WM_WINDOW_TYPE_UTILITY,
+            context->atoms->ewmh_conn._NET_WM_WINDOW_TYPE_SPLASH,
+            context->atoms->ewmh_conn._NET_WM_WINDOW_TYPE_DIALOG,
+            context->atoms->ewmh_conn._NET_WM_WINDOW_TYPE_DROPDOWN_MENU,
+            context->atoms->ewmh_conn._NET_WM_WINDOW_TYPE_POPUP_MENU,
+            context->atoms->ewmh_conn._NET_WM_WINDOW_TYPE_TOOLTIP,
+            context->atoms->ewmh_conn._NET_WM_WINDOW_TYPE_NOTIFICATION,
+            context->atoms->ewmh_conn._NET_WM_WINDOW_TYPE_COMBO,
+            context->atoms->ewmh_conn._NET_WM_WINDOW_TYPE_DND,
+            context->atoms->ewmh_conn._NET_WM_WINDOW_TYPE_NORMAL,
+            context->atoms->ewmh_conn._NET_WM_STATE,
+            context->atoms->ewmh_conn._NET_WM_STATE_MODAL,
+            context->atoms->ewmh_conn._NET_WM_STATE_HIDDEN
+        };
+
+    xcb_ewmh_set_supported(&context->atoms->ewmh_conn,
+                           context->conn_screen,
+                           21,  /* Length of supported[] */
+                           supported);
+
+    /* Get the ICCCM atoms we need that are not included in the
+     * xcb_ewmh_connetion_t. */
 
     /* WM_DELETE_WINDOW atom */
     atom_cookie = xcb_intern_atom(context->conn,
@@ -146,7 +176,7 @@ _xcwm_atoms_set_wm_delete(xcwm_window_t *window)
     /* Get the WM_PROTOCOLS */
     cookie = xcb_icccm_get_wm_protocols(window->context->conn,
                                         window->window_id,
-                                        window->context->atoms->wm_protocols_atom);
+                                        window->context->atoms->ewmh_conn.WM_PROTOCOLS);
 
     if (xcb_icccm_get_wm_protocols_reply(window->context->conn,
                                          cookie, &reply, &error) == 1) {
@@ -185,4 +215,12 @@ set_window_size_hints(xcwm_window_t *window)
     window->sizing->max_height = hints.max_height;
     window->sizing->width_inc = hints.width_inc;
     window->sizing->height_inc = hints.height_inc;
+}
+
+void
+_xcwm_atoms_release(xcwm_context_t *context)
+{
+
+    /* Free the xcb_ewmh_connection_t */
+    xcb_ewmh_connection_wipe(&context->atoms->ewmh_conn);
 }
