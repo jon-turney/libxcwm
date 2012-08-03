@@ -282,10 +282,13 @@ _xcwm_map_window(xcb_connection_t *conn, xcwm_window_t *window);
  ****************/
 
 /**
- * Get the values for the WM_* atoms that we need.
+ * Get the values for the WM_* atoms that we need, as well as checking
+ * to make sure another window manager is not running on the
+ * connection.
  * @param context The context
+ * @return Returns 0 on success, otherwise XCB error code.
  */
-void
+int
 _xcwm_atoms_init(xcwm_context_t *context);
 
 /**

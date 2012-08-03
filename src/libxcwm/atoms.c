@@ -37,24 +37,35 @@
 
 /* Local functions */
 
+/* Check to make sure another EWMH window manager is not running */
+int
+check_wm_cm_owner(xcwm_context_t *context);
+
+/* Create the window required to show a EWMH compliant window manager
+ * is running */
+void
+create_wm_cm_window(xcwm_context_t *context);
+
 /* Get and set the size hints for the window */
 void
 set_window_size_hints(xcwm_window_t *window);
 
 
-void
+int
 _xcwm_atoms_init(xcwm_context_t *context)
 {
     xcb_intern_atom_reply_t *atom_reply;
     xcb_intern_atom_cookie_t atom_cookie;
     xcb_intern_atom_cookie_t *atom_cookies;
+    xcb_generic_error_t *error;
 
     /* Initialization for the xcb_ewmh connection and EWMH atoms */
     atom_cookies = xcb_ewmh_init_atoms(context->conn,
                                        &context->atoms->ewmh_conn);
-    xcb_ewmh_init_atoms_replies(&context->atoms->ewmh_conn,
-                                         atom_cookies,
-                                         NULL);
+    if (!xcb_ewmh_init_atoms_replies(&context->atoms->ewmh_conn,
+                                     atom_cookies, &error)) {
+        return error->major_code;;
+    }
     
     /* Set the _NET_SUPPORTED atom for this context
      * Most of these are defined ast MUSTs in the
@@ -110,6 +121,53 @@ _xcwm_atoms_init(xcwm_context_t *context)
         free(atom_reply);
     }
 
+    if (!check_wm_cm_owner(context)) {
+        return XCB_WINDOW;
+    }
+
+    create_wm_cm_window(context);
+    
+    return 0;
+}
+
+int
+check_wm_cm_owner(xcwm_context_t *context)
+{
+    xcb_get_selection_owner_cookie_t cookie;
+    xcb_window_t wm_owner;
+
+    cookie = xcb_ewmh_get_wm_cm_owner(&context->atoms->ewmh_conn,
+                                      context->conn_screen);
+    xcb_ewmh_get_wm_cm_owner_reply(&context->atoms->ewmh_conn,
+                                   cookie, &wm_owner, NULL);
+    if (wm_owner != XCB_NONE) {
+        return 0;
+    }
+    return 1;
+}
+
+void
+create_wm_cm_window(xcwm_context_t *context)
+{
+    context->wm_cm_window = xcb_generate_id(context->conn);
+
+    xcb_create_window(context->conn,
+                      XCB_COPY_FROM_PARENT,
+                      context->wm_cm_window,
+                      context->root_window->window_id,
+                      0, 0, 1, 1, 0, /* 1x1 size, no border */
+                      XCB_COPY_FROM_PARENT,
+                      XCB_COPY_FROM_PARENT,
+                      0, NULL);
+
+    /* Set the atoms for the window */
+    xcb_ewmh_set_wm_name(&context->atoms->ewmh_conn,
+                         context->wm_cm_window,
+                         strlen("xcwm"), "xcwm");
+
+    xcb_ewmh_set_supporting_wm_check(&context->atoms->ewmh_conn,
+                                     context->conn_screen,
+                                     context->wm_cm_window);
 }
 
 void
@@ -223,4 +281,7 @@ _xcwm_atoms_release(xcwm_context_t *context)
 
     /* Free the xcb_ewmh_connection_t */
     xcb_ewmh_connection_wipe(&context->atoms->ewmh_conn);
+
+    /* Close the wm window */
+    xcb_destroy_window(context->conn, context->wm_cm_window);
 }
