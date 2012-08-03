@@ -46,6 +46,10 @@ check_wm_cm_owner(xcwm_context_t *context);
 void
 create_wm_cm_window(xcwm_context_t *context);
 
+/* Determine the window type */
+static void
+setup_window_type(xcwm_window_t *window);
+
 /* Get and set the size hints for the window */
 void
 set_window_size_hints(xcwm_window_t *window);
@@ -173,31 +177,10 @@ create_wm_cm_window(xcwm_context_t *context)
 void
 _xcwm_atoms_init_window(xcwm_window_t *window)
 {
-    xcb_get_property_cookie_t cookie;
-    xcb_window_t transient;
-    xcb_generic_error_t *error;
-    uint8_t success;
-
     _xcwm_atoms_set_window_name(window);
     _xcwm_atoms_set_wm_delete(window);
+    setup_window_type(window);
     set_window_size_hints(window);
-
-    /* Get the window this one is transient for */
-    cookie = xcb_icccm_get_wm_transient_for(window->context->conn,
-                                            window->window_id);
-    success = xcb_icccm_get_wm_transient_for_reply(window->context->conn,
-                                                   cookie,
-                                                   &transient,
-                                                   &error);
-    if (success) {
-        window->transient_for = _xcwm_get_window_node_by_window_id(transient);
-        /* FIXME: Currently we assume that any window that is
-         * transient for another is a dialog. */
-        window->type = XCWM_WINDOW_TYPE_DIALOG;
-    } else {
-        window->transient_for = NULL;
-        window->type = XCWM_WINDOW_TYPE_NORMAL;
-    }
 }
 
 
@@ -253,6 +236,83 @@ _xcwm_atoms_set_wm_delete(xcwm_window_t *window)
 
     return;
 }
+
+static void
+setup_window_type(xcwm_window_t *window)
+{
+    xcb_get_property_cookie_t cookie;
+    xcb_window_t transient;
+    xcb_ewmh_get_atoms_reply_t type;
+    xcb_ewmh_connection_t ewmh_conn = window->context->atoms->ewmh_conn;
+    int i;
+
+    /* Get the window this one is transient for */
+    cookie = xcb_icccm_get_wm_transient_for(window->context->conn,
+                                            window->window_id);
+    if (xcb_icccm_get_wm_transient_for_reply(window->context->conn, cookie,
+                                             &transient, NULL)) {
+        window->transient_for = _xcwm_get_window_node_by_window_id(transient);
+        window->type = XCWM_WINDOW_TYPE_DIALOG;
+    } else {
+        window->transient_for = NULL;
+        window->type = XCWM_WINDOW_TYPE_NORMAL;
+    }
+
+    /* Check and see if the client has set the _NET_WM_WINDOW_TYPE
+     * atom. Since the "type" is a list of window types, ordered by
+     * preference, we need to loop through to make sure we get a
+     * match. */
+    cookie = xcb_ewmh_get_wm_window_type(&ewmh_conn, window->window_id);
+    if (xcb_ewmh_get_wm_window_type_reply(&ewmh_conn, cookie, &type, NULL)) {
+        /* If we get a reply, but nothing below matches, set the
+         * default to unknown */
+        window->type = XCWM_WINDOW_TYPE_UNKNOWN;
+        for (i = 0; i <= type.atoms_len; i++) {
+            if (type.atoms[i] ==  ewmh_conn._NET_WM_WINDOW_TYPE_TOOLBAR) {
+                window->type = XCWM_WINDOW_TYPE_TOOLBAR;
+                break;
+            } else if (type.atoms[i] == ewmh_conn._NET_WM_WINDOW_TYPE_MENU) {
+                window->type = XCWM_WINDOW_TYPE_MENU;
+                break;
+            } else if (type.atoms[i]
+                       == ewmh_conn._NET_WM_WINDOW_TYPE_UTILITY) {
+                window->type = XCWM_WINDOW_TYPE_UTILITY;
+                break;
+            } else if (type.atoms[i] == ewmh_conn._NET_WM_WINDOW_TYPE_SPLASH) {
+                window->type = XCWM_WINDOW_TYPE_SPLASH;
+                break;
+            } else if (type.atoms[i] == ewmh_conn._NET_WM_WINDOW_TYPE_DIALOG) {
+                window->type = XCWM_WINDOW_TYPE_DIALOG;
+                break;
+            } else if (type.atoms[i]
+                       == ewmh_conn._NET_WM_WINDOW_TYPE_DROPDOWN_MENU) {
+                window->type = XCWM_WINDOW_TYPE_DROPDOWN_MENU;
+                break;
+            } else if (type.atoms[i]
+                       == ewmh_conn._NET_WM_WINDOW_TYPE_POPUP_MENU) {
+                window->type = XCWM_WINDOW_TYPE_POPUP_MENU;
+                break;
+            } else if (type.atoms[i]
+                       == ewmh_conn._NET_WM_WINDOW_TYPE_TOOLTIP) {
+                window->type = XCWM_WINDOW_TYPE_TOOLTIP;
+                break;
+            } else if (type.atoms[i]
+                       == ewmh_conn._NET_WM_WINDOW_TYPE_NOTIFICATION) {
+                window->type = XCWM_WINDOW_TYPE_NOTIFICATION;
+                break;
+            } else if (type.atoms[i] == ewmh_conn._NET_WM_WINDOW_TYPE_COMBO) {
+                window->type = XCWM_WINDOW_TYPE_COMBO;
+                break;
+            } else if (type.atoms[i] == ewmh_conn._NET_WM_WINDOW_TYPE_DND) {
+                window->type = XCWM_WINDOW_TYPE_DND;
+                break;
+            } else if (type.atoms[i] == ewmh_conn._NET_WM_WINDOW_TYPE_NORMAL) {
+                window->type = XCWM_WINDOW_TYPE_NORMAL;
+                break;
+            }
+        }
+    }
+}    
 
 void
 set_window_size_hints(xcwm_window_t *window)
