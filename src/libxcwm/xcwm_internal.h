@@ -54,6 +54,7 @@ struct xcwm_wm_atoms_t {
     xcb_atom_t wm_delete_window_atom;
     xcb_atom_t wm_transient_for_atom;
     xcb_atom_t wm_name_atom;
+    xcb_atom_t wm_state_atom;
     xcb_ewmh_connection_t ewmh_conn;
 };
 
@@ -320,5 +321,14 @@ _xcwm_atoms_set_wm_delete(xcwm_window_t *window);
  */
 void
 _xcwm_atoms_release(xcwm_context_t *context);
+
+/**
+ * Set the ICCCM WM_STATE for the given window to the state seen by
+ * the window manager.
+ * @param window The window to set the state on
+ * @param state The new state.
+ */
+void
+_xcwm_atoms_set_wm_state(xcwm_window_t *window, xcb_icccm_wm_state_t state);
 
 #endif  /* _XTOQ_INTERNAL_H_ */

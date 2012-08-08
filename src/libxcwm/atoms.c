@@ -145,6 +145,22 @@ _xcwm_atoms_init(xcwm_context_t *context)
         return XCB_WINDOW;
     }
 
+    /* WM_STATE atom */
+    atom_cookie = xcb_intern_atom(context->conn,
+                                  0,
+                                  strlen("WM_STATE"),
+                                  "WM_STATE");
+    atom_reply = xcb_intern_atom_reply(context->conn,
+                                       atom_cookie,
+                                       NULL);
+    if (!atom_reply) {
+        context->atoms->wm_state_atom = 0;
+    }
+    else {
+        context->atoms->wm_state_atom = atom_reply->atom;
+        free(atom_reply);
+    }
+
     create_wm_cm_window(context);
     
     return 0;
@@ -357,6 +373,25 @@ set_window_size_hints(xcwm_window_t *window)
     window->sizing->max_height = hints.max_height;
     window->sizing->width_inc = hints.width_inc;
     window->sizing->height_inc = hints.height_inc;
+}
+
+void
+_xcwm_atoms_set_wm_state(xcwm_window_t *window, xcb_icccm_wm_state_t state)
+{
+    uint32_t data[] = { state, XCB_NONE };
+
+    /* Only set this for top-level windows */
+    if (!window->transient_for && !window->override_redirect) {
+        xcb_change_property(window->context->conn,
+                            XCB_PROP_MODE_REPLACE,
+                            window->window_id,
+                            window->context->atoms->wm_state_atom,
+                            window->context->atoms->wm_state_atom,
+                            32,
+                            2,
+                            data);
+    }
+    xcb_flush(window->context->conn);
 }
 
 void

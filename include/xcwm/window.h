@@ -231,4 +231,20 @@ xcwm_window_copy_name(xcwm_window_t const *window);
 xcwm_window_sizing_t const *
 xcwm_window_get_sizing(xcwm_window_t const *window);
 
+/**
+ * Set the window to an iconic state. Usually this means the window
+ * has been minimized.
+ * @param window The window to iconify
+ */
+void
+xcwm_window_iconify(xcwm_window_t *window);
+
+/**
+ * Set the window to a normal state, meaning that the window has moved
+ * from an iconic/minimized state to a deiconic/de-minimized state.
+ * @param window The window being deiconified
+ */
+void
+xcwm_window_deiconify(xcwm_window_t *window);
+
 #endif  /* _XCWM_WINDOW_H_ */
