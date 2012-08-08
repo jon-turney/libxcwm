@@ -368,7 +368,21 @@ run_event_loop(void *thread_arg_struct)
                  * handle internally */
                 if (notify->atom == window->context->atoms->ewmh_conn.WM_PROTOCOLS) {
                     _xcwm_atoms_set_wm_delete(window);
+                    break;
                 }
+
+                /* Change to window name */
+                if (notify->atom == window->context->atoms->ewmh_conn._NET_WM_NAME
+                    || notify->atom == window->context->atoms->wm_name_atom) {
+                    _xcwm_atoms_set_window_name(window);
+                    return_evt = malloc(sizeof(xcwm_event_t));
+                    return_evt->event_type = XCWM_EVENT_WINDOW_NAME;
+                    return_evt->window = window;
+                    
+                    callback_ptr(return_evt);
+                    break;
+                }
+
                 break;
             }
 

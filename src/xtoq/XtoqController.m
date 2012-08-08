@@ -487,12 +487,7 @@
     [newWindow setContentView: newView];
 
     // set title
-    char *name = xcwm_window_copy_name(window);
-    NSString *winTitle;
-    winTitle = [NSString stringWithCString: name
-                                  encoding: NSUTF8StringEncoding];
-    [newWindow setTitle: winTitle];
-    free(name);
+    [self updateWindowName: window];
 
     // Set the sizing for the window, if we have values.
     xcwm_window_sizing_t const *sizing = xcwm_window_get_sizing(window);
@@ -585,6 +580,17 @@
     }
 }
 
+- (void)updateWindowName:(xcwm_window_t *)window
+{
+    XtoqWindow *nameWindow = xcwm_window_get_local_data(window);
+    char *name = xcwm_window_copy_name(window);
+    NSString *winTitle;
+    winTitle = [NSString stringWithCString: name
+                                  encoding: NSUTF8StringEncoding];
+    [nameWindow setTitle: winTitle];
+    free(name);
+}
+
 @end
 
 void
@@ -601,6 +607,10 @@ eventHandler(xcwm_event_t *event)
     else if (xcwm_event_get_type(event) == XCWM_EVENT_WINDOW_DESTROY) {
         NSLog(@"Window was destroyed");
         [referenceToSelf destroyWindow: window];
+    }
+    else if (xcwm_event_get_type(event) == XCWM_EVENT_WINDOW_NAME) {
+        NSLog(@"Window name changed");
+        [referenceToSelf updateWindowName: window];
     }
     else {
         NSLog(@"Unknown event type received.");

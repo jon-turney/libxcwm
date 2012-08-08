@@ -259,6 +259,12 @@ id referenceToSelf;
  */
 - (int)osxToXserver:(int)yValue windowHeight:(int)windowH;
 
+/**
+ * Handler for XCWM_WINDOW_NAME event. Updates the name of the window.
+ * @param window The window whose name needs updating.
+ */
+- (void)updateWindowName:(xcwm_window_t *)window;
+
 @end
 
 /**

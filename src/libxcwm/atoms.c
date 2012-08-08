@@ -125,6 +125,22 @@ _xcwm_atoms_init(xcwm_context_t *context)
         free(atom_reply);
     }
 
+    /* WM_NAME */
+    atom_cookie = xcb_intern_atom(context->conn,
+                                  0,
+                                  strlen("WM_NAME"),
+                                  "WM_NAME");
+    atom_reply = xcb_intern_atom_reply(context->conn,
+                                       atom_cookie,
+                                       NULL);
+    if (!atom_reply) {
+        context->atoms->wm_name_atom = 0;
+    }
+    else {
+        context->atoms->wm_name_atom = atom_reply->atom;
+        free(atom_reply);
+    }
+
     if (!check_wm_cm_owner(context)) {
         return XCB_WINDOW;
     }
@@ -189,19 +205,27 @@ _xcwm_atoms_set_window_name(xcwm_window_t *window)
 {
     xcb_get_property_cookie_t cookie;
     xcb_icccm_get_text_property_reply_t reply;
-    xcb_generic_error_t *error;
+    xcb_ewmh_get_utf8_strings_reply_t data;
+
+    /* Check _NET_WM_NAME first */
+    cookie = xcb_ewmh_get_wm_name(&window->context->atoms->ewmh_conn,
+                                  window->window_id);
+    if (xcb_ewmh_get_wm_name_reply(&window->context->atoms->ewmh_conn,
+                                   cookie, &data, NULL)) {
+        window->name = strndup(data.strings, data.strings_len);
+        xcb_ewmh_get_utf8_strings_reply_wipe(&data);
+        return;
+    }
 
     cookie = xcb_icccm_get_wm_name(window->context->conn, window->window_id);
     if (!xcb_icccm_get_wm_name_reply(window->context->conn,
-                                     cookie, &reply, &error)) {
+                                     cookie, &reply, NULL)) {
         window->name = malloc(sizeof(char));
         window->name[0] = '\0';
         return;
     }
 
-    window->name = malloc(sizeof(char) * (reply.name_len + 1));
-    strncpy(window->name, reply.name, reply.name_len);
-    window->name[reply.name_len] = '\0';
+    window->name = strndup(reply.name, reply.name_len);
     xcb_icccm_get_text_property_reply_wipe(&reply);
 }
 

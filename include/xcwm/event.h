@@ -41,7 +41,8 @@ typedef enum xcwm_event_type_t {
     XCWM_EVENT_WINDOW_DAMAGE = 0,
     XCWM_EVENT_WINDOW_EXPOSE,
     XCWM_EVENT_WINDOW_CREATE,
-    XCWM_EVENT_WINDOW_DESTROY
+    XCWM_EVENT_WINDOW_DESTROY,
+    XCWM_EVENT_WINDOW_NAME
 } xcwm_event_type_t;
 
 /**
