@@ -265,6 +265,19 @@ id referenceToSelf;
  */
 - (void)updateWindowName:(xcwm_window_t *)window;
 
+
+/**
+ * Handler for window miniaturize events.
+ * @param notification Notification object for this event.
+ */
+- (void)windowDidMiniaturize:(NSNotification *)notification;
+
+/**
+ * Handler for window de-miniaturize events.
+ * @param notification Notification object for this event.
+ */
+- (void)windowDidDeminiaturize:(NSNotification *)notification;
+
 @end
 
 /**

@@ -139,6 +139,16 @@
                name:NSWindowDidResizeNotification
              object:nil];
 
+    [nc addObserver:self
+           selector:@selector(windowDidMiniaturize:)
+               name:NSWindowDidMiniaturizeNotification
+             object:nil];
+
+    [nc addObserver:self
+           selector:@selector(windowDidDeminiaturize:)
+               name:NSWindowDidDeminiaturizeNotification
+             object:nil];
+
     xcwmDispatchQueue = dispatch_queue_create("xcwm.dispatch.queue", NULL);
 
     // Start the event loop and set the handler function
@@ -589,6 +599,22 @@
                                   encoding: NSUTF8StringEncoding];
     [nameWindow setTitle: winTitle];
     free(name);
+}
+
+- (void) windowDidMiniaturize:(NSNotification *)notification
+{
+    XtoqWindow *xtoqWin = (XtoqWindow *)[notification object];
+    xcwm_window_t *window = [xtoqWin getXcwmWindow];
+    
+    xcwm_window_iconify(window);
+}
+
+- (void) windowDidDeminiaturize:(NSNotification *)notification
+{
+    XtoqWindow *xtoqWin = (XtoqWindow *)[notification object];
+    xcwm_window_t *window = [xtoqWin getXcwmWindow];
+    
+    xcwm_window_deiconify(window);
 }
 
 @end
