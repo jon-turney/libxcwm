@@ -376,11 +376,40 @@ set_window_size_hints(xcwm_window_t *window)
 }
 
 void
-_xcwm_atoms_set_wm_state(xcwm_window_t *window, xcb_icccm_wm_state_t state)
+_xcwm_atoms_set_wm_state(xcwm_window_t *window, xcwm_window_state_t state)
 {
-    uint32_t data[] = { state, XCB_NONE };
+    /* xcb_icccm_wm_state_t icccm_state; */
 
-    /* Only set this for top-level windows */
+    uint32_t icccm_state[2];
+    xcb_atom_t *ewmh_state = NULL;
+    int ewmh_atom_cnt = 0;
+
+    switch (state) {
+    case XCWM_WINDOW_STATE_NORMAL:
+    {
+        icccm_state[0] = XCB_ICCCM_WM_STATE_NORMAL;
+        icccm_state[1] = XCB_NONE;
+        break;
+    }
+
+    case XCWM_WINDOW_STATE_ICONIC:
+    {
+        ewmh_atom_cnt = 1;
+        icccm_state[0] = XCB_ICCCM_WM_STATE_ICONIC;
+        icccm_state[1] = XCB_NONE;
+        
+        ewmh_state = calloc(ewmh_atom_cnt, sizeof(xcb_atom_t));
+        ewmh_state[0] = window->context->atoms->ewmh_conn._NET_WM_STATE_HIDDEN;
+        break;
+    }
+    default:
+    {
+        /* No need to attempt to update the state */
+        return;
+    }
+    }
+
+    /* Only set for top-level windows */
     if (!window->transient_for && !window->override_redirect) {
         xcb_change_property(window->context->conn,
                             XCB_PROP_MODE_REPLACE,
@@ -389,9 +418,19 @@ _xcwm_atoms_set_wm_state(xcwm_window_t *window, xcb_icccm_wm_state_t state)
                             window->context->atoms->wm_state_atom,
                             32,
                             2,
-                            data);
+                            icccm_state);
     }
+
+    xcb_ewmh_set_wm_state(&window->context->atoms->ewmh_conn,
+                          window->window_id,
+                          ewmh_atom_cnt,
+                          ewmh_state);
+
     xcb_flush(window->context->conn);
+        
+    if (ewmh_state) {
+        free(ewmh_state);
+    }
 }
 
 void

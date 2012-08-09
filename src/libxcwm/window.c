@@ -160,7 +160,7 @@ _xcwm_window_create(xcwm_context_t *context, xcb_window_t new_window,
     window = _xcwm_add_window(window);
 
     /* Set the WM_STATE of the window to normal */
-    _xcwm_atoms_set_wm_state(window, XCB_ICCCM_WM_STATE_NORMAL);
+    _xcwm_atoms_set_wm_state(window, XCWM_WINDOW_STATE_NORMAL);
 
     return window;
 }
@@ -378,13 +378,13 @@ xcwm_window_get_sizing(xcwm_window_t const *window)
 void
 xcwm_window_iconify(xcwm_window_t *window)
 {
-    _xcwm_atoms_set_wm_state(window, XCB_ICCCM_WM_STATE_ICONIC);
+    _xcwm_atoms_set_wm_state(window, XCWM_WINDOW_STATE_ICONIC);
 }
 
 void
 xcwm_window_deiconify(xcwm_window_t *window)
 {
-    _xcwm_atoms_set_wm_state(window, XCB_ICCCM_WM_STATE_NORMAL);
+    _xcwm_atoms_set_wm_state(window, XCWM_WINDOW_STATE_NORMAL);
 }
 
 /* Resize the window on server side */

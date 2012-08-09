@@ -323,12 +323,12 @@ void
 _xcwm_atoms_release(xcwm_context_t *context);
 
 /**
- * Set the ICCCM WM_STATE for the given window to the state seen by
- * the window manager.
+ * Set the ICCCM WM_STATE and EWMH _NET_WM_STATE for the given
+ * window to the state seen by the window manager.
  * @param window The window to set the state on
  * @param state The new state.
  */
 void
-_xcwm_atoms_set_wm_state(xcwm_window_t *window, xcb_icccm_wm_state_t state);
+_xcwm_atoms_set_wm_state(xcwm_window_t *window, xcwm_window_state_t state);
 
 #endif  /* _XTOQ_INTERNAL_H_ */

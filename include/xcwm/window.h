@@ -64,6 +64,16 @@ enum xcwm_window_type_t {
 typedef enum xcwm_window_type_t xcwm_window_type_t;
 
 /**
+ * Enumeration for possible supported window states.
+ */
+enum xcwm_window_state_t {
+    XCWM_WINDOW_STATE_UNKNOWN = 0,
+    XCWM_WINDOW_STATE_NORMAL,
+    XCWM_WINDOW_STATE_ICONIC
+};
+typedef enum xcwm_window_state_t xcwm_window_state_t;
+
+/**
  * Structure defining min/max size for window and resizing
  * increments. A value of 0 in any field implies the field is unset.
  */
