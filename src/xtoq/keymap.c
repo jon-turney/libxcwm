@@ -51,7 +51,6 @@
 
 #include <assert.h>
 
-/* FIXME: Use xcb instead */
 #include <xcb/xcb.h>
 #include <X11/X.h>
 #include <X11/keysym.h>
@@ -70,6 +69,22 @@
 #define NUM_KEYCODES   248     // NX_NUMKEYCODES might be better
 #define MIN_KEYCODE    XkbMinLegalKeyCode      // unfortunately, this isn't 0...
 #define MAX_KEYCODE    NUM_KEYCODES + MIN_KEYCODE - 1
+
+/* Number of keys per modifier and number of modifiers */
+#define KEYS_PER_MODIFIER 2     /* Only allow 2 keys for each modifier */
+#define NUM_MODIFIERS 8         /* Total number of modifers: shift,
+                                 * lock, control, mod1, mod2, mod3,
+                                 * mod4, mod5 */
+/* Offsets into the modKeymap array. Use: offset * KEYS_PER_MODIFIER
+ * to get the position in the array for modifier key */
+#define SHIFT_MOD_OFFSET 0
+#define LOCK_MOD_OFFSET 1
+#define CTRL_MOD_OFFSET 2
+#define MOD1_MOD_OFFSET 3
+#define MOD2_MOD_OFFSET 4
+#define MOD3_MOD_OFFSET 5
+#define MOD4_MOD_OFFSET 6
+#define MOD5_MOD_OFFSET 7
 
 // FIXME: Don't rely on this
 #define MAP_LENGTH 256
@@ -195,6 +210,7 @@ typedef struct XtoQKeymapInfo_struct {
     char modMap[MAP_LENGTH];
     xcb_keysym_t keyMap[MAP_LENGTH * GLYPHS_PER_KEY];
     unsigned char modifierKeycodes[32][2];
+    xcb_keycode_t modKeymap[KEYS_PER_MODIFIER * NUM_MODIFIERS];
 } XtoQKeymapInfo;
 
 XtoQKeymapInfo keyInfo;
@@ -217,9 +233,18 @@ XtoQBuildModifierMaps(XtoQKeymapInfo *info)
 {
     int i;
     xcb_keysym_t *k;
+    /* Counters used to build modKeymap and make sure we only put
+     * KEYS_PER_MODIFIER number of keys in each spot */
+    int shift_cnt = 0;
+    int lock_cnt = 0;
+    int ctrl_cnt = 0;
+    int mod1_cnt = 0;
+    int mod2_cnt = 0;
+    int mod3_cnt = 0;
 
     memset(info->modMap, NoSymbol, sizeof(info->modMap));
     memset(info->modifierKeycodes, 0, sizeof(info->modifierKeycodes));
+    memset(info->modKeymap, 0, sizeof(info->modKeymap));
 
     for (i = 0; i < NUM_KEYCODES; i++) {
         k = info->keyMap + i * GLYPHS_PER_KEY;
@@ -228,6 +253,11 @@ XtoQBuildModifierMaps(XtoQKeymapInfo *info)
         case XK_Shift_L:
             info->modifierKeycodes[NX_MODIFIERKEY_SHIFT][0] = i;
             info->modMap[MIN_KEYCODE + i] = ShiftMask;
+            if (shift_cnt < KEYS_PER_MODIFIER) {
+                info->modKeymap[SHIFT_MOD_OFFSET * KEYS_PER_MODIFIER + shift_cnt]
+                    = MIN_KEYCODE + i;
+                shift_cnt++;
+            }
             break;
 
         case XK_Shift_R:
@@ -237,11 +267,21 @@ XtoQBuildModifierMaps(XtoQKeymapInfo *info)
             info->modifierKeycodes[NX_MODIFIERKEY_SHIFT][0] = i;
 #endif
             info->modMap[MIN_KEYCODE + i] = ShiftMask;
+            if (shift_cnt < KEYS_PER_MODIFIER) {
+                info->modKeymap[SHIFT_MOD_OFFSET * KEYS_PER_MODIFIER + shift_cnt]
+                    = MIN_KEYCODE + i;
+                shift_cnt++;
+            }
             break;
 
         case XK_Control_L:
             info->modifierKeycodes[NX_MODIFIERKEY_CONTROL][0] = i;
             info->modMap[MIN_KEYCODE + i] = ControlMask;
+            if (ctrl_cnt < KEYS_PER_MODIFIER) {
+                info->modKeymap[CTRL_MOD_OFFSET * KEYS_PER_MODIFIER + ctrl_cnt]
+                    = MIN_KEYCODE + i;
+                ctrl_cnt++;
+            }
             break;
 
         case XK_Control_R:
@@ -251,11 +291,21 @@ XtoQBuildModifierMaps(XtoQKeymapInfo *info)
             info->modifierKeycodes[NX_MODIFIERKEY_CONTROL][0] = i;
 #endif
             info->modMap[MIN_KEYCODE + i] = ControlMask;
+            if (ctrl_cnt < KEYS_PER_MODIFIER) {
+                info->modKeymap[CTRL_MOD_OFFSET * KEYS_PER_MODIFIER + ctrl_cnt]
+                    = MIN_KEYCODE + i;
+                ctrl_cnt++;
+            }
             break;
 
         case XK_Caps_Lock:
             info->modifierKeycodes[NX_MODIFIERKEY_ALPHALOCK][0] = i;
             info->modMap[MIN_KEYCODE + i] = LockMask;
+            if (lock_cnt < KEYS_PER_MODIFIER) {
+                info->modKeymap[LOCK_MOD_OFFSET * KEYS_PER_MODIFIER + lock_cnt]
+                    = MIN_KEYCODE + i;
+                lock_cnt++;
+            }
             break;
 
         case XK_Alt_L:
@@ -266,6 +316,11 @@ XtoQBuildModifierMaps(XtoQKeymapInfo *info)
             if (!XQuartzOptionSendsAlt)
                 *k = XK_Mode_switch;     // Yes, this is ugly.  This needs to be cleaned up when we integrate quartzKeyboard with this code and refactor.
 #endif
+            if (mod1_cnt < KEYS_PER_MODIFIER) {
+                info->modKeymap[MOD1_MOD_OFFSET * KEYS_PER_MODIFIER + mod1_cnt]
+                    = MIN_KEYCODE + i;
+                mod1_cnt++;
+            }
             break;
 
         case XK_Alt_R:
@@ -280,7 +335,11 @@ XtoQBuildModifierMaps(XtoQKeymapInfo *info)
                 *k = XK_Mode_switch;     // Yes, this is ugly.  This needs to be cleaned up when we integrate quartzKeyboard with this code and refactor.
 #endif
             info->modMap[MIN_KEYCODE + i] = Mod1Mask;
-            break;
+            if (mod1_cnt < KEYS_PER_MODIFIER) {
+                info->modKeymap[MOD1_MOD_OFFSET * KEYS_PER_MODIFIER + mod1_cnt]
+                    = MIN_KEYCODE + i;
+                mod1_cnt++;
+            }            break;
 
         case XK_Mode_switch:
             ErrorF(
@@ -295,6 +354,11 @@ XtoQBuildModifierMaps(XtoQKeymapInfo *info)
         case XK_Meta_L:
             info->modifierKeycodes[NX_MODIFIERKEY_COMMAND][0] = i;
             info->modMap[MIN_KEYCODE + i] = Mod2Mask;
+            if (mod2_cnt < KEYS_PER_MODIFIER) {
+                info->modKeymap[MOD2_MOD_OFFSET * KEYS_PER_MODIFIER + mod2_cnt]
+                    = MIN_KEYCODE + i;
+                mod2_cnt++;
+            }
             break;
 
         case XK_Meta_R:
@@ -304,10 +368,20 @@ XtoQBuildModifierMaps(XtoQKeymapInfo *info)
             info->modifierKeycodes[NX_MODIFIERKEY_COMMAND][0] = i;
 #endif
             info->modMap[MIN_KEYCODE + i] = Mod2Mask;
+            if (mod2_cnt < KEYS_PER_MODIFIER) {
+                info->modKeymap[MOD2_MOD_OFFSET * KEYS_PER_MODIFIER + mod2_cnt]
+                    = MIN_KEYCODE + i;
+                mod2_cnt++;
+            }
             break;
 
         case XK_Num_Lock:
             info->modMap[MIN_KEYCODE + i] = Mod3Mask;
+            if (mod3_cnt < KEYS_PER_MODIFIER) {
+                info->modKeymap[MOD3_MOD_OFFSET * KEYS_PER_MODIFIER + mod3_cnt]
+                    = MIN_KEYCODE + i;
+                mod3_cnt++;
+            }
             break;
         }
     }
@@ -406,16 +480,14 @@ XtoQKeyboardReloadHandler(xcb_connection_t *conn)
         keyRepeatValue = 6;
 
 
-    //FIXME: Use Xi's ChangeDeviceKeyMapping (note that this won't handle modMap).
-    //       modMap needs to be sent using the core SetModifierMapping request,
-    //       and it probably needs to be in a different format than it is currently.
-    //FIXME: Disabled XtoQKeyboardSetRepeat(darwinKeyboard, initialKeyRepeatValue, keyRepeatValue)
-
     /* FIXME: Set the keymap through XCB call. Once this is and
      * modifier mapping is working, this will be replaced by call to
      * xcwm */
     xcb_void_cookie_t cookie;
     xcb_generic_error_t *error;
+    xcb_set_modifier_mapping_cookie_t map_cookie;
+    xcb_set_modifier_mapping_reply_t *map_reply;
+    
     cookie = xcb_change_keyboard_mapping_checked(conn,
                                                  NUM_KEYCODES,
                                                  MIN_KEYCODE,
@@ -427,6 +499,17 @@ XtoQKeyboardReloadHandler(xcb_connection_t *conn)
         fprintf(stderr, "ERROR: Failed to change keyboard mapping");
         fprintf(stderr, "\nError code: %d\n", error->error_code);
     }
+
+    /* Set the modifier mapping */
+    map_cookie = xcb_set_modifier_mapping(conn,
+                                          KEYS_PER_MODIFIER,
+                                          keyInfo.modKeymap);
+    map_reply = xcb_set_modifier_mapping_reply(conn, map_cookie, &error);
+    if (error) {
+        fprintf(stderr, "ERROR: Failed to change keyboard modifier mapping");
+        fprintf(stderr, "\nError code: %d\n", error->error_code);
+    }
+    free(map_reply);
     xcb_flush(conn);
 
 #if 0 /* FIXME: Don't worry about xmodmap until we're done with everything else */
