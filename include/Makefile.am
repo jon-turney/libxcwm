@@ -7,5 +7,7 @@ xcwminclude_HEADERS = \
 	xcwm/window.h \
 	xcwm/event.h \
 	xcwm/image.h \
-	xcwm/input.h
+	xcwm/input.h \
+	xcwm/keyboard.h
+
 

@@ -35,5 +35,6 @@
 #include <xcwm/event.h>
 #include <xcwm/input.h>
 #include <xcwm/image.h>
+#include <xcwm/keyboard.h>
 
 #endif /* _XCWM_XCWM_H_ */

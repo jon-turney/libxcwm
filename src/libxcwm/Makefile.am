@@ -16,4 +16,5 @@ libxcwm_la_SOURCES = \
 	util.c \
 	image.c \
     input.c \
-	atoms.c
+	atoms.c \
+	keyboard.c
