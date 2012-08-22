@@ -141,23 +141,55 @@ run_event_loop(void *thread_arg_struct)
                 continue;
             }
 
-            /* Increase the damaged area if new damage is outside the
-             * area already marked - this should be set back to 0 by 0
-             * when area is actually redrawn. This is likely to be
-             * done in another thread that handles window redraws */
+            /* Increase the damaged area of window if new damage is
+             * larger than current. */
             xcwm_event_get_thread_lock();
 
             /* Initial damage events for override-redirect windows are
              * reported relative to the root window, subsequent events
-             * are relative to the window itself. */
-            if (return_evt->window->initial_damage == 1) {
-                dmg_area.x = dmgevnt->area.x - dmgevnt->geometry.x;
-                dmg_area.y = dmgevnt->area.y - dmgevnt->geometry.y;
+             * are relative to the window itself. We also catch cases
+             * where the damage area is larger than the bounds of the
+             * window. */
+            if (return_evt->window->initial_damage == 1
+                || (dmgevnt->area.width > return_evt->window->bounds->width)
+                || (dmgevnt->area.height > return_evt->window->bounds->height) ) {
+                xcb_xfixes_region_t region =
+                    xcb_generate_id(return_evt->window->context->conn);
+                xcb_rectangle_t rect;
+
+                /* Remove the damage */
+                xcb_xfixes_create_region(return_evt->window->context->conn,
+                                         region,
+                                         1,
+                                         &dmgevnt->area);
+                xcb_damage_subtract(return_evt->window->context->conn,
+                                    return_evt->window->damage,
+                                    region,
+                                    XCB_NONE);
+                
+                /* Add new damage area for entire window */
+                rect.x = 0;
+                rect.y = 0;
+                rect.width = return_evt->window->bounds->width;
+                rect.height = return_evt->window->bounds->height;
+                xcb_xfixes_set_region(return_evt->window->context->conn,
+                                      region,
+                                      1,
+                                      &rect);
+                xcb_damage_add(return_evt->window->context->conn,
+                               return_evt->window->window_id,
+                               region);
+
                 return_evt->window->initial_damage = 0;
-            } else {
-                dmg_area.x = dmgevnt->area.x;
-                dmg_area.y = dmgevnt->area.y;
+                free(return_evt);
+                xcb_xfixes_destroy_region(return_evt->window->context->conn,
+                                          region);
+                xcwm_event_release_thread_lock();
+                continue;
             }
+
+            dmg_area.x = dmgevnt->area.x;
+            dmg_area.y = dmgevnt->area.y;
             dmg_area.width = dmgevnt->area.width;
             dmg_area.height = dmgevnt->area.height;
 
