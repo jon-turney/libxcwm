@@ -202,7 +202,11 @@ create_wm_cm_window(xcwm_context_t *context)
                          strlen("xcwm"), "xcwm");
 
     xcb_ewmh_set_supporting_wm_check(&context->atoms->ewmh_conn,
-                                     context->conn_screen,
+                                     context->root_window->window_id,
+                                     context->wm_cm_window);
+
+    xcb_ewmh_set_supporting_wm_check(&context->atoms->ewmh_conn,
+                                     context->wm_cm_window,
                                      context->wm_cm_window);
 }
 
