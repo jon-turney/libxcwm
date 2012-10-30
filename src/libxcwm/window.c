@@ -371,9 +371,154 @@ xcwm_window_copy_name(xcwm_window_t const *window)
 xcwm_window_sizing_t const *
 xcwm_window_get_sizing(xcwm_window_t const *window)
 {
-
+    window->sizing->min_width = window->size_hints.min_width;
+    window->sizing->min_height = window->size_hints.min_height;;
+    window->sizing->max_width = window->size_hints.max_width;
+    window->sizing->max_height = window->size_hints.max_height;
+    window->sizing->width_inc = window->size_hints.width_inc;
+    window->sizing->height_inc = window->size_hints.height_inc;
     return window->sizing;
 }
+
+void
+xcwm_window_constrain_sizing(xcwm_window_t const *window, int *widthp, int *heightp)
+{
+  /*/
+   * (based on something taken from TWM sources)
+   * Respect WM_NORMAL_HINTS constraints for sizing
+   */
+  const xcb_size_hints_t *hints = &(window->size_hints);
+
+#define makemult(a,b) ((b==1) ? (a) : (((int)((a)/(b))) * (b)) )
+  int minWidth, minHeight, maxWidth, maxHeight, xinc, yinc, delta;
+  int baseWidth, baseHeight;
+
+  /* Accept input values */
+  int dwidth = *widthp, dheight = *heightp;
+
+  /* Interpret hints */
+  if (hints->flags & XCB_ICCCM_SIZE_HINT_P_MIN_SIZE)
+    {
+      minWidth = hints->min_width;
+      minHeight = hints->min_height;
+    }
+  else if (hints->flags & XCB_ICCCM_SIZE_HINT_BASE_SIZE)
+    {
+      minWidth = hints->base_width;
+      minHeight = hints->base_height;
+    }
+  else
+    minWidth = minHeight = 1;
+
+  if (hints->flags & XCB_ICCCM_SIZE_HINT_BASE_SIZE)
+    {
+      baseWidth = hints->base_width;
+      baseHeight = hints->base_height;
+    }
+  else if (hints->flags & XCB_ICCCM_SIZE_HINT_P_MIN_SIZE)
+    {
+      baseWidth = hints->min_width;
+      baseHeight = hints->min_height;
+    }
+  else
+    baseWidth = baseHeight = 0;
+
+  if (hints->flags & XCB_ICCCM_SIZE_HINT_P_MAX_SIZE)
+    {
+      maxWidth = hints->max_width;
+      maxHeight = hints->max_height;
+    }
+  else
+    {
+      maxWidth = INT_MAX;
+      maxHeight = INT_MAX;
+    }
+
+  if (hints->flags & XCB_ICCCM_SIZE_HINT_P_RESIZE_INC)
+    {
+      xinc = hints->width_inc;
+      yinc = hints->height_inc;
+
+      /* Avoid divide-by-zero */
+      if (xinc == 0) xinc = 1;
+      if (yinc == 0) yinc = 1;
+    }
+  else
+    xinc = yinc = 1;
+
+  /*
+   * First, clamp to min and max values
+   */
+  if (dwidth < minWidth)
+    dwidth = minWidth;
+  if (dheight < minHeight)
+    dheight = minHeight;
+
+  if (dwidth > maxWidth)
+    dwidth = maxWidth;
+  if (dheight > maxHeight)
+    dheight = maxHeight;
+
+  /*
+   * Second, fit to base + N * inc
+   */
+  dwidth = ((dwidth - baseWidth) / xinc * xinc) + baseWidth;
+  dheight = ((dheight - baseHeight) / yinc * yinc) + baseHeight;
+
+  /*
+   * Third, adjust for aspect ratio
+   */
+
+  /*
+   * The math looks like this:
+   *
+   * minAspectX    dwidth     maxAspectX
+   * ---------- <= ------- <= ----------
+   * minAspectY    dheight    maxAspectY
+   *
+   * If that is multiplied out, then the width and height are
+   * invalid in the following situations:
+   *
+   * minAspectX * dheight > minAspectY * dwidth
+   * maxAspectX * dheight < maxAspectY * dwidth
+   *
+   */
+
+  if (hints->flags & XCB_ICCCM_SIZE_HINT_P_ASPECT)
+    {
+      if (hints->min_aspect_num * dheight > hints->min_aspect_den * dwidth)
+        {
+	  delta = makemult(hints->min_aspect_num * dheight / hints->min_aspect_den - dwidth, xinc);
+	  if (dwidth + delta <= maxWidth)
+	    dwidth += delta;
+	  else
+            {
+	      delta = makemult(dheight - dwidth*hints->min_aspect_den/hints->min_aspect_num, yinc);
+	      if (dheight - delta >= minHeight)
+		dheight -= delta;
+            }
+        }
+
+      if (hints->max_aspect_num * dheight < hints->max_aspect_den * dwidth)
+        {
+	  delta = makemult(dwidth * hints->max_aspect_den / hints->max_aspect_num - dheight, yinc);
+	  if (dheight + delta <= maxHeight)
+	    dheight += delta;
+	  else
+            {
+	      delta = makemult(dwidth - hints->max_aspect_num*dheight/hints->max_aspect_den, xinc);
+	      if (dwidth - delta >= minWidth)
+		dwidth -= delta;
+            }
+        }
+    }
+
+  /* Return computed values */
+  *widthp = dwidth;
+  *heightp = dheight;
+}
+#undef makemult
+
 
 void
 xcwm_window_iconify(xcwm_window_t *window)
