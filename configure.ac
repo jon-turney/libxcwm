@@ -20,7 +20,7 @@ AC_PROG_OBJC
 AC_PROG_INSTALL
 
 # Checks for libraries.
-NEEDED="xcb-damage xcb-composite xcb-event xcb-xtest xcb-image xcb-keysyms xcb-icccm xcb-atom xcb-ewmh"
+NEEDED="xcb-damage xcb-composite xcb-event xcb-xtest xcb-image xcb-keysyms xcb-icccm >= 0.3.9 xcb-atom xcb-ewmh"
 PKG_CHECK_MODULES(XCB, $NEEDED)
 AC_SUBST(NEEDED)
 
