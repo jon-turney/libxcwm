@@ -32,6 +32,7 @@
 
 #include <xcb/xcb.h>
 #include <xcb/damage.h>
+#include <xcb/xcb_icccm.h>
 
 /* Abstract types for context data types 
  * FIXME: Move this to window.h once accessor API functions in place */

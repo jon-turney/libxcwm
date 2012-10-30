@@ -342,21 +342,13 @@ void
 set_window_size_hints(xcwm_window_t *window)
 {
     xcb_get_property_cookie_t cookie;
-    xcb_size_hints_t hints;
-    
     cookie = xcb_icccm_get_wm_normal_hints(window->context->conn,
                                            window->window_id);
     if (!xcb_icccm_get_wm_normal_hints_reply(window->context->conn,
-                                             cookie, &hints, NULL)) {
+                                             cookie, &(window->size_hints), NULL)) {
         /* Use 0 for all values (as set in calloc), or previous values */
         return;
     }
-    window->sizing->min_width = hints.min_width;
-    window->sizing->min_height = hints.min_height;;
-    window->sizing->max_width = hints.max_width;
-    window->sizing->max_height = hints.max_height;
-    window->sizing->width_inc = hints.width_inc;
-    window->sizing->height_inc = hints.height_inc;
 }
 
 void

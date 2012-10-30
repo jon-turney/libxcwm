@@ -97,6 +97,7 @@ struct xcwm_window_t {
     xcb_damage_damage_t damage;
     xcwm_rect_t *bounds;
     xcwm_rect_t *dmg_bounds;
+    xcb_size_hints_t size_hints; /* WM_NORMAL_HINTS */
     xcwm_window_sizing_t *sizing; /* Sizing information for the window */
     char *name;         /* The name of the window */
     int wm_delete_set;  /* Flag for WM_DELETE_WINDOW, 1 if set */
@@ -240,6 +241,16 @@ xcwm_window_copy_name(xcwm_window_t const *window);
  */
 xcwm_window_sizing_t const *
 xcwm_window_get_sizing(xcwm_window_t const *window);
+
+/**
+ * Constrain height and width values according to sizing
+ * hints for window
+ * @param window The window
+ * @param widthp The height
+ * @param heightp The width
+ */
+void
+xcwm_window_constrain_sizing(xcwm_window_t const *window, int *widthp, int *heightp);
 
 /**
  * Set the window to an iconic state. Usually this means the window
