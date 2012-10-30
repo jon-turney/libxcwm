@@ -1,5 +1,8 @@
 SUBDIRS = include src man
 
+pkgconfigdir = $(libdir)/pkgconfig
+pkgconfig_DATA = xcwm.pc
+
 MAINTAINERCLEANFILES = ChangeLog INSTALL
 
 INSTALL:

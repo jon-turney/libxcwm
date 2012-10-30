@@ -20,7 +20,9 @@ AC_PROG_OBJC
 AC_PROG_INSTALL
 
 # Checks for libraries.
-PKG_CHECK_MODULES(XCB, xcb-damage xcb-composite xcb-event xcb-xtest xcb-image xcb-keysyms xcb-icccm xcb-atom xcb-ewmh)
+NEEDED="xcb-damage xcb-composite xcb-event xcb-xtest xcb-image xcb-keysyms xcb-icccm xcb-atom xcb-ewmh"
+PKG_CHECK_MODULES(XCB, $NEEDED)
+AC_SUBST(NEEDED)
 
 AC_CHECK_FUNC(dispatch_async,
               AC_DEFINE([HAVE_LIBDISPATCH], 1, [Define to 1 if you have the libdispatch (GCD) available])
@@ -39,6 +41,7 @@ AC_MSG_RESULT($XTOQ)
 AM_CONDITIONAL(XTOQ, [test "x$XTOQ" = "xyes"])
 
 AC_CONFIG_FILES([Makefile
+                 xcwm.pc
                  include/Makefile
                  man/Makefile
                  src/libxcwm/Makefile

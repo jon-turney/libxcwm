@@ -57,3 +57,6 @@ missing
 # Merge and patch files to ignore
 *.orig
 *.patch
+
+# ignore generated pkg-config files
+*.pc

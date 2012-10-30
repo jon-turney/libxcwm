@@ -1,0 +1,13 @@
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+Name: xcwm
+Description: X11 Composite Window Manager Library
+Version: @PACKAGE_VERSION@
+Requires:
+Requires.private: @NEEDED@
+Cflags: -I${includedir}
+Libs: -L${libdir} -lxcwm
+Libs.private: @LIBS@
