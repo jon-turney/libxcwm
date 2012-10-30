@@ -181,9 +181,9 @@ run_event_loop(void *thread_arg_struct)
                                region);
 
                 return_evt->window->initial_damage = 0;
-                free(return_evt);
                 xcb_xfixes_destroy_region(return_evt->window->context->conn,
                                           region);
+                free(return_evt);
                 xcwm_event_release_thread_lock();
                 continue;
             }
