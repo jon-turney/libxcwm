@@ -50,6 +50,11 @@ xcwm_context_open(char *display)
 
     conn = xcb_connect(display, &conn_screen);
 
+    if (xcb_connection_has_error(conn)) {
+      fprintf(stderr, "Cannot open display\n");
+      exit(1);
+    }
+
     root_screen = xcb_aux_get_screen(conn, conn_screen);
     root_window_id = root_screen->root;
 
