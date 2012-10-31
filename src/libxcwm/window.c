@@ -85,7 +85,7 @@ xcwm_window_set_input_focus(xcwm_window_t *window)
         xcb_get_input_focus(window->context->conn);
     xcb_get_input_focus_reply_t *reply =
         xcb_get_input_focus_reply(window->context->conn, cookie, NULL);
-    printf("Focus was in window #%d, now in #%d (window.c)\n",
+    printf("Focus was in window 0x%08x, now in 0x%08x (window.c)\n",
            reply->focus, window->window_id);
     free(reply);
 
