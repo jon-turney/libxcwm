@@ -150,7 +150,7 @@ xcwm_window_request_close(xcwm_window_t *window);
  */
 void
 xcwm_window_configure(xcwm_window_t *window, int x, int y,
-                      int height, int width);
+                      int width, int height);
 
 /**
  * Get the window's type.

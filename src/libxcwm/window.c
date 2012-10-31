@@ -188,7 +188,7 @@ _xcwm_window_remove(xcb_connection_t *conn, xcb_window_t window)
 
 void
 xcwm_window_configure(xcwm_window_t *window, int x, int y,
-                      int height, int width)
+                      int width, int height)
 {
 
     /* Set values for xcwm_window_t */
