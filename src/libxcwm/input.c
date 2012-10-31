@@ -45,7 +45,7 @@ xcwm_input_key_event(xcwm_context_t *context, uint8_t code, int state)
                         XCB_CURRENT_TIME, none, 0, 0, 1);
 
     xcb_flush(context->conn);
-    printf("xcwm.c received key event - uint8_t '%i'\n", code);
+    printf("Injected key event - key code %i\n", code);
 }
 
 void
@@ -67,8 +67,8 @@ xcwm_input_mouse_button_event(xcwm_window_t *window,
                         XCB_CURRENT_TIME,
                         window->window_id, 0, 0, 0);
     xcb_flush(window->context->conn);
-    printf("Mouse event received by xtoq.c - (%ld,%ld), state: %d\n",
-           x, y, state);
+    printf("Injected mouse event - (%ld,%ld), button %d, state: %d\n",
+           x, y, button, state);
 }
 
 void
