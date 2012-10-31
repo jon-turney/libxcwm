@@ -62,7 +62,7 @@ xcwm_input_mouse_button_event(xcwm_window_t *window,
  * @param y - y coordinate
  */
 void
-xcwm_input_mouse_motion(xcwm_context_t *context, long x, long y, int button);
+xcwm_input_mouse_motion(xcwm_context_t *context, long x, long y);
 
 
 #endif  /* _XCWM_INPUT_H_ */

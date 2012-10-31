@@ -191,8 +191,7 @@
                       (rootContext,
                        [xNum intValue],
                        //Converting OSX coordinates to X11
-                       height - WINDOWBAR - [yNum intValue],
-                       0);
+                       height - WINDOWBAR - [yNum intValue]);
                    });
 }
 

@@ -72,7 +72,7 @@ xcwm_input_mouse_button_event(xcwm_window_t *window,
 }
 
 void
-xcwm_input_mouse_motion(xcwm_context_t *context, long x, long y, int button)
+xcwm_input_mouse_motion(xcwm_context_t *context, long x, long y)
 {
     xcb_test_fake_input(context->conn, XCB_MOTION_NOTIFY, 0, XCB_CURRENT_TIME,
                         context->root_window->window_id, x, y, 0);
