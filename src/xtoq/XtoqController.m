@@ -458,8 +458,8 @@
         // Move the window down by the height of the OSX menu bar
         xcwm_window_configure(window, windowSize->x,
                               windowSize->y - WINDOWBAR,
-                              windowSize->height,
-                              windowSize->width);
+                              windowSize->width,
+                              windowSize->height);
     }
     
     newWindow = [[XtoqWindow alloc]
@@ -580,7 +580,7 @@
         int height = (int)moveFrame.size.height - WINDOWBAR;
 
         xcwm_window_configure(window,
-                              x, y - height, height, width);
+                              x, y - height, width, height);
         [[moveWindow contentView] setNeedsDisplay: YES];
     }
 }
