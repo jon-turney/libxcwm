@@ -1,62 +1,85 @@
-# Files for git to ignore
 #
+#		X.Org module default exclusion patterns
+#		The next section if for module specific patterns
+#
+#	Do not edit the following section
+# 	GNU Build System (Autotools)
+aclocal.m4
+autom4te.cache/
+autoscan.log
+ChangeLog
+compile
+config.guess
+config.h
+config.h.in
+config.log
+config-ml.in
+config.py
+config.status
+config.status.lineno
+config.sub
+configure
+configure.scan
+depcomp
+.deps/
+INSTALL
+install-sh
+.libs/
+libtool
+libtool.m4
+ltmain.sh
+lt~obsolete.m4
+ltoptions.m4
+ltsugar.m4
+ltversion.m4
+Makefile
+Makefile.in
+mdate-sh
+missing
+mkinstalldirs
+*.pc
+py-compile
+stamp-h?
+symlink-tree
+texinfo.tex
+ylwrap
 
-# Ignore local git metadata
-HEAD
-description
-config
-info
-hooks
+#	Do not edit the following section
+# 	Edit Compile Debug Document Distribute
+*~
+*.[0-9]
+*.[0-9]x
+*.bak
+*.bin
+core
+*.dll
+*.exe
+*-ISO*.bdf
+*-JIS*.bdf
+*-KOI8*.bdf
+*.kld
+*.ko
+*.ko.cmd
+*.lai
+*.l[oa]
+*.[oa]
+*.obj
+*.patch
+*.so
+*.pcf.gz
+*.pdb
+*.tar.bz2
+*.tar.gz
+#
+#		Add & Override patterns for libxcwm
+#
+#		Edit the following section as needed
+# For example, !report.pc overrides *.pc. See 'man gitignore'
+#
 
 # Ignore the .DS_Store files that Apple seems to want in every directory
 .DS_Store
 
-# Ignore emacs temp files and emacs desktop files
-*~
-.emacs.desktop
-.emacs.desktop.lock
-
-# Ignore object files
-*.o
-*.lo
-*la
-
-# Ignore latex intermediate files
-*.aux
-*.out
-*.log
-
-# Executables to ignore
-lpxcb-ex
-
-# Xcode files to ignore 
-#project.pbxproj
+# Xcode files to ignore
 xcuserdata/
 xcuserdatad/
-
-# Autotools files to ignore
-config.status
-compile
-config.h
-Makefile
-Makefile.in
-libtool
-install-sh
-ltmain.sh
-config.guess
-config.h.in
-configure
-stamp-h1
-.deps
-aclocal.m4
-autom4te.cache
-config.sub
-depcomp
-missing
-
-# Merge and patch files to ignore
-*.orig
-*.patch
-
-# ignore generated pkg-config files
-*.pc
