@@ -51,9 +51,12 @@ static void
 setup_window_type(xcwm_window_t *window);
 
 /* Get and set the size hints for the window */
-void
+static void
 set_window_size_hints(xcwm_window_t *window);
 
+/* Get opacity hint */
+static void
+set_window_opacity(xcwm_window_t *window);
 
 static xcb_atom_t
 _xcwm_atom_get(xcwm_context_t *context, const char *atomName)
@@ -137,12 +140,14 @@ _xcwm_atoms_init(xcwm_context_t *context)
     if (!check_wm_cm_owner(context)) {
         return XCB_WINDOW;
     }
+    create_wm_cm_window(context);
 
     /* WM_STATE atom */
     context->atoms->wm_state_atom = _xcwm_atom_get(context, "WM_STATE");
 
-    create_wm_cm_window(context);
-    
+    /* NET_WM_OPACITY */
+    context->atoms->wm_opacity_atom = _xcwm_atom_get(context, "_NET_WM_WINDOW_OPACITY");
+
     return 0;
 }
 
@@ -197,6 +202,7 @@ _xcwm_atoms_init_window(xcwm_window_t *window)
     _xcwm_atoms_set_wm_delete(window);
     setup_window_type(window);
     set_window_size_hints(window);
+    set_window_opacity(window);
 }
 
 
@@ -348,6 +354,27 @@ set_window_size_hints(xcwm_window_t *window)
                                              cookie, &(window->size_hints), NULL)) {
         /* Use 0 for all values (as set in calloc), or previous values */
         return;
+    }
+}
+
+void
+set_window_opacity(xcwm_window_t *window)
+{
+  xcb_get_property_cookie_t cookie;
+  cookie = xcb_get_property(window->context->conn, 0, window->window_id, window->context->atoms->wm_opacity_atom, XCB_ATOM_CARDINAL, 0L, 4L);
+
+  xcb_get_property_reply_t *reply = xcb_get_property_reply(window->context->conn, cookie, NULL);
+  if (reply)
+    {
+      int nitems = xcb_get_property_value_length(reply);
+      uint32_t *value = xcb_get_property_value(reply);
+
+      if (value && nitems == 4)
+        {
+          window->opacity = *value;
+        }
+
+      free(reply);
     }
 }
 
