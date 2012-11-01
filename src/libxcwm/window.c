@@ -127,6 +127,7 @@ _xcwm_window_create(xcwm_context_t *context, xcb_window_t new_window,
     window->bounds->y = geom->y;
     window->bounds->width = geom->width;
     window->bounds->height = geom->height;
+    window->opacity = ~0;
 
     /* Find an set the parent */
     window->parent = _xcwm_get_window_node_by_window_id(parent);
@@ -366,6 +367,12 @@ xcwm_window_copy_name(xcwm_window_t const *window)
 {
 
     return strdup(window->name);
+}
+
+unsigned int
+xcwm_window_get_opacity(xcwm_window_t const *window)
+{
+  return window->opacity;
 }
 
 xcwm_window_sizing_t const *

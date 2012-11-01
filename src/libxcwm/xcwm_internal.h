@@ -56,6 +56,7 @@ struct xcwm_wm_atoms_t {
     xcb_atom_t wm_name_atom;
     xcb_atom_t wm_state_atom;
     xcb_ewmh_connection_t ewmh_conn;
+    xcb_atom_t wm_opacity_atom;
 };
 
 /**

@@ -104,6 +104,7 @@ struct xcwm_window_t {
     int override_redirect;
     int initial_damage;         /* Set to 1 for override-redirect windows */
     void *local_data;   /* Area for data client cares about */
+    unsigned int opacity;
 };
 
 /**
@@ -267,5 +268,13 @@ xcwm_window_iconify(xcwm_window_t *window);
  */
 void
 xcwm_window_deiconify(xcwm_window_t *window);
+
+/**
+ * Get the opacity for the window.
+ * @param window The window to get opacity data for.
+ * @return The window opacity, in the range 0 (transparent) to 0xFFFFFFFF (opaque)
+ */
+unsigned int
+xcwm_window_get_opacity(xcwm_window_t const *window);
 
 #endif  /* _XCWM_WINDOW_H_ */
