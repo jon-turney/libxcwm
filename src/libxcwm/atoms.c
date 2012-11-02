@@ -276,6 +276,9 @@ setup_window_type(xcwm_window_t *window)
     xcb_ewmh_connection_t ewmh_conn = window->context->atoms->ewmh_conn;
     int i;
 
+    /* if nothing below matches, set the default to unknown */
+    window->type = XCWM_WINDOW_TYPE_UNKNOWN;
+
     /* Get the window this one is transient for */
     cookie = xcb_icccm_get_wm_transient_for(window->context->conn,
                                             window->window_id);
@@ -283,6 +286,7 @@ setup_window_type(xcwm_window_t *window)
                                              &transient, NULL)) {
         window->transient_for = _xcwm_get_window_node_by_window_id(transient);
         window->type = XCWM_WINDOW_TYPE_DIALOG;
+        // not if override-redirect
     } else {
         window->transient_for = NULL;
         window->type = XCWM_WINDOW_TYPE_NORMAL;
@@ -294,9 +298,6 @@ setup_window_type(xcwm_window_t *window)
      * match. */
     cookie = xcb_ewmh_get_wm_window_type(&ewmh_conn, window->window_id);
     if (xcb_ewmh_get_wm_window_type_reply(&ewmh_conn, cookie, &type, NULL)) {
-        /* If we get a reply, but nothing below matches, set the
-         * default to unknown */
-        window->type = XCWM_WINDOW_TYPE_UNKNOWN;
         for (i = 0; i <= type.atoms_len; i++) {
             if (type.atoms[i] ==  ewmh_conn._NET_WM_WINDOW_TYPE_TOOLBAR) {
                 window->type = XCWM_WINDOW_TYPE_TOOLBAR;
