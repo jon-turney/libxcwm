@@ -32,7 +32,7 @@
 
 /**
  * Send key event to the X server.
- * @param context The context the event occured in.
+ * @param context The context the event occurred in.
  * @param code The keycode of event.
  * @param state 1 if key has been pressed, 0 if key released.
  */
@@ -41,7 +41,7 @@ xcwm_input_key_event(xcwm_context_t *context, uint8_t code, int state);
 
 /**
  * Send mouse button event to the X Server.
- * @param window The window the event occured in.
+ * @param window The window the event occurred in.
  * @param button The mouse button pressed.
  * @param state 1 if the mouse button is pressed down, 0 if released.
  */

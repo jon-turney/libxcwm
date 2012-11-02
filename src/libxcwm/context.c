@@ -1,6 +1,6 @@
 /* Copyright (c) 2012 David Snyder, Benjamin Carr, Braden Wooley
  *
- * rootimg_api.h
+ * context.c
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
