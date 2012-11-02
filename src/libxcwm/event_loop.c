@@ -320,7 +320,7 @@ run_event_loop(void *thread_arg_struct)
                 printf(
                     "Window %u exposed. Region to be redrawn at location (%d, %d), ",
                     exevnt->window, exevnt->x, exevnt->y);
-                printf("with dimentions (%d, %d).\n", exevnt->width,
+                printf("with dimensions (%d, %d).\n", exevnt->width,
                        exevnt->height);
 
                 return_evt = malloc(sizeof(xcwm_event_t));

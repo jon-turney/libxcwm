@@ -91,7 +91,7 @@ _xcwm_atoms_init(xcwm_context_t *context)
     }
     
     /* Set the _NET_SUPPORTED atom for this context
-     * Most of these are defined ast MUSTs in the
+     * Most of these are defined as MUSTs in the
      * EWMH standards for window managers.
      * NOTE: Starting with only a limited set of _NET_WM_STATE. This
      * may be expanded. */
@@ -126,7 +126,7 @@ _xcwm_atoms_init(xcwm_context_t *context)
                            supported);
 
     /* Get the ICCCM atoms we need that are not included in the
-     * xcb_ewmh_connetion_t. */
+     * xcb_ewmh_connection_t. */
 
     /* WM_DELETE_WINDOW atom */
     context->atoms->wm_delete_window_atom = _xcwm_atom_get(context, "WM_DELETE_WINDOW");

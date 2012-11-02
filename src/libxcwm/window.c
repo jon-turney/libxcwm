@@ -444,7 +444,7 @@ init_damage_on_window(xcb_connection_t *conn, xcwm_window_t *window)
         window->damage = 0;
         return;
     }
-    /* Assign this damage object to the roots window's context */
+    /* Assign this damage object to the window's context */
     window->damage = damage_id;
 
     /* Set the damage area in the context to zero */

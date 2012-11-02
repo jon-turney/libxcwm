@@ -40,11 +40,11 @@
 #include <xcwm/xcwm.h>
 
 /**
- * Strucuture used to pass nesessary data to xcwm_start_event_loop.
+ * Structure used to pass necessary data to xcwm_start_event_loop.
  */
-typedef struct xcwm_event_connetion {
+typedef struct xcwm_event_connection {
     xcb_connection_t *conn;               /* Connection to listen to events on */
-    xcwm_event_cb_t event_callback;       /* Fuction to call when event caught */
+    xcwm_event_cb_t event_callback;       /* Function to call when event caught */
 } xcwm_event_connection;
 
 /**
@@ -106,7 +106,7 @@ _xcwm_write_all_children_window_info(xcb_connection_t *conn,
 /**
  * Get the image data for a window.
  * @param conn the connection to the xserver.
- * @param root the window acenstral to all children to be written.
+ * @param root the window ancestral to all children to be written.
  * @return a structure containing data and data length.
  */
 image_data_t

@@ -85,7 +85,7 @@ xcwm_image_copy_damaged(xcwm_window_t *window)
         return NULL;
     }
 
-    /* Get the image of the root window */
+    /* Get the image of the damaged area of the window */
     image = xcb_image_get(window->context->conn,
                           window->window_id,
                           window->dmg_bounds->x,

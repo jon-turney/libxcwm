@@ -476,7 +476,7 @@
     // save the newWindow pointer into the context
     xcwm_window_set_local_data(window, (id)newWindow);
 
-    // get image to darw
+    // get image to draw
     xcbImage = xcwm_image_copy_full(window);
     imageRep = [[XtoqImageRep alloc] initWithData: xcbImage x: 0 y: 0];
 
