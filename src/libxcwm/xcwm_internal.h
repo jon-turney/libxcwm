@@ -24,8 +24,8 @@
  * SOFTWARE.
  */
 
-#ifndef _XTOQ_INTERNAL_H_
-#define _XTOQ_INTERNAL_H_
+#ifndef _XCWM_INTERNAL_H_
+#define _XCWM_INTERNAL_H_
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -331,4 +331,4 @@ _xcwm_atoms_release(xcwm_context_t *context);
 void
 _xcwm_atoms_set_wm_state(xcwm_window_t *window, xcwm_window_state_t state);
 
-#endif  /* _XTOQ_INTERNAL_H_ */
+#endif  /* _XCWM_INTERNAL_H_ */
