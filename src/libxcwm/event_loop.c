@@ -1,5 +1,4 @@
-/* Copyright (c) 2012 Jess VanDerwalker <washu@sonic.net> All rights
- * reserved
+/* Copyright (c) 2012 Jess VanDerwalker <washu@sonic.net>
  *
  * event_loop.c
  *
