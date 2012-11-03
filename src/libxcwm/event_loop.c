@@ -202,11 +202,6 @@ run_event_loop(void *thread_arg_struct)
         if ((evt->response_type & ~0x80) == context->damage_event_mask) {
             xcb_damage_notify_event_t *dmgevnt =
                 (xcb_damage_notify_event_t *)evt;
-            int old_x;
-            int old_y;
-            int old_height;
-            int old_width;
-            xcwm_rect_t dmg_area;
 
             return_evt = malloc(sizeof(xcwm_event_t));
             return_evt->event_type = XCWM_EVENT_WINDOW_DAMAGE;
@@ -264,48 +259,15 @@ run_event_loop(void *thread_arg_struct)
                 continue;
             }
 
-            dmg_area.x = dmgevnt->area.x;
-            dmg_area.y = dmgevnt->area.y;
-            dmg_area.width = dmgevnt->area.width;
-            dmg_area.height = dmgevnt->area.height;
+            return_evt->window->dmg_bounds->x = dmgevnt->area.x;
+            return_evt->window->dmg_bounds->y = dmgevnt->area.y;
+            return_evt->window->dmg_bounds->width = dmgevnt->area.width;
+            return_evt->window->dmg_bounds->height = dmgevnt->area.height;
 
-            old_x = return_evt->window->dmg_bounds->x;
-            old_y = return_evt->window->dmg_bounds->y;
-            old_width = return_evt->window->dmg_bounds->width;
-            old_height = return_evt->window->dmg_bounds->height;
-
-            if (return_evt->window->dmg_bounds->width == 0) {
-                /* We know something is damaged */
-                return_evt->window->dmg_bounds->x = dmg_area.x;
-                return_evt->window->dmg_bounds->y = dmg_area.y;
-                return_evt->window->dmg_bounds->width = dmg_area.width;
-                return_evt->window->dmg_bounds->height = dmg_area.height;
-            }
-            else {
-                /* Is the new damage bigger than the old */
-                if (old_x > dmg_area.x) {
-                    return_evt->window->dmg_bounds->x = dmg_area.x;
-                }
-                if (old_y > dmg_area.y) {
-                    return_evt->window->dmg_bounds->y = dmg_area.y;
-                }
-                if (old_width < dmg_area.width) {
-                    return_evt->window->dmg_bounds->width = dmg_area.width;
-                }
-                if (old_height < dmg_area.height) {
-                    return_evt->window->dmg_bounds->height = dmg_area.height;
-                }
-            }
             xcwm_event_release_thread_lock();
 
-            if (((old_x > dmg_area.x) || (old_y > dmg_area.y))
-                || ((old_width < dmg_area.width)
-                    || (old_height < dmg_area.height))) {
-                /* We should only reach here if this damage event
-                 * actually increases that area of the window marked
-                 * for damage. */
-                callback_ptr(return_evt);
-            }
+            callback_ptr(return_evt);
+
         }
         else {
             switch (evt->response_type & ~0x80) {
