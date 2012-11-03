@@ -203,11 +203,16 @@ run_event_loop(void *thread_arg_struct)
             xcb_damage_notify_event_t *dmgevnt =
                 (xcb_damage_notify_event_t *)evt;
 
+            /* printf("damage %d,%d @ %d,%d reported against window 0x%08x\n", */
+            /*        dmgevnt->area.width, dmgevnt->area.height, dmgevnt->area.x, dmgevnt->area.y, */
+            /*        dmgevnt->drawable); */
+
             return_evt = malloc(sizeof(xcwm_event_t));
             return_evt->event_type = XCWM_EVENT_WINDOW_DAMAGE;
             return_evt->window =
                 _xcwm_get_window_node_by_window_id(dmgevnt->drawable);
             if (!return_evt->window) {
+                printf("damage reported against unknown window 0x%08x\n", dmgevnt->drawable);
                 free(return_evt);
                 continue;
             }
@@ -228,6 +233,8 @@ run_event_loop(void *thread_arg_struct)
                     xcb_generate_id(return_evt->window->context->conn);
                 xcb_rectangle_t rect;
 
+                printf("initial damage on window 0x%08x\n", dmgevnt->drawable);
+
                 /* Remove the damage */
                 xcb_xfixes_create_region(return_evt->window->context->conn,
                                          region,
@@ -237,7 +244,7 @@ run_event_loop(void *thread_arg_struct)
                                     return_evt->window->damage,
                                     region,
                                     XCB_NONE);
-                
+
                 /* Add new damage area for entire window */
                 rect.x = 0;
                 rect.y = 0;
