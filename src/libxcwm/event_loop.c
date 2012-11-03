@@ -30,6 +30,7 @@
 
 #include <pthread.h>
 #include <xcwm/xcwm.h>
+#include <xcb/composite.h>
 #include "xcwm_internal.h"
 
 /* Definition of abstract data type for event */
@@ -102,6 +103,24 @@ _xcwm_event_stop_loop(void)
     return 1;
 }
 
+static void
+_xcwm_window_composite_pixmap_release(xcwm_window_t *window)
+{
+  if (window->composite_pixmap_id)
+    {
+      xcb_free_pixmap(window->context->conn, window->composite_pixmap_id);
+      window->composite_pixmap_id = 0;
+    }
+}
+
+static void
+_xcwm_window_composite_pixmap_update(xcwm_window_t *window)
+{
+  _xcwm_window_composite_pixmap_release(window);
+  window->composite_pixmap_id = xcb_generate_id(window->context->conn);
+  xcb_composite_name_window_pixmap(window->context->conn, window->window_id, window->composite_pixmap_id);
+}
+
 /*
   Generate a XCWM_EVENT_WINDOW_CREATE event for all
   existing mapped top-level windows when we start
@@ -135,6 +154,8 @@ _xcwm_windows_adopt(xcwm_context_t *context, xcwm_event_cb_t callback_ptr)
             if (!window) {
                 continue;
             }
+
+            _xcwm_window_composite_pixmap_update(window);
 
             xcwm_event_t *return_evt = malloc(sizeof(xcwm_event_t));
             if (!return_evt) {
@@ -366,15 +387,28 @@ run_event_loop(void *thread_arg_struct)
                     (xcb_map_notify_event_t *)evt;
                 return_evt = malloc(sizeof(xcwm_event_t));
                 /* notify->event holds parent of the window */
-                return_evt->window =
-                    _xcwm_window_create(context, notify->window,
-                                        notify->event);
-                if (!return_evt->window) {
-                    free(return_evt);
-                    break;
+
+                xcwm_window_t *window =
+                    _xcwm_get_window_node_by_window_id(notify->window);
+                if (!window)
+                {
+                    /*
+                      No MAP_REQUEST for override-redirect windows, so
+                      need to create the xcwm_window_t for it now
+                    */
+                    printf("MAP_NOTIFY without MAP_REQUEST\n");
+                    window =
+                        _xcwm_window_create(context, notify->window,
+                                            notify->event);
+
+                    _xcwm_window_composite_pixmap_update(window);
+
+                    return_evt->window = window;
+                    return_evt->event_type = XCWM_EVENT_WINDOW_CREATE;
+                    callback_ptr(return_evt);
                 }
-                return_evt->event_type = XCWM_EVENT_WINDOW_CREATE;
-                callback_ptr(return_evt);
+
+                _xcwm_window_composite_pixmap_update(window);
                 break;
             }
 
@@ -415,6 +449,8 @@ run_event_loop(void *thread_arg_struct)
 
                 callback_ptr(return_evt);
 
+                _xcwm_window_composite_pixmap_release(window);
+
                 // Release memory for the window
                 _xcwm_window_release(window);
                 break;
@@ -422,6 +458,12 @@ run_event_loop(void *thread_arg_struct)
 
             case XCB_CONFIGURE_NOTIFY:
             {
+                xcb_configure_notify_event_t *request =
+                    (xcb_configure_notify_event_t *)evt;
+                xcwm_window_t *window =
+                    _xcwm_get_window_node_by_window_id(request->window);
+                if (window)
+                    _xcwm_window_composite_pixmap_update(window);
                 break;
             }
 
