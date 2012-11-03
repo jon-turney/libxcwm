@@ -172,6 +172,8 @@ create_wm_cm_window(xcwm_context_t *context)
 {
     context->wm_cm_window = xcb_generate_id(context->conn);
 
+    printf("Created CM window with XID 0x%08x\n", context->wm_cm_window);
+
     xcb_create_window(context->conn,
                       XCB_COPY_FROM_PARENT,
                       context->wm_cm_window,
