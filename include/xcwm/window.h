@@ -105,6 +105,7 @@ struct xcwm_window_t {
     int initial_damage;         /* Set to 1 for override-redirect windows */
     void *local_data;   /* Area for data client cares about */
     unsigned int opacity;
+    xcb_pixmap_t composite_pixmap_id;
 };
 
 /**

@@ -47,7 +47,7 @@ xcwm_image_copy_full(xcwm_window_t *window)
     xcb_flush(window->context->conn);
     /* Get the full image of the window */
     image = xcb_image_get(window->context->conn,
-                          window->window_id,
+                          window->composite_pixmap_id,
                           0,
                           0,
                           geom_reply->width,
@@ -75,7 +75,6 @@ xcwm_image_copy_full(xcwm_window_t *window)
 xcwm_image_t *
 xcwm_image_copy_damaged(xcwm_window_t *window)
 {
-
     xcb_image_t *image;
 
     xcb_flush(window->context->conn);
@@ -87,7 +86,7 @@ xcwm_image_copy_damaged(xcwm_window_t *window)
 
     /* Get the image of the damaged area of the window */
     image = xcb_image_get(window->context->conn,
-                          window->window_id,
+                          window->composite_pixmap_id,
                           window->dmg_bounds->x,
                           window->dmg_bounds->y,
                           window->dmg_bounds->width,
