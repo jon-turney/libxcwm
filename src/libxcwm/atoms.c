@@ -55,11 +55,30 @@ void
 set_window_size_hints(xcwm_window_t *window);
 
 
-int
-_xcwm_atoms_init(xcwm_context_t *context)
+static xcb_atom_t
+_xcwm_atom_get(xcwm_context_t *context, const char *atomName)
 {
     xcb_intern_atom_reply_t *atom_reply;
     xcb_intern_atom_cookie_t atom_cookie;
+    xcb_atom_t atom = XCB_NONE;
+
+    atom_cookie = xcb_intern_atom(context->conn,
+                                  0,
+                                  strlen(atomName),
+                                  atomName);
+    atom_reply = xcb_intern_atom_reply(context->conn,
+                                       atom_cookie,
+                                       NULL);
+    if (atom_reply) {
+        atom = atom_reply->atom;
+        free(atom_reply);
+    }
+    return atom;
+}
+
+int
+_xcwm_atoms_init(xcwm_context_t *context)
+{
     xcb_intern_atom_cookie_t *atom_cookies;
     xcb_generic_error_t *error;
 
@@ -110,56 +129,17 @@ _xcwm_atoms_init(xcwm_context_t *context)
      * xcb_ewmh_connetion_t. */
 
     /* WM_DELETE_WINDOW atom */
-    atom_cookie = xcb_intern_atom(context->conn,
-                                  0,
-                                  strlen("WM_DELETE_WINDOW"),
-                                  "WM_DELETE_WINDOW");
-    atom_reply = xcb_intern_atom_reply(context->conn,
-                                       atom_cookie,
-                                       NULL);
-    if (!atom_reply) {
-        context->atoms->wm_delete_window_atom = 0;
-    }
-    else {
-        context->atoms->wm_delete_window_atom = atom_reply->atom;
-        free(atom_reply);
-    }
+    context->atoms->wm_delete_window_atom = _xcwm_atom_get(context, "WM_DELETE_WINDOW");
 
     /* WM_NAME */
-    atom_cookie = xcb_intern_atom(context->conn,
-                                  0,
-                                  strlen("WM_NAME"),
-                                  "WM_NAME");
-    atom_reply = xcb_intern_atom_reply(context->conn,
-                                       atom_cookie,
-                                       NULL);
-    if (!atom_reply) {
-        context->atoms->wm_name_atom = 0;
-    }
-    else {
-        context->atoms->wm_name_atom = atom_reply->atom;
-        free(atom_reply);
-    }
+    context->atoms->wm_name_atom = _xcwm_atom_get(context, "WM_NAME");
 
     if (!check_wm_cm_owner(context)) {
         return XCB_WINDOW;
     }
 
     /* WM_STATE atom */
-    atom_cookie = xcb_intern_atom(context->conn,
-                                  0,
-                                  strlen("WM_STATE"),
-                                  "WM_STATE");
-    atom_reply = xcb_intern_atom_reply(context->conn,
-                                       atom_cookie,
-                                       NULL);
-    if (!atom_reply) {
-        context->atoms->wm_state_atom = 0;
-    }
-    else {
-        context->atoms->wm_state_atom = atom_reply->atom;
-        free(atom_reply);
-    }
+    context->atoms->wm_state_atom = _xcwm_atom_get(context, "WM_STATE");
 
     create_wm_cm_window(context);
     
