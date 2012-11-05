@@ -8,6 +8,5 @@ xcwminclude_HEADERS = \
 	xcwm/event.h \
 	xcwm/image.h \
 	xcwm/input.h \
-	xcwm/keyboard.h
-
-
+	xcwm/keyboard.h \
+	xcwm/atoms.h

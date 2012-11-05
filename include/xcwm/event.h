@@ -42,7 +42,8 @@ typedef enum xcwm_event_type_t {
     XCWM_EVENT_WINDOW_EXPOSE,
     XCWM_EVENT_WINDOW_CREATE,
     XCWM_EVENT_WINDOW_DESTROY,
-    XCWM_EVENT_WINDOW_NAME
+    XCWM_EVENT_WINDOW_NAME,
+    XCWM_EVENT_WINDOW_APPEARANCE,
 } xcwm_event_type_t;
 
 /**
