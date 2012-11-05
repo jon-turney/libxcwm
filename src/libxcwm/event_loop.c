@@ -538,6 +538,24 @@ run_event_loop(void *thread_arg_struct)
                 break;
             }
 
+            case XCB_ENTER_NOTIFY:
+            {
+                xcb_enter_notify_event_t *en = (xcb_enter_notify_event_t *)evt;
+                printf("entering window 0x%08x, focus %d\n",
+                       en->event, en->same_screen_focus);
+
+                break;
+            }
+
+            case XCB_LEAVE_NOTIFY:
+            {
+                xcb_leave_notify_event_t *ln = (xcb_leave_notify_event_t *)evt;
+                printf("leaving window 0x%08x, focus %d\n",
+                       ln->event, ln->same_screen_focus);
+
+                break;
+            }
+
             case XCB_MAPPING_NOTIFY:
                 break;
 
