@@ -52,10 +52,8 @@ typedef struct xcwm_event_connection {
 struct xcwm_wm_atoms_t {
     xcb_atom_t wm_delete_window_atom;
     xcb_atom_t wm_transient_for_atom;
-    xcb_atom_t wm_name_atom;
     xcb_atom_t wm_state_atom;
     xcb_ewmh_connection_t ewmh_conn;
-    xcb_atom_t wm_opacity_atom;
 };
 
 /**
@@ -302,13 +300,6 @@ void
 _xcwm_atoms_init_window(xcwm_window_t *window);
 
 /**
- * Get and set the WM_NAME of the window.
- * @param window The window
- */
-void
-_xcwm_atoms_set_window_name(xcwm_window_t *window);
-
-/**
  * Get the set the WM_DELETE_WINDOWatom for the winodw.
  * @param window The window.
  */
@@ -330,5 +321,15 @@ _xcwm_atoms_release(xcwm_context_t *context);
  */
 void
 _xcwm_atoms_set_wm_state(xcwm_window_t *window, xcwm_window_state_t state);
+
+/**
+ * Note change of a property atom, and look up corresponding event type
+ * @param window The property atom which has changed
+ * @param event The corresponding event type
+ * @return 0 if there is no corresponding event
+ */
+int
+_xcwm_atom_change_to_event(xcb_atom_t atom, xcwm_window_t *window, xcwm_event_type_t *event);
+
 
 #endif  /* _XCWM_INTERNAL_H_ */

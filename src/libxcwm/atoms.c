@@ -46,17 +46,48 @@ check_wm_cm_owner(xcwm_context_t *context);
 void
 create_wm_cm_window(xcwm_context_t *context);
 
+/*
+  The table of xcwm_property_t represents the window properties we take note of,
+  the function to update our internal state on a change of that property, and
+  the event we send when that state changes.
+ */
+typedef struct xcwm_property_t xcwm_property_t;
+
+typedef void (xcwm_property_change_fn_t)(xcwm_window_t *window, xcwm_property_t *property);
+
+struct xcwm_property_t
+{
+    const char *name;
+    xcwm_property_change_fn_t *prop_change_fn;
+    xcwm_event_type_t event;
+    xcb_atom_t atom;
+};
+
 /* Determine the window type */
 static void
-setup_window_type(xcwm_window_t *window);
+setup_window_type(xcwm_window_t *window, xcwm_property_t *property);
 
 /* Get and set the size hints for the window */
 static void
-set_window_size_hints(xcwm_window_t *window);
+set_window_size_hints(xcwm_window_t *window, xcwm_property_t *property);
 
 /* Get opacity hint */
 static void
-set_window_opacity(xcwm_window_t *window);
+set_window_opacity(xcwm_window_t *window, xcwm_property_t *property);
+
+/* Get window name */
+static void
+set_window_name(xcwm_window_t *window, xcwm_property_t *property);
+
+xcwm_property_t property_table[] =
+    {
+        { "_NET_WM_NAME",           set_window_name,        XCWM_EVENT_WINDOW_NAME },
+        { "WM_NAME",                set_window_name,        XCWM_EVENT_WINDOW_NAME },
+        { "_NET_WM_WINDOW_TYPE",    setup_window_type,      XCWM_EVENT_WINDOW_APPEARANCE },
+        { "WM_NORMAL_HINTS",        set_window_size_hints,  0 },
+        { "_NET_WM_WINDOW_OPACITY", set_window_opacity,     XCWM_EVENT_WINDOW_APPEARANCE },
+        { NULL,                     NULL,                   0 }
+    };
 
 static xcb_atom_t
 _xcwm_atom_get(xcwm_context_t *context, const char *atomName)
@@ -130,12 +161,14 @@ _xcwm_atoms_init(xcwm_context_t *context)
 
     /* Get the ICCCM atoms we need that are not included in the
      * xcb_ewmh_connection_t. */
+    int i;
+    for (i = 0; property_table[i].name != NULL; i++)
+    {
+        property_table[i].atom = _xcwm_atom_get(context, property_table[i].name);
+    }
 
     /* WM_DELETE_WINDOW atom */
     context->atoms->wm_delete_window_atom = _xcwm_atom_get(context, "WM_DELETE_WINDOW");
-
-    /* WM_NAME */
-    context->atoms->wm_name_atom = _xcwm_atom_get(context, "WM_NAME");
 
     if (!check_wm_cm_owner(context)) {
         return XCB_WINDOW;
@@ -144,9 +177,6 @@ _xcwm_atoms_init(xcwm_context_t *context)
 
     /* WM_STATE atom */
     context->atoms->wm_state_atom = _xcwm_atom_get(context, "WM_STATE");
-
-    /* NET_WM_OPACITY */
-    context->atoms->wm_opacity_atom = _xcwm_atom_get(context, "_NET_WM_WINDOW_OPACITY");
 
     return 0;
 }
@@ -200,16 +230,36 @@ create_wm_cm_window(xcwm_context_t *context)
 void
 _xcwm_atoms_init_window(xcwm_window_t *window)
 {
-    _xcwm_atoms_set_window_name(window);
     _xcwm_atoms_set_wm_delete(window);
-    setup_window_type(window);
-    set_window_size_hints(window);
-    set_window_opacity(window);
+
+    /* Put the value of all properties we consider into effect */
+    int i;
+    for (i = 0; property_table[i].name != NULL; i++)
+    {
+        (property_table[i].prop_change_fn)(window, &(property_table[i]));
+    }
 }
 
+int
+_xcwm_atom_change_to_event(xcb_atom_t atom, xcwm_window_t *window, xcwm_event_type_t *event)
+{
+    int i;
+    for (i = 0; property_table[i].name != NULL; i++) {
+        if (property_table[i].atom == atom) {
+            /* Take the value into consideration */
+            (property_table[i].prop_change_fn)(window, &(property_table[i]));
+
+            /* and translate to XCWM_ event */
+            *event = property_table[i].event;
+            return 1;
+        }
+    }
+
+    return 0;
+}
 
 void
-_xcwm_atoms_set_window_name(xcwm_window_t *window)
+set_window_name(xcwm_window_t *window, xcwm_property_t *property)
 {
     xcb_get_property_cookie_t cookie;
     xcb_icccm_get_text_property_reply_t reply;
@@ -270,7 +320,7 @@ _xcwm_atoms_set_wm_delete(xcwm_window_t *window)
 }
 
 static void
-setup_window_type(xcwm_window_t *window)
+setup_window_type(xcwm_window_t *window, xcwm_property_t *property)
 {
     xcb_get_property_cookie_t cookie;
     xcb_window_t transient;
@@ -348,7 +398,7 @@ setup_window_type(xcwm_window_t *window)
 }    
 
 void
-set_window_size_hints(xcwm_window_t *window)
+set_window_size_hints(xcwm_window_t *window, xcwm_property_t *property)
 {
     xcb_get_property_cookie_t cookie;
     cookie = xcb_icccm_get_wm_normal_hints(window->context->conn,
@@ -361,10 +411,10 @@ set_window_size_hints(xcwm_window_t *window)
 }
 
 void
-set_window_opacity(xcwm_window_t *window)
+set_window_opacity(xcwm_window_t *window, xcwm_property_t *property)
 {
   xcb_get_property_cookie_t cookie;
-  cookie = xcb_get_property(window->context->conn, 0, window->window_id, window->context->atoms->wm_opacity_atom, XCB_ATOM_CARDINAL, 0L, 4L);
+  cookie = xcb_get_property(window->context->conn, 0, window->window_id, property->atom, XCB_ATOM_CARDINAL, 0L, 4L);
 
   xcb_get_property_reply_t *reply = xcb_get_property_reply(window->context->conn, cookie, NULL);
   if (reply)

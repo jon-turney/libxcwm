@@ -469,16 +469,21 @@ run_event_loop(void *thread_arg_struct)
                     break;
                 }
 
-                /* Change to window name */
-                if (notify->atom == window->context->atoms->ewmh_conn._NET_WM_NAME
-                    || notify->atom == window->context->atoms->wm_name_atom) {
-                    _xcwm_atoms_set_window_name(window);
+                xcwm_event_type_t event;
+                if (_xcwm_atom_change_to_event(notify->atom, window, &event))
+                {
+                    /* Send the appropriate event */
                     return_evt = malloc(sizeof(xcwm_event_t));
-                    return_evt->event_type = XCWM_EVENT_WINDOW_NAME;
+                    return_evt->event_type = event;
                     return_evt->window = window;
-                    
                     callback_ptr(return_evt);
-                    break;
+                }
+                else {
+                    printf("PROPERTY_NOTIFY for ignored property atom %d\n", notify->atom);
+                    /*
+                      We need a mechanism to forward properties we don't know about to WM,
+                      otherwise everything needs to be in libXcwm ...?
+                    */
                 }
 
                 break;
