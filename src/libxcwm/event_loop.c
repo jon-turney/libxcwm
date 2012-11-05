@@ -477,9 +477,19 @@ run_event_loop(void *thread_arg_struct)
             case XCB_KEY_PRESS:
             {
                 printf("X Key press from xserver-");
-                xcb_button_press_event_t *kp =
-                    (xcb_button_press_event_t *)evt;
-                printf("Key pressed in window %u detail %c\n",
+                xcb_key_press_event_t *kp =
+                    (xcb_key_press_event_t *)evt;
+                printf("Key pressed in window 0x%08x detail %d\n",
+                       kp->event, kp->detail);
+                break;
+            }
+
+            case XCB_KEY_RELEASE:
+            {
+                printf("X Key release from xserver-");
+                xcb_key_release_event_t *kp =
+                    (xcb_key_release_event_t *)evt;
+                printf("Key released in window 0x%08x detail %d\n",
                        kp->event, kp->detail);
                 break;
             }
@@ -489,7 +499,7 @@ run_event_loop(void *thread_arg_struct)
                 printf("X Button press from xserver ");
                 xcb_button_press_event_t *bp =
                     (xcb_button_press_event_t *)evt;
-                printf("in window %u, at coordinates (%d,%d)\n",
+                printf("in window 0x%08x, at coordinates (%d,%d)\n",
                        bp->event, bp->event_x, bp->event_y);
                 break;
             }
@@ -497,9 +507,9 @@ run_event_loop(void *thread_arg_struct)
             case XCB_BUTTON_RELEASE:
             {
                 printf("X Button release from xserver ");
-                xcb_button_press_event_t *bp =
-                    (xcb_button_press_event_t *)evt;
-                printf("in window %u, at coordinates (%d,%d)\n",
+                xcb_button_release_event_t *bp =
+                    (xcb_button_release_event_t *)evt;
+                printf("in window 0x%08x, at coordinates (%d,%d)\n",
                        bp->event, bp->event_x, bp->event_y);
                 break;
             }
