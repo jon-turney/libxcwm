@@ -50,7 +50,6 @@ xcwm_input_key_event(xcwm_context_t *context, uint8_t code, int state)
 
 void
 xcwm_input_mouse_button_event(xcwm_window_t *window,
-                              long x, long y,
                               int button, int state)
 {
     int button_state;
@@ -67,8 +66,8 @@ xcwm_input_mouse_button_event(xcwm_window_t *window,
                         XCB_CURRENT_TIME,
                         window->window_id, 0, 0, 0);
     xcb_flush(window->context->conn);
-    printf("Injected mouse event - (%ld,%ld), button %d, state: %d\n",
-           x, y, button, state);
+    printf("Injected mouse event - button %d, state: %d\n",
+           button, state);
 }
 
 void

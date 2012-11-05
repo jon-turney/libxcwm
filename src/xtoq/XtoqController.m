@@ -246,8 +246,6 @@
 
     dispatch_async(xcwmDispatchQueue,
                    ^{ xcwm_input_mouse_button_event (window,
-                                                     0,
-                                                     0,
                                                      buttonInt,
                                                      1);
                       ;
@@ -273,8 +271,6 @@
 
     dispatch_async(xcwmDispatchQueue,
                    ^{ xcwm_input_mouse_button_event (window,
-                                                     0,
-                                                     0,
                                                      buttonInt,
                                                      0);
                    });
