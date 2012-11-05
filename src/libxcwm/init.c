@@ -38,7 +38,7 @@
 
 
 xcb_query_extension_reply_t *
-_xcwm_init_extension(xcb_connection_t *conn, char *extension_name)
+_xcwm_init_extension(xcb_connection_t *conn, const char *extension_name)
 {
     xcb_query_extension_cookie_t cookie =
         xcb_query_extension(conn, strlen(extension_name), extension_name);

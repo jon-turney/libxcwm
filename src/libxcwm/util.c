@@ -182,7 +182,7 @@ _xcwm_write_window_info(xcb_connection_t *conn, xcb_window_t window)
 
 int
 _xcwm_request_check(xcb_connection_t *conn, xcb_void_cookie_t cookie,
-                    char *msg)
+                    const char *msg)
 {
     xcb_generic_error_t *error;
 

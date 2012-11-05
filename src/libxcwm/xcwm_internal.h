@@ -130,7 +130,7 @@ _xcwm_write_window_info(xcb_connection_t *conn, xcb_window_t window);
  */
 int
 _xcwm_request_check(xcb_connection_t *conn, xcb_void_cookie_t cookie,
-                    char *msg);
+                    const char *msg);
 
 /****************
 * init.c
@@ -143,7 +143,7 @@ _xcwm_request_check(xcb_connection_t *conn, xcb_void_cookie_t cookie,
  * @return The reply structure
  */
 xcb_query_extension_reply_t *
-_xcwm_init_extension(xcb_connection_t *conn, char *extension_name);
+_xcwm_init_extension(xcb_connection_t *conn, const char *extension_name);
 
 /**
  * Initializes the damage extension.
