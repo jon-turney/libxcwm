@@ -102,6 +102,60 @@ _xcwm_event_stop_loop(void)
     return 1;
 }
 
+/*
+  Generate a XCWM_EVENT_WINDOW_CREATE event for all
+  existing mapped top-level windows when we start
+*/
+static void
+_xcwm_windows_adopt(xcwm_context_t *context, xcwm_event_cb_t callback_ptr)
+{
+    xcb_query_tree_cookie_t tree_cookie = xcb_query_tree(context->conn, context->root_window->window_id);
+    xcb_query_tree_reply_t *reply = xcb_query_tree_reply(context->conn, tree_cookie, NULL);
+    if (NULL == reply) {
+        return;
+    }
+
+    int len = xcb_query_tree_children_length(reply);
+    xcb_window_t *children = xcb_query_tree_children(reply);
+
+    int i;
+    for (i = 0; i < len; i ++) {
+        xcb_get_window_attributes_cookie_t cookie = xcb_get_window_attributes(context->conn, children[i]);
+        xcb_get_window_attributes_reply_t *attr = xcb_get_window_attributes_reply(context->conn, cookie, NULL);
+
+        if (!attr) {
+            fprintf(stderr, "Couldn't get attributes for window 0x%08x\n", children[i]);
+            continue;
+        }
+
+        if (attr->map_state == XCB_MAP_STATE_VIEWABLE) {
+            printf("window 0x%08x viewable\n", children[i]);
+
+            xcwm_window_t *window = _xcwm_window_create(context, children[i], context->root_window->window_id);
+            if (!window) {
+                continue;
+            }
+
+            xcwm_event_t *return_evt = malloc(sizeof(xcwm_event_t));
+            if (!return_evt) {
+                continue;
+            }
+
+            return_evt->window = window;
+            return_evt->event_type = XCWM_EVENT_WINDOW_CREATE;
+
+            callback_ptr(return_evt);
+        }
+        else {
+            printf("window 0x%08x non-viewable\n", children[i]);
+        }
+
+        free(attr);
+    }
+
+    free(reply);
+}
+
 void *
 run_event_loop(void *thread_arg_struct)
 {
@@ -118,6 +172,8 @@ run_event_loop(void *thread_arg_struct)
     callback_ptr = conn_data->callback;
 
     free(thread_arg_struct);
+
+    _xcwm_windows_adopt(context, callback_ptr);
 
     /* Start the event loop, and flush if first */
     xcb_flush(event_conn);
