@@ -513,6 +513,9 @@ run_event_loop(void *thread_arg_struct)
                 break;
             }
 
+            case XCB_MAPPING_NOTIFY:
+                break;
+
             default:
             {
                 printf("UNKNOWN EVENT: %i\n", (evt->response_type & ~0x80));
