@@ -465,17 +465,19 @@ run_event_loop(void *thread_arg_struct)
                        request->window, request->width, request->height,
                        request->x, request->y, request->value_mask);
 
-                xcwm_window_t *window =
-                    _xcwm_get_window_node_by_window_id(request->window);
-                if (!window) {
-                    /* Passing on requests for windows we aren't
-                     * managing seems to speed window future mapping
-                     * of window */
-
+                /*
+                   relying on the server's idea of the current values of values not
+                   in value_mask is a bad idea, we might have a configure request of
+                   our own on this window in flight
+                */
+                if (request->value_mask &
+                    (XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y | XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT))
                     _xcwm_resize_window(event_conn, request->window,
                                         request->x, request->y,
                                         request->width, request->height);
-                }
+
+                /* Ignore requests to change stacking ? */
+
                 break;
             }
 
