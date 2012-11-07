@@ -127,11 +127,10 @@ _xcwm_window_create(xcwm_context_t *context, xcb_window_t new_window,
     window->composite_pixmap_id = 0;
     window->local_data = 0;
 
-    /* Find an set the parent */
+    /* Find and set the parent */
     window->parent = _xcwm_get_window_node_by_window_id(parent);
-
     free(geom);
-    
+
     /* Get value of override_redirect flag */
     window->override_redirect = attrs->override_redirect;
     /* FIXME: Workaround for initial damage reporting for
