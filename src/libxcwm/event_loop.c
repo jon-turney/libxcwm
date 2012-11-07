@@ -395,6 +395,11 @@ run_event_loop(void *thread_arg_struct)
             {
                 xcb_map_request_event_t *request =
                     (xcb_map_request_event_t *)evt;
+
+                /* Map the window */
+                xcb_map_window(context->conn, request->window);
+                xcb_flush(context->conn);
+
                 return_evt = malloc(sizeof(xcwm_event_t));
                 return_evt->window =
                     _xcwm_window_create(context, request->window,
@@ -403,7 +408,7 @@ run_event_loop(void *thread_arg_struct)
                     free(return_evt);
                     break;
                 }
-                _xcwm_map_window(event_conn, return_evt->window);
+
                 return_evt->event_type = XCWM_EVENT_WINDOW_CREATE;
                 callback_ptr(return_evt);
                 break;

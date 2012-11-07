@@ -554,14 +554,6 @@ _xcwm_resize_window(xcb_connection_t *conn, xcb_window_t window,
 }
 
 void
-_xcwm_map_window(xcb_connection_t *conn, xcwm_window_t *window)
-{
-    /* Map the window. May want to handle other things here */
-    xcb_map_window(conn, window->window_id);
-    xcb_flush(conn);
-}
-
-void
 set_window_event_masks(xcb_connection_t *conn, xcwm_window_t *window)
 {
     uint32_t values[1] = { XCB_EVENT_MASK_PROPERTY_CHANGE };

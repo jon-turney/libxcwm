@@ -268,14 +268,6 @@ void
 _xcwm_resize_window(xcb_connection_t *conn, xcb_window_t window,
                     int x, int y, int width, int height);
 
-/**
- * Map the given window.
- * @param conn The connection to xserver
- * @param window The window to map
- */
-void
-_xcwm_map_window(xcb_connection_t *conn, xcwm_window_t *window);
-
 
 /****************
  * atoms.c
