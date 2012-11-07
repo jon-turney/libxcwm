@@ -233,7 +233,7 @@ run_event_loop(void *thread_arg_struct)
                     xcb_generate_id(return_evt->window->context->conn);
                 xcb_rectangle_t rect;
 
-                printf("initial damage on window 0x%08x\n", dmgevnt->drawable);
+                /* printf("initial damage on window 0x%08x\n", dmgevnt->drawable); */
 
                 /* Remove the damage */
                 xcb_xfixes_create_region(return_evt->window->context->conn,
@@ -366,7 +366,7 @@ run_event_loop(void *thread_arg_struct)
                       No MAP_REQUEST for override-redirect windows, so
                       need to create the xcwm_window_t for it now
                     */
-                    printf("MAP_NOTIFY without MAP_REQUEST\n");
+                    /* printf("MAP_NOTIFY without MAP_REQUEST\n"); */
                     window =
                         _xcwm_window_create(context, notify->window,
                                             notify->event);
