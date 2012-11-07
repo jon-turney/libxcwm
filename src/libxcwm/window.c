@@ -99,6 +99,12 @@ _xcwm_window_create(xcwm_context_t *context, xcb_window_t new_window,
         _xcwm_get_window_attributes(context->conn, new_window);
     if ((!attrs) || (attrs->_class == XCB_WINDOW_CLASS_INPUT_ONLY))
         return NULL;
+
+    xcb_get_geometry_reply_t *geom;
+    geom = _xcwm_get_window_geometry(context->conn, new_window);
+    if (!geom)
+        return NULL;
+
     /* allocate memory for new xcwm_window_t and rectangles */
     xcwm_window_t *window = malloc(sizeof(xcwm_window_t));
     assert(window);
@@ -108,9 +114,6 @@ _xcwm_window_create(xcwm_context_t *context, xcb_window_t new_window,
     assert(window->dmg_bounds);
     window->sizing = calloc(1, sizeof(*window->sizing));
     assert(window->dmg_bounds);;
-
-    xcb_get_geometry_reply_t *geom;
-    geom = _xcwm_get_window_geometry(context->conn, new_window);
 
     /* set any available values from xcb_create_notify_event_t object pointer
        and geom pointer */

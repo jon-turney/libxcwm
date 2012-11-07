@@ -44,6 +44,9 @@ xcwm_image_copy_full(xcwm_window_t *window)
     geom_reply = _xcwm_get_window_geometry(window->context->conn,
                                            window->window_id);
 
+    if (!geom_reply)
+        return NULL;
+
     xcb_flush(window->context->conn);
     /* Get the full image of the window */
     image = xcb_image_get(window->context->conn,
