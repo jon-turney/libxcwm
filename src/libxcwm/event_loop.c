@@ -371,14 +371,25 @@ run_event_loop(void *thread_arg_struct)
                         _xcwm_window_create(context, notify->window,
                                             notify->event);
 
-                    _xcwm_window_composite_pixmap_update(window);
+                    if (window)
+                    {
+                        if (!return_evt->window) {
+                            free(return_evt);
+                            break;
+                        }
 
-                    return_evt->window = window;
-                    return_evt->event_type = XCWM_EVENT_WINDOW_CREATE;
-                    callback_ptr(return_evt);
+                        _xcwm_window_composite_pixmap_update(window);
+
+                        return_evt->window = window;
+                        return_evt->event_type = XCWM_EVENT_WINDOW_CREATE;
+                        callback_ptr(return_evt);
+                    }
+                }
+                else
+                {
+                    _xcwm_window_composite_pixmap_update(window);
                 }
 
-                _xcwm_window_composite_pixmap_update(window);
                 break;
             }
 
