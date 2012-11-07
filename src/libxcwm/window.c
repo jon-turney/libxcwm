@@ -94,6 +94,11 @@ _xcwm_window_create(xcwm_context_t *context, xcb_window_t new_window,
         return NULL;
     }
 
+    /* Ignore InputOnly windows */
+    xcb_get_window_attributes_reply_t *attrs =
+        _xcwm_get_window_attributes(context->conn, new_window);
+    if ((!attrs) || (attrs->_class == XCB_WINDOW_CLASS_INPUT_ONLY))
+        return NULL;
     /* allocate memory for new xcwm_window_t and rectangles */
     xcwm_window_t *window = malloc(sizeof(xcwm_window_t));
     assert(window);
@@ -125,8 +130,6 @@ _xcwm_window_create(xcwm_context_t *context, xcb_window_t new_window,
     free(geom);
     
     /* Get value of override_redirect flag */
-    xcb_get_window_attributes_reply_t *attrs =
-        _xcwm_get_window_attributes(context->conn, new_window);
     window->override_redirect = attrs->override_redirect;
     /* FIXME: Workaround for initial damage reporting for
      * override-redirect windows. Initial damage event is relative to
