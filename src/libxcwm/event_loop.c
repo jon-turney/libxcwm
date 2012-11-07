@@ -233,7 +233,7 @@ run_event_loop(void *thread_arg_struct)
                     xcb_generate_id(return_evt->window->context->conn);
                 xcb_rectangle_t rect;
 
-                printf("initial damage on window 0x%08x\n", dmgevnt->drawable);
+                /* printf("initial damage on window 0x%08x\n", dmgevnt->drawable); */
 
                 /* Remove the damage */
                 xcb_xfixes_create_region(return_evt->window->context->conn,
@@ -364,7 +364,7 @@ run_event_loop(void *thread_arg_struct)
                       No MAP_REQUEST for override-redirect windows, so
                       need to create the xcwm_window_t for it now
                     */
-                    printf("MAP_NOTIFY without MAP_REQUEST\n");
+                    /* printf("MAP_NOTIFY without MAP_REQUEST\n"); */
                     window =
                         _xcwm_window_create(context, notify->window,
                                             notify->event);
@@ -540,19 +540,17 @@ run_event_loop(void *thread_arg_struct)
 
             case XCB_ENTER_NOTIFY:
             {
-                xcb_enter_notify_event_t *en = (xcb_enter_notify_event_t *)evt;
-                printf("entering window 0x%08x, focus %d\n",
-                       en->event, en->same_screen_focus);
-
+                /* xcb_enter_notify_event_t *en = (xcb_enter_notify_event_t *)evt; */
+                /* printf("entering window 0x%08x, focus %d\n", */
+                /*        en->event, en->same_screen_focus); */
                 break;
             }
 
             case XCB_LEAVE_NOTIFY:
             {
-                xcb_leave_notify_event_t *ln = (xcb_leave_notify_event_t *)evt;
-                printf("leaving window 0x%08x, focus %d\n",
-                       ln->event, ln->same_screen_focus);
-
+                /* xcb_leave_notify_event_t *ln = (xcb_leave_notify_event_t *)evt; */
+                /* printf("leaving window 0x%08x, focus %d\n", */
+                /*        ln->event, ln->same_screen_focus); */
                 break;
             }
 
