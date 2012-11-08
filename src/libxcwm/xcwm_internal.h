@@ -53,6 +53,7 @@ struct xcwm_wm_atoms_t {
     xcb_atom_t wm_delete_window_atom;
     xcb_atom_t wm_transient_for_atom;
     xcb_atom_t wm_state_atom;
+    xcb_atom_t net_wm_window_type_splashscreen;
     xcb_ewmh_connection_t ewmh_conn;
 };
 

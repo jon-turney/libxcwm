@@ -174,6 +174,9 @@ _xcwm_atoms_init(xcwm_context_t *context)
                            21,  /* Length of supported[] */
                            supported);
 
+    /* Used erroneously instead of _NET_WM_WINDOW_TYPE_SPLASH by some applications */
+    context->atoms->net_wm_window_type_splashscreen = _xcwm_atom_get(context, "_NET_WM_WINDOW_TYPE_SPLASHSCREEN");
+
     /* Get the ICCCM atoms we need that are not included in the
      * xcb_ewmh_connection_t. */
     _xcwm_atom_register(context, "_NET_WM_NAME",           set_window_name,       XCWM_EVENT_WINDOW_NAME);
@@ -367,8 +370,14 @@ setup_window_type(xcwm_window_t *window, xcwm_property_t *property)
      * match. */
     cookie = xcb_ewmh_get_wm_window_type(&ewmh_conn, window->window_id);
     if (xcb_ewmh_get_wm_window_type_reply(&ewmh_conn, cookie, &type, NULL)) {
-        for (i = 0; i <= type.atoms_len; i++) {
-            if (type.atoms[i] ==  ewmh_conn._NET_WM_WINDOW_TYPE_TOOLBAR) {
+        for (i = 0; i < type.atoms_len; i++) {
+            if (type.atoms[i] ==  ewmh_conn._NET_WM_WINDOW_TYPE_DESKTOP) {
+                window->type = XCWM_WINDOW_TYPE_DESKTOP;
+                break;
+            } else if (type.atoms[i] ==  ewmh_conn._NET_WM_WINDOW_TYPE_DOCK) {
+                window->type = XCWM_WINDOW_TYPE_DOCK;
+                break;
+            } else if (type.atoms[i] ==  ewmh_conn._NET_WM_WINDOW_TYPE_TOOLBAR) {
                 window->type = XCWM_WINDOW_TYPE_TOOLBAR;
                 break;
             } else if (type.atoms[i] == ewmh_conn._NET_WM_WINDOW_TYPE_MENU) {
@@ -378,7 +387,8 @@ setup_window_type(xcwm_window_t *window, xcwm_property_t *property)
                        == ewmh_conn._NET_WM_WINDOW_TYPE_UTILITY) {
                 window->type = XCWM_WINDOW_TYPE_UTILITY;
                 break;
-            } else if (type.atoms[i] == ewmh_conn._NET_WM_WINDOW_TYPE_SPLASH) {
+            } else if ((type.atoms[i] == ewmh_conn._NET_WM_WINDOW_TYPE_SPLASH) ||
+                       (type.atoms[i] == window->context->atoms->net_wm_window_type_splashscreen)) {
                 window->type = XCWM_WINDOW_TYPE_SPLASH;
                 break;
             } else if (type.atoms[i] == ewmh_conn._NET_WM_WINDOW_TYPE_DIALOG) {
