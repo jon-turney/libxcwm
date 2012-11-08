@@ -1,6 +1,6 @@
 /* Copyright (c) 2012 Jess VanDerwalker <washu@sonic.net>
  *
- * xcwm/event.h
+ * xcwm/input.h
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation

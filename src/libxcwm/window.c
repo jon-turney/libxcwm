@@ -39,10 +39,6 @@
 void
 set_window_event_masks(xcb_connection_t *conn, xcwm_window_t *window);
 
-/* Set the WM_NAME property in context */
-void
-set_wm_name_in_context(xcb_connection_t *conn, xcwm_window_t *window);
-
 /* Determine values of window WM_SIZE_HINTS */
 void
 set_wm_size_hints_for_window(xcb_connection_t *conn, xcwm_window_t *window);
@@ -152,7 +148,7 @@ _xcwm_window_create(xcwm_context_t *context, xcb_window_t new_window,
     /* register for damage */
     init_damage_on_window(context->conn, window);
 
-    /* add context to context_list */
+    /* add window to window list for this context */
     window = _xcwm_add_window(window);
 
     /* Set the WM_STATE of the window to normal */
@@ -175,10 +171,10 @@ _xcwm_window_remove(xcb_connection_t *conn, xcb_window_t window)
     /* Destroy the damage object associated with the window. */
     xcb_damage_destroy(conn, removed->damage);
 
-    /* Call the remove function in context_list.c */
+    /* Remove window from window list for this context */
     _xcwm_remove_window_node(removed->window_id);
 
-    /* Return the pointer for the context that was removed from the list. */
+    /* Return the pointer to the window that was removed from the list. */
     return removed;
 }
 
@@ -239,9 +235,7 @@ xcwm_window_remove_damage(xcwm_window_t *window)
 void
 xcwm_window_request_close(xcwm_window_t *window)
 {
-
-    /* check to see if the context is in the list */
-
+    /* check to see if the window is in the list */
     if (!_xcwm_get_window_node_by_window_id(window->window_id))
         return;
 
@@ -557,7 +551,7 @@ void
 set_window_event_masks(xcb_connection_t *conn, xcwm_window_t *window)
 {
     uint32_t values[1] = { XCB_EVENT_MASK_PROPERTY_CHANGE };
-    
+
     xcb_change_window_attributes(conn, window->window_id,
                                  XCB_CW_EVENT_MASK, values);
 }
@@ -571,8 +565,6 @@ init_damage_on_window(xcb_connection_t *conn, xcwm_window_t *window)
 
     damage_id = xcb_generate_id(conn);
 
-    // Refer to the Damage Protocol. level = 0 corresponds to the level
-    // DamageReportRawRectangles.  Another level may be more appropriate.
     level = XCB_DAMAGE_REPORT_LEVEL_BOUNDING_BOX;
     cookie = xcb_damage_create(conn,
                                damage_id,
@@ -584,10 +576,11 @@ init_damage_on_window(xcb_connection_t *conn, xcwm_window_t *window)
         window->damage = 0;
         return;
     }
-    /* Assign this damage object to the window's context */
+
+    /* Assign this damage object to the window */
     window->damage = damage_id;
 
-    /* Set the damage area in the context to zero */
+    /* Initialize the damaged area in the window to zero */
     window->dmg_bounds->x = 0;
     window->dmg_bounds->y = 0;
     window->dmg_bounds->width = 0;

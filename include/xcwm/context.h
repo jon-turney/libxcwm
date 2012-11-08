@@ -34,7 +34,7 @@
 #include <xcb/damage.h>
 #include <xcb/xcb_icccm.h>
 
-/* Abstract types for context data types 
+/* Abstract types for context data types
  * FIXME: Move this to window.h once accessor API functions in place */
 struct xcwm_window_t;
 typedef struct xcwm_window_t xcwm_window_t;

@@ -231,7 +231,7 @@ xcwm_window_get_damaged_rect(xcwm_window_t const *window);
  * Get a copy of the name of the window. Client is responsible for freeing
  * memory created for the copy.
  * @param window The window to get name from.
- * @return Name of window. 
+ * @return Name of window.
  */
 char *
 xcwm_window_copy_name(xcwm_window_t const *window);
