@@ -444,6 +444,11 @@ run_event_loop(void *thread_arg_struct)
             {
                 xcb_configure_notify_event_t *request =
                     (xcb_configure_notify_event_t *)evt;
+
+                printf("CONFIGURE_NOTIFY: XID 0x%08x %dx%d @ %d,%d\n",
+                       request->window, request->width, request->height,
+                       request->x, request->y);
+
                 xcwm_window_t *window =
                     _xcwm_get_window_node_by_window_id(request->window);
                 if (window)
@@ -455,12 +460,18 @@ run_event_loop(void *thread_arg_struct)
             {
                 xcb_configure_request_event_t *request =
                     (xcb_configure_request_event_t *)evt;
+
+                printf("CONFIGURE_REQUEST: XID 0x%08x %dx%d @ %d,%d mask 0x%04x\n",
+                       request->window, request->width, request->height,
+                       request->x, request->y, request->value_mask);
+
                 xcwm_window_t *window =
                     _xcwm_get_window_node_by_window_id(request->window);
                 if (!window) {
                     /* Passing on requests for windows we aren't
                      * managing seems to speed window future mapping
                      * of window */
+
                     _xcwm_resize_window(event_conn, request->window,
                                         request->x, request->y,
                                         request->width, request->height);
