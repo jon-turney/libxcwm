@@ -79,15 +79,8 @@ set_window_opacity(xcwm_window_t *window, xcwm_property_t *property);
 static void
 set_window_name(xcwm_window_t *window, xcwm_property_t *property);
 
-xcwm_property_t property_table[] =
-    {
-        { "_NET_WM_NAME",           set_window_name,        XCWM_EVENT_WINDOW_NAME },
-        { "WM_NAME",                set_window_name,        XCWM_EVENT_WINDOW_NAME },
-        { "_NET_WM_WINDOW_TYPE",    setup_window_type,      XCWM_EVENT_WINDOW_APPEARANCE },
-        { "WM_NORMAL_HINTS",        set_window_size_hints,  0 },
-        { "_NET_WM_WINDOW_OPACITY", set_window_opacity,     XCWM_EVENT_WINDOW_APPEARANCE },
-        { NULL,                     NULL,                   0 }
-    };
+static xcwm_property_t *property_table = NULL;
+static unsigned int property_table_entries = 0;;
 
 static xcb_atom_t
 _xcwm_atom_get(xcwm_context_t *context, const char *atomName)
@@ -108,6 +101,28 @@ _xcwm_atom_get(xcwm_context_t *context, const char *atomName)
         free(atom_reply);
     }
     return atom;
+}
+
+static xcwm_property_t *
+_xcwm_atom_register(xcwm_context_t *context, const char *name, xcwm_property_change_fn_t *prop_change_fn, xcwm_event_type_t event)
+{
+    // XXX: what if atom is already registered?
+    property_table_entries++;
+    property_table = realloc(property_table, property_table_entries * sizeof(struct xcwm_property_t));
+
+    xcwm_property_t *new_property = &(property_table[property_table_entries - 1]);
+    new_property->name = name;
+    new_property->prop_change_fn = prop_change_fn;
+    new_property->event = event;
+    new_property->atom = _xcwm_atom_get(context, name);
+
+    return new_property;
+}
+
+xcb_atom_t
+xcwm_atom_register(xcwm_context_t *context, const char *atom, xcwm_event_type_t event)
+{
+    return _xcwm_atom_register(context, atom, NULL, event)->atom;
 }
 
 int
@@ -161,11 +176,11 @@ _xcwm_atoms_init(xcwm_context_t *context)
 
     /* Get the ICCCM atoms we need that are not included in the
      * xcb_ewmh_connection_t. */
-    int i;
-    for (i = 0; property_table[i].name != NULL; i++)
-    {
-        property_table[i].atom = _xcwm_atom_get(context, property_table[i].name);
-    }
+    _xcwm_atom_register(context, "_NET_WM_NAME",           set_window_name,       XCWM_EVENT_WINDOW_NAME);
+    _xcwm_atom_register(context, "WM_NAME",                set_window_name,       XCWM_EVENT_WINDOW_NAME);
+    _xcwm_atom_register(context, "_NET_WM_WINDOW_TYPE",    setup_window_type,     XCWM_EVENT_WINDOW_APPEARANCE);
+    _xcwm_atom_register(context, "WM_NORMAL_HINTS",        set_window_size_hints, 0);
+    _xcwm_atom_register(context, "_NET_WM_WINDOW_OPACITY", set_window_opacity,    XCWM_EVENT_WINDOW_APPEARANCE);
 
     /* WM_DELETE_WINDOW atom */
     context->atoms->wm_delete_window_atom = _xcwm_atom_get(context, "WM_DELETE_WINDOW");
@@ -233,21 +248,23 @@ _xcwm_atoms_init_window(xcwm_window_t *window)
     _xcwm_atoms_set_wm_delete(window);
 
     /* Put the value of all properties we consider into effect */
-    int i;
-    for (i = 0; property_table[i].name != NULL; i++)
+    unsigned int i;
+    for (i = 0; i < property_table_entries; i++)
     {
-        (property_table[i].prop_change_fn)(window, &(property_table[i]));
+        if (property_table[i].prop_change_fn)
+            (property_table[i].prop_change_fn)(window, &(property_table[i]));
     }
 }
 
 int
 _xcwm_atom_change_to_event(xcb_atom_t atom, xcwm_window_t *window, xcwm_event_type_t *event)
 {
-    int i;
-    for (i = 0; property_table[i].name != NULL; i++) {
+    unsigned int i;
+    for (i = 0; i < property_table_entries; i++) {
         if (property_table[i].atom == atom) {
             /* Take the value into consideration */
-            (property_table[i].prop_change_fn)(window, &(property_table[i]));
+            if (property_table[i].prop_change_fn)
+                (property_table[i].prop_change_fn)(window, &(property_table[i]));
 
             /* and translate to XCWM_ event */
             *event = property_table[i].event;

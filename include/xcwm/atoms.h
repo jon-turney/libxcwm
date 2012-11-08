@@ -1,6 +1,6 @@
-/* Copyright (c) 2012 Apple Inc
+/* Copyright (c) 2012 Jon TURNEY
  *
- * xcwm/xcwm.h
+ * xcwm/atoms.h
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -23,19 +23,16 @@
  * SOFTWARE.
  */
 
-#ifndef _XCWM_XCWM_H_
-#define _XCWM_XWCM_H_
+#ifndef XCWM_ATOMS_H
+#define XCWM_ATOMS_H
 
-#ifndef __XCWM_INDIRECT__
-#define __XCWM_INDIRECT__
-#endif
+/**
+ * register interest in an atom
+ * @param context The context
+ * @param atom The name of the atom
+ * @param event The event to be delivered when atom changes
+ */
+xcb_atom_t
+xcwm_atom_register(xcwm_context_t *context, const char *atom, xcwm_event_type_t event);
 
-#include <xcwm/context.h>
-#include <xcwm/window.h>
-#include <xcwm/event.h>
-#include <xcwm/input.h>
-#include <xcwm/image.h>
-#include <xcwm/keyboard.h>
-#include <xcwm/atoms.h>
-
-#endif /* _XCWM_XCWM_H_ */
+#endif /* XCWM_ATOMS_H */
