@@ -248,8 +248,10 @@ xcwm_window_get_sizing(xcwm_window_t const *window);
  * Constrain height and width values according to sizing
  * hints for window
  * @param window The window
- * @param widthp The height
- * @param heightp The width
+ * @param[in] widthp The height
+ * @param[in] heightp The width
+ * @param[out] widthp The constrained height
+ * @param[out] heightp The constrained width
  */
 void
 xcwm_window_constrain_sizing(xcwm_window_t const *window, int *widthp, int *heightp);
