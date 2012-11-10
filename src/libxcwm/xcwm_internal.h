@@ -93,11 +93,6 @@ struct xcwm_window_t {
 };
 
 /**
- * Local data type for image data.
- */
-typedef struct image_data_t image_data_t;
-
-/**
  * Mutex lock supplied to client to lock event loop thread
  */
 extern pthread_mutex_t event_thread_lock;
@@ -136,15 +131,6 @@ _xcwm_get_window_geometry(xcb_connection_t *conn, xcb_window_t window);
 void
 _xcwm_write_all_children_window_info(xcb_connection_t *conn,
                                      xcb_window_t root);
-
-/**
- * Get the image data for a window.
- * @param conn the connection to the xserver.
- * @param root the window ancestral to all children to be written.
- * @return a structure containing data and data length.
- */
-image_data_t
-_xcwm_get_window_image_data(xcb_connection_t *conn, xcb_window_t window);
 
 /**
  * Write information about a window out to stdio.
