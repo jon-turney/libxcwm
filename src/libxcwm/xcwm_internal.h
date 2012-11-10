@@ -67,7 +67,7 @@ struct xcwm_context_t {
     xcwm_window_t *root_window;
     int damage_event_mask;
     xcb_window_t wm_cm_window;
-    xcwm_wm_atoms_t *atoms;
+    xcwm_wm_atoms_t atoms;
 };
 
 /**

@@ -493,7 +493,7 @@ run_event_loop(void *thread_arg_struct)
 
                 /* If this is WM_PROTOCOLS, do not send event, just
                  * handle internally */
-                if (notify->atom == window->context->atoms->ewmh_conn.WM_PROTOCOLS) {
+                if (notify->atom == window->context->atoms.ewmh_conn.WM_PROTOCOLS) {
                     _xcwm_atoms_set_wm_delete(window);
                     break;
                 }
