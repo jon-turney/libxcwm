@@ -61,15 +61,8 @@ xcwm_context_open(char *display)
     // Set the mask for the root window so we know when new windows
     // are created on the root. This is where we add masks for the events
     // we care about catching on the root window.
-    mask_values[0] = XCB_EVENT_MASK_KEY_PRESS |
-                     XCB_EVENT_MASK_KEY_RELEASE |
-                     XCB_EVENT_MASK_BUTTON_PRESS |
-                     XCB_EVENT_MASK_BUTTON_RELEASE |
-                     XCB_EVENT_MASK_POINTER_MOTION |
-                     XCB_EVENT_MASK_STRUCTURE_NOTIFY |
+    mask_values[0] = XCB_EVENT_MASK_STRUCTURE_NOTIFY |
                      XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY |
-                     XCB_EVENT_MASK_ENTER_WINDOW |
-                     XCB_EVENT_MASK_LEAVE_WINDOW |
                      XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT;
     cookie = xcb_change_window_attributes_checked(conn,
                                                   root_window_id,
