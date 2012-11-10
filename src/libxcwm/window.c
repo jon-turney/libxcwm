@@ -104,19 +104,15 @@ _xcwm_window_create(xcwm_context_t *context, xcb_window_t new_window,
     /* allocate memory for new xcwm_window_t and rectangles */
     xcwm_window_t *window = malloc(sizeof(xcwm_window_t));
     assert(window);
-    window->bounds = malloc(sizeof(xcwm_rect_t));
-    assert(window->bounds);
-    window->dmg_bounds = malloc(sizeof(xcwm_rect_t));
-    assert(window->dmg_bounds);
 
     /* set any available values from xcb_create_notify_event_t object pointer
        and geom pointer */
     window->context = context;
     window->window_id = new_window;
-    window->bounds->x = geom->x;
-    window->bounds->y = geom->y;
-    window->bounds->width = geom->width;
-    window->bounds->height = geom->height;
+    window->bounds.x = geom->x;
+    window->bounds.y = geom->y;
+    window->bounds.width = geom->width;
+    window->bounds.height = geom->height;
     window->opacity = ~0;
     window->composite_pixmap_id = 0;
     window->local_data = 0;
@@ -182,16 +178,16 @@ xcwm_window_configure(xcwm_window_t *window, int x, int y,
 {
 
     /* Set values for xcwm_window_t */
-    window->bounds->x = x;
-    window->bounds->y = y;
-    window->bounds->width = width;
-    window->bounds->height = height;
+    window->bounds.x = x;
+    window->bounds.y = y;
+    window->bounds.width = width;
+    window->bounds.height = height;
 
     _xcwm_resize_window(window->context->conn, window->window_id,
                         x, y, width, height);
     /* Set the damage area to the new window size so its redrawn properly */
-    window->dmg_bounds->width = width;
-    window->dmg_bounds->height = height;
+    window->dmg_bounds.width = width;
+    window->dmg_bounds.height = height;
 }
 
 void
@@ -205,10 +201,10 @@ xcwm_window_remove_damage(xcwm_window_t *window)
         return;
     }
 
-    rect.x = window->dmg_bounds->x;
-    rect.y = window->dmg_bounds->y;
-    rect.width = window->dmg_bounds->width;
-    rect.height = window->dmg_bounds->height;
+    rect.x = window->dmg_bounds.x;
+    rect.y = window->dmg_bounds.y;
+    rect.width = window->dmg_bounds.width;
+    rect.height = window->dmg_bounds.height;
 
     xcb_xfixes_create_region(window->context->conn,
                              region,
@@ -222,10 +218,10 @@ xcwm_window_remove_damage(xcwm_window_t *window)
 
     if (!(_xcwm_request_check(window->context->conn, cookie,
                               "Failed to subtract damage"))) {
-        window->dmg_bounds->x = 0;
-        window->dmg_bounds->y = 0;
-        window->dmg_bounds->width = 0;
-        window->dmg_bounds->height = 0;
+        window->dmg_bounds.x = 0;
+        window->dmg_bounds.y = 0;
+        window->dmg_bounds.width = 0;
+        window->dmg_bounds.height = 0;
     }
     return;
 }
@@ -273,10 +269,6 @@ _xcwm_window_release(xcwm_window_t *window)
         return;
     }
 
-    free(window->bounds);
-    if (window->dmg_bounds) {
-        free(window->dmg_bounds);
-    }
     if (window->name) {
         free(window->name);
     }
@@ -341,18 +333,18 @@ xcwm_window_set_local_data(xcwm_window_t *window, void *data_ptr)
     window->local_data = data_ptr;
 }
 
-xcwm_rect_t *
+const xcwm_rect_t *
 xcwm_window_get_full_rect(xcwm_window_t const *window)
 {
 
-    return window->bounds;
+    return &(window->bounds);
 }
 
-xcwm_rect_t *
+const xcwm_rect_t *
 xcwm_window_get_damaged_rect(xcwm_window_t const *window)
 {
 
-    return window->dmg_bounds;
+    return &(window->dmg_bounds);
 }
 
 char *
@@ -579,8 +571,8 @@ init_damage_on_window(xcb_connection_t *conn, xcwm_window_t *window)
     window->damage = damage_id;
 
     /* Initialize the damaged area in the window to zero */
-    window->dmg_bounds->x = 0;
-    window->dmg_bounds->y = 0;
-    window->dmg_bounds->width = 0;
-    window->dmg_bounds->height = 0;
+    window->dmg_bounds.x = 0;
+    window->dmg_bounds.y = 0;
+    window->dmg_bounds.width = 0;
+    window->dmg_bounds.height = 0;
 }

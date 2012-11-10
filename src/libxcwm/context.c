@@ -81,10 +81,6 @@ xcwm_context_open(char *display)
     assert(root_context);
     root_context->root_window = malloc(sizeof(xcwm_window_t));
     assert(root_context->root_window);
-    root_context->root_window->bounds = malloc(sizeof(xcwm_rect_t));
-    root_context->root_window->dmg_bounds = malloc(sizeof(xcwm_rect_t));
-    assert(root_context->root_window->bounds);
-    assert(root_context->root_window->dmg_bounds);
 
     root_context->conn = conn;
     root_context->conn_screen = conn_screen;
@@ -94,10 +90,10 @@ xcwm_context_open(char *display)
     root_context->root_window->context = root_context;
 
     /* Set width, height, x, & y from root_screen into the xcwm_context_t */
-    root_context->root_window->bounds->width = root_screen->width_in_pixels;
-    root_context->root_window->bounds->height = root_screen->height_in_pixels;
-    root_context->root_window->bounds->x = 0;
-    root_context->root_window->bounds->y = 0;
+    root_context->root_window->bounds.width = root_screen->width_in_pixels;
+    root_context->root_window->bounds.height = root_screen->height_in_pixels;
+    root_context->root_window->bounds.x = 0;
+    root_context->root_window->bounds.y = 0;
 
     _xcwm_init_composite(root_context);
 

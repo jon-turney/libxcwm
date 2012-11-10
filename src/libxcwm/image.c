@@ -83,17 +83,17 @@ xcwm_image_copy_damaged(xcwm_window_t *window)
     xcb_flush(window->context->conn);
 
     /* Return null if image is 0 by 0 */
-    if (window->dmg_bounds->width == 0 || window->dmg_bounds->height == 0) {
+    if (window->dmg_bounds.width == 0 || window->dmg_bounds.height == 0) {
         return NULL;
     }
 
     /* Get the image of the damaged area of the window */
     image = xcb_image_get(window->context->conn,
                           window->composite_pixmap_id,
-                          window->dmg_bounds->x,
-                          window->dmg_bounds->y,
-                          window->dmg_bounds->width,
-                          window->dmg_bounds->height,
+                          window->dmg_bounds.x,
+                          window->dmg_bounds.y,
+                          window->dmg_bounds.width,
+                          window->dmg_bounds.height,
                           (unsigned int)~0L,
                           XCB_IMAGE_FORMAT_Z_PIXMAP);
 
@@ -105,10 +105,10 @@ xcwm_image_copy_damaged(xcwm_window_t *window)
     xcwm_image_t * xcwm_image = malloc(sizeof(xcwm_image_t));
 
     xcwm_image->image = image;
-    xcwm_image->x = window->dmg_bounds->x;
-    xcwm_image->y = window->dmg_bounds->y;
-    xcwm_image->width = window->dmg_bounds->width;
-    xcwm_image->height = window->dmg_bounds->height;
+    xcwm_image->x = window->dmg_bounds.x;
+    xcwm_image->y = window->dmg_bounds.y;
+    xcwm_image->width = window->dmg_bounds.width;
+    xcwm_image->height = window->dmg_bounds.height;
 
     return xcwm_image;
 }
