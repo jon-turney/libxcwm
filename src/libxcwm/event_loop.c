@@ -227,8 +227,8 @@ run_event_loop(void *thread_arg_struct)
              * where the damage area is larger than the bounds of the
              * window. */
             if (return_evt->window->initial_damage == 1
-                || (dmgevnt->area.width > return_evt->window->bounds->width)
-                || (dmgevnt->area.height > return_evt->window->bounds->height) ) {
+                || (dmgevnt->area.width > return_evt->window->bounds.width)
+                || (dmgevnt->area.height > return_evt->window->bounds.height) ) {
                 xcb_xfixes_region_t region =
                     xcb_generate_id(return_evt->window->context->conn);
                 xcb_rectangle_t rect;
@@ -248,8 +248,8 @@ run_event_loop(void *thread_arg_struct)
                 /* Add new damage area for entire window */
                 rect.x = 0;
                 rect.y = 0;
-                rect.width = return_evt->window->bounds->width;
-                rect.height = return_evt->window->bounds->height;
+                rect.width = return_evt->window->bounds.width;
+                rect.height = return_evt->window->bounds.height;
                 xcb_xfixes_set_region(return_evt->window->context->conn,
                                       region,
                                       1,
@@ -266,10 +266,10 @@ run_event_loop(void *thread_arg_struct)
                 continue;
             }
 
-            return_evt->window->dmg_bounds->x = dmgevnt->area.x;
-            return_evt->window->dmg_bounds->y = dmgevnt->area.y;
-            return_evt->window->dmg_bounds->width = dmgevnt->area.width;
-            return_evt->window->dmg_bounds->height = dmgevnt->area.height;
+            return_evt->window->dmg_bounds.x = dmgevnt->area.x;
+            return_evt->window->dmg_bounds.y = dmgevnt->area.y;
+            return_evt->window->dmg_bounds.width = dmgevnt->area.width;
+            return_evt->window->dmg_bounds.height = dmgevnt->area.height;
 
             xcwm_event_release_thread_lock();
 

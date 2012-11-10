@@ -189,7 +189,7 @@ xcwm_window_set_local_data(xcwm_window_t *window, void *data_ptr);
  * @param window Window to get rectangle from.
  * @return The rectangle.
  */
-xcwm_rect_t *
+const xcwm_rect_t *
 xcwm_window_get_full_rect(xcwm_window_t const *window);
 
 /**
@@ -197,7 +197,7 @@ xcwm_window_get_full_rect(xcwm_window_t const *window);
  * @param window The window to get damage from.
  * @return Rectangle describing damaged area.
  */
-xcwm_rect_t *
+const xcwm_rect_t *
 xcwm_window_get_damaged_rect(xcwm_window_t const *window);
 
 /**
