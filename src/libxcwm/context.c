@@ -89,8 +89,6 @@ xcwm_context_open(char *display)
     root_context->root_window->dmg_bounds = malloc(sizeof(xcwm_rect_t));
     assert(root_context->root_window->bounds);
     assert(root_context->root_window->dmg_bounds);
-    root_context->atoms = malloc(sizeof(xcwm_wm_atoms_t));
-    assert(root_context->atoms);
 
     root_context->conn = conn;
     root_context->conn_screen = conn_screen;
@@ -140,7 +138,6 @@ xcwm_context_close(xcwm_context_t *context)
 
     /* Free atom related stuff */
     _xcwm_atoms_release(context);
-    free(context->atoms);
 
     // Terminate the event loop
     if (_xcwm_event_stop_loop() != 1) {

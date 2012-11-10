@@ -251,9 +251,9 @@ xcwm_window_request_close(xcwm_window_t *window)
 
         event.response_type = XCB_CLIENT_MESSAGE;
         event.window = window->window_id;
-        event.type = window->context->atoms->ewmh_conn.WM_PROTOCOLS;
+        event.type = window->context->atoms.ewmh_conn.WM_PROTOCOLS;
         event.format = 32;
-        event.data.data32[0] = window->context->atoms->wm_delete_window_atom;
+        event.data.data32[0] = window->context->atoms.wm_delete_window_atom;
         event.data.data32[1] = XCB_CURRENT_TIME;
 
         xcb_send_event(window->context->conn, 0, window->window_id,

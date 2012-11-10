@@ -133,8 +133,8 @@ _xcwm_atoms_init(xcwm_context_t *context)
 
     /* Initialization for the xcb_ewmh connection and EWMH atoms */
     atom_cookies = xcb_ewmh_init_atoms(context->conn,
-                                       &context->atoms->ewmh_conn);
-    if (!xcb_ewmh_init_atoms_replies(&context->atoms->ewmh_conn,
+                                       &context->atoms.ewmh_conn);
+    if (!xcb_ewmh_init_atoms_replies(&context->atoms.ewmh_conn,
                                      atom_cookies, &error)) {
         return error->major_code;;
     }
@@ -146,36 +146,36 @@ _xcwm_atoms_init(xcwm_context_t *context)
      * may be expanded. */
     xcb_atom_t supported[] =
         {
-            context->atoms->ewmh_conn.WM_PROTOCOLS,
-            context->atoms->ewmh_conn._NET_SUPPORTED,
-            context->atoms->ewmh_conn._NET_SUPPORTING_WM_CHECK,
-            context->atoms->ewmh_conn._NET_CLOSE_WINDOW,
-            context->atoms->ewmh_conn._NET_WM_NAME,
-            context->atoms->ewmh_conn._NET_WM_WINDOW_TYPE,
-            context->atoms->ewmh_conn._NET_WM_WINDOW_TYPE_TOOLBAR,
-            context->atoms->ewmh_conn._NET_WM_WINDOW_TYPE_MENU,
-            context->atoms->ewmh_conn._NET_WM_WINDOW_TYPE_UTILITY,
-            context->atoms->ewmh_conn._NET_WM_WINDOW_TYPE_SPLASH,
-            context->atoms->ewmh_conn._NET_WM_WINDOW_TYPE_DIALOG,
-            context->atoms->ewmh_conn._NET_WM_WINDOW_TYPE_DROPDOWN_MENU,
-            context->atoms->ewmh_conn._NET_WM_WINDOW_TYPE_POPUP_MENU,
-            context->atoms->ewmh_conn._NET_WM_WINDOW_TYPE_TOOLTIP,
-            context->atoms->ewmh_conn._NET_WM_WINDOW_TYPE_NOTIFICATION,
-            context->atoms->ewmh_conn._NET_WM_WINDOW_TYPE_COMBO,
-            context->atoms->ewmh_conn._NET_WM_WINDOW_TYPE_DND,
-            context->atoms->ewmh_conn._NET_WM_WINDOW_TYPE_NORMAL,
-            context->atoms->ewmh_conn._NET_WM_STATE,
-            context->atoms->ewmh_conn._NET_WM_STATE_MODAL,
-            context->atoms->ewmh_conn._NET_WM_STATE_HIDDEN
+            context->atoms.ewmh_conn.WM_PROTOCOLS,
+            context->atoms.ewmh_conn._NET_SUPPORTED,
+            context->atoms.ewmh_conn._NET_SUPPORTING_WM_CHECK,
+            context->atoms.ewmh_conn._NET_CLOSE_WINDOW,
+            context->atoms.ewmh_conn._NET_WM_NAME,
+            context->atoms.ewmh_conn._NET_WM_WINDOW_TYPE,
+            context->atoms.ewmh_conn._NET_WM_WINDOW_TYPE_TOOLBAR,
+            context->atoms.ewmh_conn._NET_WM_WINDOW_TYPE_MENU,
+            context->atoms.ewmh_conn._NET_WM_WINDOW_TYPE_UTILITY,
+            context->atoms.ewmh_conn._NET_WM_WINDOW_TYPE_SPLASH,
+            context->atoms.ewmh_conn._NET_WM_WINDOW_TYPE_DIALOG,
+            context->atoms.ewmh_conn._NET_WM_WINDOW_TYPE_DROPDOWN_MENU,
+            context->atoms.ewmh_conn._NET_WM_WINDOW_TYPE_POPUP_MENU,
+            context->atoms.ewmh_conn._NET_WM_WINDOW_TYPE_TOOLTIP,
+            context->atoms.ewmh_conn._NET_WM_WINDOW_TYPE_NOTIFICATION,
+            context->atoms.ewmh_conn._NET_WM_WINDOW_TYPE_COMBO,
+            context->atoms.ewmh_conn._NET_WM_WINDOW_TYPE_DND,
+            context->atoms.ewmh_conn._NET_WM_WINDOW_TYPE_NORMAL,
+            context->atoms.ewmh_conn._NET_WM_STATE,
+            context->atoms.ewmh_conn._NET_WM_STATE_MODAL,
+            context->atoms.ewmh_conn._NET_WM_STATE_HIDDEN
         };
 
-    xcb_ewmh_set_supported(&context->atoms->ewmh_conn,
+    xcb_ewmh_set_supported(&context->atoms.ewmh_conn,
                            context->conn_screen,
                            21,  /* Length of supported[] */
                            supported);
 
     /* Used erroneously instead of _NET_WM_WINDOW_TYPE_SPLASH by some applications */
-    context->atoms->net_wm_window_type_splashscreen = _xcwm_atom_get(context, "_NET_WM_WINDOW_TYPE_SPLASHSCREEN");
+    context->atoms.net_wm_window_type_splashscreen = _xcwm_atom_get(context, "_NET_WM_WINDOW_TYPE_SPLASHSCREEN");
 
     /* Get the ICCCM atoms we need that are not included in the
      * xcb_ewmh_connection_t. */
@@ -186,7 +186,7 @@ _xcwm_atoms_init(xcwm_context_t *context)
     _xcwm_atom_register(context, "_NET_WM_WINDOW_OPACITY", set_window_opacity,    XCWM_EVENT_WINDOW_APPEARANCE);
 
     /* WM_DELETE_WINDOW atom */
-    context->atoms->wm_delete_window_atom = _xcwm_atom_get(context, "WM_DELETE_WINDOW");
+    context->atoms.wm_delete_window_atom = _xcwm_atom_get(context, "WM_DELETE_WINDOW");
 
     if (!check_wm_cm_owner(context)) {
         return XCB_WINDOW;
@@ -194,7 +194,7 @@ _xcwm_atoms_init(xcwm_context_t *context)
     create_wm_cm_window(context);
 
     /* WM_STATE atom */
-    context->atoms->wm_state_atom = _xcwm_atom_get(context, "WM_STATE");
+    context->atoms.wm_state_atom = _xcwm_atom_get(context, "WM_STATE");
 
     return 0;
 }
@@ -205,9 +205,9 @@ check_wm_cm_owner(xcwm_context_t *context)
     xcb_get_selection_owner_cookie_t cookie;
     xcb_window_t wm_owner;
 
-    cookie = xcb_ewmh_get_wm_cm_owner(&context->atoms->ewmh_conn,
+    cookie = xcb_ewmh_get_wm_cm_owner(&context->atoms.ewmh_conn,
                                       context->conn_screen);
-    xcb_ewmh_get_wm_cm_owner_reply(&context->atoms->ewmh_conn,
+    xcb_ewmh_get_wm_cm_owner_reply(&context->atoms.ewmh_conn,
                                    cookie, &wm_owner, NULL);
     if (wm_owner != XCB_NONE) {
         return 0;
@@ -232,15 +232,15 @@ create_wm_cm_window(xcwm_context_t *context)
                       0, NULL);
 
     /* Set the atoms for the window */
-    xcb_ewmh_set_wm_name(&context->atoms->ewmh_conn,
+    xcb_ewmh_set_wm_name(&context->atoms.ewmh_conn,
                          context->wm_cm_window,
                          strlen("xcwm"), "xcwm");
 
-    xcb_ewmh_set_supporting_wm_check(&context->atoms->ewmh_conn,
+    xcb_ewmh_set_supporting_wm_check(&context->atoms.ewmh_conn,
                                      context->root_window->window_id,
                                      context->wm_cm_window);
 
-    xcb_ewmh_set_supporting_wm_check(&context->atoms->ewmh_conn,
+    xcb_ewmh_set_supporting_wm_check(&context->atoms.ewmh_conn,
                                      context->wm_cm_window,
                                      context->wm_cm_window);
 }
@@ -286,9 +286,9 @@ set_window_name(xcwm_window_t *window, xcwm_property_t *property)
     xcb_ewmh_get_utf8_strings_reply_t data;
 
     /* Check _NET_WM_NAME first */
-    cookie = xcb_ewmh_get_wm_name(&window->context->atoms->ewmh_conn,
+    cookie = xcb_ewmh_get_wm_name(&window->context->atoms.ewmh_conn,
                                   window->window_id);
-    if (xcb_ewmh_get_wm_name_reply(&window->context->atoms->ewmh_conn,
+    if (xcb_ewmh_get_wm_name_reply(&window->context->atoms.ewmh_conn,
                                    cookie, &data, NULL)) {
         window->name = strndup(data.strings, data.strings_len);
         xcb_ewmh_get_utf8_strings_reply_wipe(&data);
@@ -319,13 +319,13 @@ _xcwm_atoms_set_wm_delete(xcwm_window_t *window)
     /* Get the WM_PROTOCOLS */
     cookie = xcb_icccm_get_wm_protocols(window->context->conn,
                                         window->window_id,
-                                        window->context->atoms->ewmh_conn.WM_PROTOCOLS);
+                                        window->context->atoms.ewmh_conn.WM_PROTOCOLS);
 
     if (xcb_icccm_get_wm_protocols_reply(window->context->conn,
                                          cookie, &reply, &error) == 1) {
         /* See if the WM_DELETE_WINDOW is set in WM_PROTOCOLS */
         for (i = 0; i < reply.atoms_len; i++) {
-            if (reply.atoms[i] == window->context->atoms->wm_delete_window_atom) {
+            if (reply.atoms[i] == window->context->atoms.wm_delete_window_atom) {
                 window->wm_delete_set = 1;
                 break;
             }
@@ -345,7 +345,7 @@ setup_window_type(xcwm_window_t *window, xcwm_property_t *property)
     xcb_get_property_cookie_t cookie;
     xcb_window_t transient;
     xcb_ewmh_get_atoms_reply_t type;
-    xcb_ewmh_connection_t ewmh_conn = window->context->atoms->ewmh_conn;
+    xcb_ewmh_connection_t ewmh_conn = window->context->atoms.ewmh_conn;
     int i;
 
     /* if nothing below matches, set the default to unknown */
@@ -388,7 +388,7 @@ setup_window_type(xcwm_window_t *window, xcwm_property_t *property)
                 window->type = XCWM_WINDOW_TYPE_UTILITY;
                 break;
             } else if ((type.atoms[i] == ewmh_conn._NET_WM_WINDOW_TYPE_SPLASH) ||
-                       (type.atoms[i] == window->context->atoms->net_wm_window_type_splashscreen)) {
+                       (type.atoms[i] == window->context->atoms.net_wm_window_type_splashscreen)) {
                 window->type = XCWM_WINDOW_TYPE_SPLASH;
                 break;
             } else if (type.atoms[i] == ewmh_conn._NET_WM_WINDOW_TYPE_DIALOG) {
@@ -482,7 +482,7 @@ _xcwm_atoms_set_wm_state(xcwm_window_t *window, xcwm_window_state_t state)
         icccm_state[1] = XCB_NONE;
 
         ewmh_state = calloc(ewmh_atom_cnt, sizeof(xcb_atom_t));
-        ewmh_state[0] = window->context->atoms->ewmh_conn._NET_WM_STATE_HIDDEN;
+        ewmh_state[0] = window->context->atoms.ewmh_conn._NET_WM_STATE_HIDDEN;
         break;
     }
     default:
@@ -497,14 +497,14 @@ _xcwm_atoms_set_wm_state(xcwm_window_t *window, xcwm_window_state_t state)
         xcb_change_property(window->context->conn,
                             XCB_PROP_MODE_REPLACE,
                             window->window_id,
-                            window->context->atoms->wm_state_atom,
-                            window->context->atoms->wm_state_atom,
+                            window->context->atoms.wm_state_atom,
+                            window->context->atoms.wm_state_atom,
                             32,
                             2,
                             icccm_state);
     }
 
-    xcb_ewmh_set_wm_state(&window->context->atoms->ewmh_conn,
+    xcb_ewmh_set_wm_state(&window->context->atoms.ewmh_conn,
                           window->window_id,
                           ewmh_atom_cnt,
                           ewmh_state);
@@ -521,7 +521,7 @@ _xcwm_atoms_release(xcwm_context_t *context)
 {
 
     /* Free the xcb_ewmh_connection_t */
-    xcb_ewmh_connection_wipe(&context->atoms->ewmh_conn);
+    xcb_ewmh_connection_wipe(&context->atoms.ewmh_conn);
 
     /* Close the wm window */
     xcb_destroy_window(context->conn, context->wm_cm_window);
