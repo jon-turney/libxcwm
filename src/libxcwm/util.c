@@ -30,12 +30,6 @@
 #include "xcwm_internal.h"
 #include <xcb/xcb.h>
 
-/* Locally used structure */
-struct image_data_t {
-    uint8_t *data;
-    int length;
-};
-
 xcb_get_window_attributes_reply_t *
 _xcwm_get_window_attributes(xcb_connection_t *conn, xcb_window_t window)
 {
@@ -69,7 +63,6 @@ _xcwm_write_all_children_window_info(xcb_connection_t *conn,
     xcb_query_tree_reply_t *reply;
     xcb_query_tree_cookie_t tree_cookie;
     xcb_window_t *children;     /* The children of the given root */
-    image_data_t img_data;
     xcb_generic_error_t *error;
     int len;
     int i;
@@ -90,57 +83,11 @@ _xcwm_write_all_children_window_info(xcb_connection_t *conn,
            root);
     for (i = 0; i < len; i++) {
         _xcwm_write_window_info(conn, children[i]);
-        img_data = _xcwm_get_window_image_data(conn, children[i]);
-        if (!img_data.data) {
-            printf("Image data is empty\n");
-        }
     }
     printf("--- End window iteration ---\n");
 
     /* Free the stuff allocated by XCB */
     free(reply);
-}
-
-image_data_t
-_xcwm_get_window_image_data(xcb_connection_t *conn, xcb_drawable_t window)
-{
-    image_data_t image_data;
-    xcb_get_image_cookie_t img_cookie;
-    xcb_get_image_reply_t *reply;
-    xcb_generic_error_t *error;
-    xcb_get_geometry_reply_t *geom_reply;
-
-    image_data.data = NULL;
-    image_data.length = 0;
-
-    geom_reply = _xcwm_get_window_geometry(conn, window);
-    if (!geom_reply) {
-        fprintf(stderr, "ERROR: Failed to get window image data.\n");
-        return image_data;
-    }
-
-    img_cookie = xcb_get_image(conn,
-                               XCB_IMAGE_FORMAT_Z_PIXMAP,
-                               window,
-                               0,
-                               0,
-                               geom_reply->width,
-                               geom_reply->height,
-                               (unsigned int)~0L);
-
-    reply = xcb_get_image_reply(conn, img_cookie, &error);
-    if (error) {
-        fprintf(stderr, "ERROR: Failed to get window image data reply: %d\n",
-                error->error_code);
-        return image_data;
-    }
-    image_data.data = xcb_get_image_data(reply);
-    image_data.length = xcb_get_image_data_length(reply);
-
-    free(geom_reply);
-    /* free(reply); */
-
-    return image_data;
 }
 
 void
