@@ -74,41 +74,6 @@ enum xcwm_window_state_t {
 typedef enum xcwm_window_state_t xcwm_window_state_t;
 
 /**
- * Structure defining min/max size for window and resizing
- * increments. A value of 0 in any field implies the field is unset.
- */
-struct xcwm_window_sizing_t {
-    uint32_t min_width;
-    uint32_t min_height;
-    uint32_t max_width;
-    uint32_t max_height;
-    uint32_t width_inc;
-    uint32_t height_inc;
-};
-typedef struct xcwm_window_sizing_t xcwm_window_sizing_t;
-
-/* Structure for holding data for a window */
-struct xcwm_window_t {
-    xcb_drawable_t window_id;
-    xcwm_context_t *context;
-    xcwm_window_type_t type;    /* The type of this window */
-    struct xcwm_window_t *parent;
-    struct xcwm_window_t *transient_for; /* Window this one is transient for */
-    xcb_damage_damage_t damage;
-    xcwm_rect_t *bounds;
-    xcwm_rect_t *dmg_bounds;
-    xcb_size_hints_t size_hints; /* WM_NORMAL_HINTS */
-    xcwm_window_sizing_t *sizing; /* Sizing information for the window */
-    char *name;         /* The name of the window */
-    int wm_delete_set;  /* Flag for WM_DELETE_WINDOW, 1 if set */
-    int override_redirect;
-    int initial_damage;         /* Set to 1 for override-redirect windows */
-    void *local_data;   /* Area for data client cares about */
-    unsigned int opacity;
-    xcb_pixmap_t composite_pixmap_id;
-};
-
-/**
  * Set input focus to the window in context
  * @param window The window to set focus to
  */
@@ -154,6 +119,14 @@ xcwm_window_request_close(xcwm_window_t *window);
 void
 xcwm_window_configure(xcwm_window_t *window, int x, int y,
                       int width, int height);
+
+/**
+ * Get the window's id
+ * @param window Window to get type for.
+ * @return The id of the window.
+ */
+xcb_window_t
+xcwm_window_get_window_id(xcwm_window_t const *window);
 
 /**
  * Get the window's type.
@@ -241,7 +214,7 @@ xcwm_window_copy_name(xcwm_window_t const *window);
  * @param window The window to get sizing data for.
  * @return The structure containing the sizing data
  */
-xcwm_window_sizing_t const *
+xcb_size_hints_t const *
 xcwm_window_get_sizing(xcwm_window_t const *window);
 
 /**

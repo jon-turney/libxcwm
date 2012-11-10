@@ -108,8 +108,6 @@ _xcwm_window_create(xcwm_context_t *context, xcb_window_t new_window,
     assert(window->bounds);
     window->dmg_bounds = malloc(sizeof(xcwm_rect_t));
     assert(window->dmg_bounds);
-    window->sizing = calloc(1, sizeof(*window->sizing));
-    assert(window->dmg_bounds);;
 
     /* set any available values from xcb_create_notify_event_t object pointer
        and geom pointer */
@@ -276,7 +274,6 @@ _xcwm_window_release(xcwm_window_t *window)
     }
 
     free(window->bounds);
-    free(window->sizing);
     if (window->dmg_bounds) {
         free(window->dmg_bounds);
     }
@@ -287,6 +284,13 @@ _xcwm_window_release(xcwm_window_t *window)
 }
 
 /* Accessor functions into xcwm_window_t */
+
+xcb_window_t
+xcwm_window_get_window_id(xcwm_window_t const *window)
+{
+
+    return window->window_id;
+}
 
 xcwm_window_type_t
 xcwm_window_get_window_type(xcwm_window_t const *window)
@@ -364,16 +368,10 @@ xcwm_window_get_opacity(xcwm_window_t const *window)
   return window->opacity;
 }
 
-xcwm_window_sizing_t const *
+xcb_size_hints_t const *
 xcwm_window_get_sizing(xcwm_window_t const *window)
 {
-    window->sizing->min_width = window->size_hints.min_width;
-    window->sizing->min_height = window->size_hints.min_height;;
-    window->sizing->max_width = window->size_hints.max_width;
-    window->sizing->max_height = window->size_hints.max_height;
-    window->sizing->width_inc = window->size_hints.width_inc;
-    window->sizing->height_inc = window->size_hints.height_inc;
-    return window->sizing;
+    return &window->size_hints;
 }
 
 void
