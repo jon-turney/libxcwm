@@ -29,6 +29,7 @@
 
 #include <xcb/xcb.h>
 #include <xcwm/xcwm.h>
+#include "xcwm_internal.h"
 #include <stdlib.h>
 #include <stdio.h>
 

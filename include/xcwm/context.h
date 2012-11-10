@@ -34,26 +34,11 @@
 #include <xcb/damage.h>
 #include <xcb/xcb_icccm.h>
 
-/* Abstract types for context data types
- * FIXME: Move this to window.h once accessor API functions in place */
+/* forward reference to xcwm_window_t type */
 struct xcwm_window_t;
 typedef struct xcwm_window_t xcwm_window_t;
 
-/**
- * Struct to hold ICCCM/EWMH data for context.
- */
-struct xcwm_wm_atoms_t;
-typedef struct xcwm_wm_atoms_t xcwm_wm_atoms_t;
-
-/* Structure to hold connection data */
-struct xcwm_context_t {
-    xcb_connection_t *conn;
-    int conn_screen;
-    xcwm_window_t *root_window;
-    int damage_event_mask;
-    xcb_window_t wm_cm_window;
-    xcwm_wm_atoms_t *atoms;
-};
+struct xcwm_context_t;
 typedef struct xcwm_context_t xcwm_context_t;
 
 /**
@@ -79,5 +64,13 @@ xcwm_context_close(xcwm_context_t *context);
  */
 xcwm_window_t *
 xcwm_context_get_root_window(xcwm_context_t const *context);
+
+/**
+ * Get the connection for this context.
+ * @param context The context to get root window from.
+ * @return The connection for this context.
+ */
+xcb_connection_t *
+xcwm_context_get_connection(xcwm_context_t const *context);
 
 #endif  /* _XCWM_CONTEXT_H_ */

@@ -56,6 +56,19 @@ struct xcwm_wm_atoms_t {
     xcb_atom_t net_wm_window_type_splashscreen;
     xcb_ewmh_connection_t ewmh_conn;
 };
+typedef struct xcwm_wm_atoms_t xcwm_wm_atoms_t;
+
+/**
+ * Structure to hold connection data
+ */
+struct xcwm_context_t {
+    xcb_connection_t *conn;
+    int conn_screen;
+    xcwm_window_t *root_window;
+    int damage_event_mask;
+    xcb_window_t wm_cm_window;
+    xcwm_wm_atoms_t *atoms;
+};
 
 /**
  * Local data type for image data.
