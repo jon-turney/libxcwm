@@ -156,15 +156,11 @@ _xcwm_windows_adopt(xcwm_context_t *context, xcwm_event_cb_t callback_ptr)
 
             _xcwm_window_composite_pixmap_update(window);
 
-            xcwm_event_t *return_evt = malloc(sizeof(xcwm_event_t));
-            if (!return_evt) {
-                continue;
-            }
+            xcwm_event_t return_evt;
+            return_evt.window = window;
+            return_evt.event_type = XCWM_EVENT_WINDOW_CREATE;
 
-            return_evt->window = window;
-            return_evt->event_type = XCWM_EVENT_WINDOW_CREATE;
-
-            callback_ptr(return_evt);
+            callback_ptr(&return_evt);
         }
         else {
             printf("window 0x%08x non-viewable\n", children[i]);
@@ -183,7 +179,7 @@ run_event_loop(void *thread_arg_struct)
     xcwm_context_t *context;
     xcb_connection_t *event_conn;
     xcb_generic_event_t *evt;
-    xcwm_event_t *return_evt;
+    xcwm_event_t return_evt;
     xcwm_event_cb_t callback_ptr;
 
     conn_data = thread_arg_struct;
@@ -207,13 +203,13 @@ run_event_loop(void *thread_arg_struct)
             /*        dmgevnt->area.width, dmgevnt->area.height, dmgevnt->area.x, dmgevnt->area.y, */
             /*        dmgevnt->drawable); */
 
-            return_evt = malloc(sizeof(xcwm_event_t));
-            return_evt->event_type = XCWM_EVENT_WINDOW_DAMAGE;
-            return_evt->window =
-                _xcwm_get_window_node_by_window_id(dmgevnt->drawable);
-            if (!return_evt->window) {
+            xcwm_window_t *window = _xcwm_get_window_node_by_window_id(dmgevnt->drawable);
+
+            return_evt.event_type = XCWM_EVENT_WINDOW_DAMAGE;
+            return_evt.window = window;
+
+            if (!window) {
                 printf("damage reported against unknown window 0x%08x\n", dmgevnt->drawable);
-                free(return_evt);
                 continue;
             }
 
@@ -226,54 +222,53 @@ run_event_loop(void *thread_arg_struct)
              * are relative to the window itself. We also catch cases
              * where the damage area is larger than the bounds of the
              * window. */
-            if (return_evt->window->initial_damage == 1
-                || (dmgevnt->area.width > return_evt->window->bounds.width)
-                || (dmgevnt->area.height > return_evt->window->bounds.height) ) {
+            if (window->initial_damage == 1
+                || (dmgevnt->area.width > window->bounds.width)
+                || (dmgevnt->area.height > window->bounds.height) ) {
                 xcb_xfixes_region_t region =
-                    xcb_generate_id(return_evt->window->context->conn);
+                    xcb_generate_id(window->context->conn);
                 xcb_rectangle_t rect;
 
                 /* printf("initial damage on window 0x%08x\n", dmgevnt->drawable); */
 
                 /* Remove the damage */
-                xcb_xfixes_create_region(return_evt->window->context->conn,
+                xcb_xfixes_create_region(window->context->conn,
                                          region,
                                          1,
                                          &dmgevnt->area);
-                xcb_damage_subtract(return_evt->window->context->conn,
-                                    return_evt->window->damage,
+                xcb_damage_subtract(window->context->conn,
+                                    window->damage,
                                     region,
                                     XCB_NONE);
 
                 /* Add new damage area for entire window */
                 rect.x = 0;
                 rect.y = 0;
-                rect.width = return_evt->window->bounds.width;
-                rect.height = return_evt->window->bounds.height;
-                xcb_xfixes_set_region(return_evt->window->context->conn,
+                rect.width = window->bounds.width;
+                rect.height = window->bounds.height;
+                xcb_xfixes_set_region(window->context->conn,
                                       region,
                                       1,
                                       &rect);
-                xcb_damage_add(return_evt->window->context->conn,
-                               return_evt->window->window_id,
+                xcb_damage_add(window->context->conn,
+                               window->window_id,
                                region);
 
-                return_evt->window->initial_damage = 0;
-                xcb_xfixes_destroy_region(return_evt->window->context->conn,
+                window->initial_damage = 0;
+                xcb_xfixes_destroy_region(window->context->conn,
                                           region);
-                free(return_evt);
                 xcwm_event_release_thread_lock();
                 continue;
             }
 
-            return_evt->window->dmg_bounds.x = dmgevnt->area.x;
-            return_evt->window->dmg_bounds.y = dmgevnt->area.y;
-            return_evt->window->dmg_bounds.width = dmgevnt->area.width;
-            return_evt->window->dmg_bounds.height = dmgevnt->area.height;
+            window->dmg_bounds.x = dmgevnt->area.x;
+            window->dmg_bounds.y = dmgevnt->area.y;
+            window->dmg_bounds.width = dmgevnt->area.width;
+            window->dmg_bounds.height = dmgevnt->area.height;
 
             xcwm_event_release_thread_lock();
 
-            callback_ptr(return_evt);
+            callback_ptr(&return_evt);
 
         }
         else {
@@ -312,9 +307,8 @@ run_event_loop(void *thread_arg_struct)
                 printf("with dimensions (%d, %d).\n", exevnt->width,
                        exevnt->height);
 
-                return_evt = malloc(sizeof(xcwm_event_t));
-                return_evt->event_type = XCWM_EVENT_WINDOW_EXPOSE;
-                callback_ptr(return_evt);
+                return_evt.event_type = XCWM_EVENT_WINDOW_EXPOSE;
+                callback_ptr(&return_evt);
                 break;
             }
 
@@ -338,11 +332,10 @@ run_event_loop(void *thread_arg_struct)
                     break;
                 }
 
-                return_evt = malloc(sizeof(xcwm_event_t));
-                return_evt->event_type = XCWM_EVENT_WINDOW_DESTROY;
-                return_evt->window = window;
+                return_evt.event_type = XCWM_EVENT_WINDOW_DESTROY;
+                return_evt.window = window;
 
-                callback_ptr(return_evt);
+                callback_ptr(&return_evt);
 
                 // Release memory for the window
                 _xcwm_window_release(window);
@@ -353,7 +346,7 @@ run_event_loop(void *thread_arg_struct)
             {
                 xcb_map_notify_event_t *notify =
                     (xcb_map_notify_event_t *)evt;
-                return_evt = malloc(sizeof(xcwm_event_t));
+
                 /* notify->event holds parent of the window */
 
                 xcwm_window_t *window =
@@ -371,16 +364,11 @@ run_event_loop(void *thread_arg_struct)
 
                     if (window)
                     {
-                        if (!return_evt->window) {
-                            free(return_evt);
-                            break;
-                        }
-
                         _xcwm_window_composite_pixmap_update(window);
 
-                        return_evt->window = window;
-                        return_evt->event_type = XCWM_EVENT_WINDOW_CREATE;
-                        callback_ptr(return_evt);
+                        return_evt.window = window;
+                        return_evt.event_type = XCWM_EVENT_WINDOW_CREATE;
+                        callback_ptr(&return_evt);
                     }
                 }
                 else
@@ -400,17 +388,15 @@ run_event_loop(void *thread_arg_struct)
                 xcb_map_window(context->conn, request->window);
                 xcb_flush(context->conn);
 
-                return_evt = malloc(sizeof(xcwm_event_t));
-                return_evt->window =
+                return_evt.window =
                     _xcwm_window_create(context, request->window,
                                         request->parent);
-                if (!return_evt->window) {
-                    free(return_evt);
+                if (!return_evt.window) {
                     break;
                 }
 
-                return_evt->event_type = XCWM_EVENT_WINDOW_CREATE;
-                callback_ptr(return_evt);
+                return_evt.event_type = XCWM_EVENT_WINDOW_CREATE;
+                callback_ptr(&return_evt);
                 break;
             }
 
@@ -427,11 +413,10 @@ run_event_loop(void *thread_arg_struct)
                     break;
                 }
 
-                return_evt = malloc(sizeof(xcwm_event_t));
-                return_evt->event_type = XCWM_EVENT_WINDOW_DESTROY;
-                return_evt->window = window;
+                return_evt.event_type = XCWM_EVENT_WINDOW_DESTROY;
+                return_evt.window = window;
 
-                callback_ptr(return_evt);
+                callback_ptr(&return_evt);
 
                 _xcwm_window_composite_pixmap_release(window);
 
@@ -502,10 +487,9 @@ run_event_loop(void *thread_arg_struct)
                 if (_xcwm_atom_change_to_event(notify->atom, window, &event))
                 {
                     /* Send the appropriate event */
-                    return_evt = malloc(sizeof(xcwm_event_t));
-                    return_evt->event_type = event;
-                    return_evt->window = window;
-                    callback_ptr(return_evt);
+                    return_evt.event_type = event;
+                    return_evt.window = window;
+                    callback_ptr(&return_evt);
                 }
                 else {
                     printf("PROPERTY_NOTIFY for ignored property atom %d\n", notify->atom);
