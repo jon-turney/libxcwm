@@ -156,6 +156,11 @@ xcwm_context_close(xcwm_context_t *context)
 xcwm_window_t *
 xcwm_context_get_root_window(xcwm_context_t const *context)
 {
-
     return context->root_window;
+}
+
+xcb_connection_t *
+xcwm_context_get_connection(xcwm_context_t const *context)
+{
+    return context->conn;
 }
