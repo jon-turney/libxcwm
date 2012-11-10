@@ -71,6 +71,28 @@ struct xcwm_context_t {
 };
 
 /**
+ *  Structure for holding data for a window
+ */
+struct xcwm_window_t {
+    xcb_drawable_t window_id;
+    xcwm_context_t *context;
+    xcwm_window_type_t type;    /* The type of this window */
+    struct xcwm_window_t *parent;
+    struct xcwm_window_t *transient_for; /* Window this one is transient for */
+    xcb_damage_damage_t damage;
+    xcwm_rect_t *bounds;
+    xcwm_rect_t *dmg_bounds;
+    xcb_size_hints_t size_hints; /* WM_NORMAL_HINTS */
+    char *name;         /* The name of the window */
+    int wm_delete_set;  /* Flag for WM_DELETE_WINDOW, 1 if set */
+    int override_redirect;
+    int initial_damage;         /* Set to 1 for override-redirect windows */
+    void *local_data;   /* Area for data client cares about */
+    unsigned int opacity;
+    xcb_pixmap_t composite_pixmap_id;
+};
+
+/**
  * Local data type for image data.
  */
 typedef struct image_data_t image_data_t;
