@@ -212,6 +212,7 @@ check_wm_cm_owner(xcwm_context_t *context)
     if (wm_owner != XCB_NONE) {
         return 0;
     }
+
     return 1;
 }
 
@@ -220,7 +221,7 @@ create_wm_cm_window(xcwm_context_t *context)
 {
     context->wm_cm_window = xcb_generate_id(context->conn);
 
-    printf("Created CM window with XID 0x%08x\n", context->wm_cm_window);
+    printf("Created WM/CM window with XID 0x%08x\n", context->wm_cm_window);
 
     xcb_create_window(context->conn,
                       XCB_COPY_FROM_PARENT,
@@ -231,11 +232,12 @@ create_wm_cm_window(xcwm_context_t *context)
                       XCB_COPY_FROM_PARENT,
                       0, NULL);
 
-    /* Set the atoms for the window */
+    /* Set the name for the window */
     xcb_ewmh_set_wm_name(&context->atoms.ewmh_conn,
                          context->wm_cm_window,
                          strlen("xcwm"), "xcwm");
 
+    /* Set the atoms for the window */
     xcb_ewmh_set_supporting_wm_check(&context->atoms.ewmh_conn,
                                      context->root_window->window_id,
                                      context->wm_cm_window);
@@ -243,6 +245,18 @@ create_wm_cm_window(xcwm_context_t *context)
     xcb_ewmh_set_supporting_wm_check(&context->atoms.ewmh_conn,
                                      context->wm_cm_window,
                                      context->wm_cm_window);
+
+    /* Take & announce ownership of the _NET_CM_Sn selection */
+    xcb_ewmh_set_wm_cm_owner(&context->atoms.ewmh_conn,
+                             context->conn_screen,
+                             context->wm_cm_window,
+                             XCB_CURRENT_TIME,
+                             0, 0);
+
+    /* Likewise WM_Sn selection */
+
+    /* XXX: Need to do this in a way which complies with ICCCM "Manager Selections" i.e.
+     use an actual timestamp, so in the case of races, we either acquire selection or don't */
 }
 
 void
