@@ -47,6 +47,10 @@ set_wm_size_hints_for_window(xcb_connection_t *conn, xcwm_window_t *window);
 void
 init_damage_on_window(xcb_connection_t *conn, xcwm_window_t *window);
 
+/* Initialize reshape on a window */
+static void
+init_shape_on_window(xcb_connection_t *conn, xcwm_window_t *window);
+
 /* Set window to the top of the stack */
 void
 xcwm_window_set_to_top(xcwm_window_t *window)
@@ -116,6 +120,7 @@ _xcwm_window_create(xcwm_context_t *context, xcb_window_t new_window,
     window->opacity = ~0;
     window->composite_pixmap_id = 0;
     window->local_data = 0;
+    window->shape = 0;
 
     /* Find and set the parent */
     window->parent = _xcwm_get_window_node_by_window_id(parent);
@@ -141,6 +146,10 @@ _xcwm_window_create(xcwm_context_t *context, xcb_window_t new_window,
 
     /* register for damage */
     init_damage_on_window(context->conn, window);
+
+    /* note the shape, and register for re-shape */
+    _xcwm_window_set_shape(window, 1);
+    init_shape_on_window(context->conn, window);
 
     /* add window to window list for this context */
     window = _xcwm_add_window(window);
@@ -269,6 +278,9 @@ _xcwm_window_release(xcwm_window_t *window)
         return;
     }
 
+    if (window->shape)
+        free(window->shape);
+
     if (window->name) {
         free(window->name);
     }
@@ -364,6 +376,16 @@ xcb_size_hints_t const *
 xcwm_window_get_sizing(xcwm_window_t const *window)
 {
     return &window->size_hints;
+}
+
+xcb_rectangle_iterator_t
+xcwm_window_get_shape(xcwm_window_t const *window)
+{
+    if (window->shape)
+        return xcb_shape_get_rectangles_rectangles_iterator(window->shape);
+
+    xcb_rectangle_iterator_t empty_iterator = {0,0,0};
+    return empty_iterator;
 }
 
 void
@@ -575,4 +597,50 @@ init_damage_on_window(xcb_connection_t *conn, xcwm_window_t *window)
     window->dmg_bounds.y = 0;
     window->dmg_bounds.width = 0;
     window->dmg_bounds.height = 0;
+}
+
+void
+init_shape_on_window(xcb_connection_t *conn, xcwm_window_t *window)
+{
+    xcb_void_cookie_t cookie = xcb_shape_select_input(conn, window->window_id, 1 /* ShapeNotify */);
+
+    _xcwm_request_check(conn, cookie,
+                        "Could not select shape events on window");
+}
+
+void
+_xcwm_window_set_shape(xcwm_window_t *window, uint8_t shaped)
+{
+    if (window->shape)
+        free(window->shape);
+
+    /* If shaped == FALSE, window is unshaped and we don't need to ask to find shaped region */
+    if (shaped)
+    {
+        xcb_shape_get_rectangles_cookie_t cookie = xcb_shape_get_rectangles(window->context->conn,
+                                                                            window->window_id,
+                                                                            XCB_SHAPE_SK_BOUNDING);
+
+        xcb_shape_get_rectangles_reply_t *reply = xcb_shape_get_rectangles_reply(window->context->conn,
+                                                                                cookie,
+                                                                                NULL);
+
+        /* ... but unfortunately, there is no way to ask if a window is shaped initially, so
+           we have to check if we got exactly 1 rectangle which is the same as the window bounds
+           and treat that as unshaped, as well */
+        xcb_rectangle_iterator_t ri = xcb_shape_get_rectangles_rectangles_iterator(reply);
+        if ((ri.rem == 0) ||
+            ((ri.rem == 1) && (ri.data->x <= 0) && (ri.data->y <= 0)
+             && (ri.data->width >= window->bounds.width) && (ri.data->height >= window->bounds.height))) {
+            printf("window 0x%08x is actually unshaped\n", window->window_id);
+            window->shape = 0;
+            free(reply);
+        } else
+        {
+            window->shape = reply;
+        }
+    } else
+    {
+        window->shape = 0;
+    }
 }

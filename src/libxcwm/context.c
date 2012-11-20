@@ -101,6 +101,8 @@ xcwm_context_open(char *display)
 
     _xcwm_init_xfixes(root_context);
 
+    _xcwm_init_shape(root_context);
+
     /* Add the root window to our list of windows being managed */
     _xcwm_add_window(root_context->root_window);
 
