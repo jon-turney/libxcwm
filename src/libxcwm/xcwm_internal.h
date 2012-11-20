@@ -66,6 +66,7 @@ struct xcwm_context_t {
     int conn_screen;
     xcwm_window_t *root_window;
     int damage_event_mask;
+    int shape_event;
     xcb_window_t wm_cm_window;
     xcwm_wm_atoms_t atoms;
 };
@@ -90,6 +91,7 @@ struct xcwm_window_t {
     void *local_data;   /* Area for data client cares about */
     unsigned int opacity;
     xcb_pixmap_t composite_pixmap_id;
+    xcb_shape_get_rectangles_reply_t *shape;
 };
 
 /**
@@ -186,6 +188,13 @@ _xcwm_init_composite(xcwm_context_t *contxt);
  */
 void
 _xcwm_init_xfixes(xcwm_context_t *contxt);
+
+/**
+ * Initialize the shape extension.
+ * @param contxt The context
+ */
+void
+_xcwm_init_shape(xcwm_context_t *contxt);
 
 /****************
 * event_loop.c
@@ -289,6 +298,13 @@ void
 _xcwm_resize_window(xcb_connection_t *conn, xcb_window_t window,
                     int x, int y, int width, int height);
 
+/**
+ * Update the window shape
+ * @param window The id of window to resize
+ * @param shaped TRUE if the window is shaped
+ */
+void
+_xcwm_window_set_shape(xcwm_window_t *window, uint8_t shaped);
 
 /****************
  * atoms.c

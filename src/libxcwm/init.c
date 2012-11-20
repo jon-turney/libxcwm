@@ -118,12 +118,34 @@ _xcwm_init_composite(xcwm_context_t *contxt)
 void
 _xcwm_init_xfixes(xcwm_context_t *contxt)
 {
+    xcb_query_extension_reply_t *reply =
+        _xcwm_init_extension(contxt->conn, "XFIXES");
+
     xcb_xfixes_query_version_cookie_t cookie =
         xcb_xfixes_query_version(contxt->conn, 4, 0);
 
-    xcb_xfixes_query_version_reply_t *reply =
+    xcb_xfixes_query_version_reply_t *version_reply =
         xcb_xfixes_query_version_reply(contxt->conn, cookie, NULL);
 
+    free(version_reply);
+    free(reply);
+}
+
+void
+_xcwm_init_shape(xcwm_context_t *contxt)
+{
+    xcb_query_extension_reply_t *reply =
+        _xcwm_init_extension(contxt->conn, "SHAPE");
+
+    xcb_shape_query_version_cookie_t cookie =
+        xcb_shape_query_version(contxt->conn);
+
+    xcb_shape_query_version_reply_t *version_reply =
+        xcb_shape_query_version_reply(contxt->conn, cookie, NULL);
+
+    contxt->shape_event = reply->first_event + XCB_SHAPE_NOTIFY;
+
+    free(version_reply);
     free(reply);
 }
 

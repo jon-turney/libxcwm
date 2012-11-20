@@ -253,4 +253,12 @@ xcwm_window_deiconify(xcwm_window_t *window);
 unsigned int
 xcwm_window_get_opacity(xcwm_window_t const *window);
 
+/**
+ * Get the shape of the window.
+ * @param window The window to get shape data for.
+ * @return The window shape, or 0 if unshaped
+ */
+xcb_rectangle_iterator_t
+xcwm_window_get_shape(xcwm_window_t const *window);
+
 #endif  /* _XCWM_WINDOW_H_ */

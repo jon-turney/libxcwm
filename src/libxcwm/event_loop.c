@@ -195,7 +195,8 @@ run_event_loop(void *thread_arg_struct)
     xcb_flush(event_conn);
 
     while ((evt = xcb_wait_for_event(event_conn))) {
-        if ((evt->response_type & ~0x80) == context->damage_event_mask) {
+        uint8_t response_type = evt->response_type  & ~0x80;
+        if (response_type == context->damage_event_mask) {
             xcb_damage_notify_event_t *dmgevnt =
                 (xcb_damage_notify_event_t *)evt;
 
@@ -271,8 +272,21 @@ run_event_loop(void *thread_arg_struct)
             callback_ptr(&return_evt);
 
         }
+        else if (response_type == context->shape_event) {
+            xcb_shape_notify_event_t *shapeevnt =
+                (xcb_shape_notify_event_t *)evt;
+
+            if (shapeevnt->shape_kind == XCB_SHAPE_SK_BOUNDING) {
+                xcwm_window_t *window = _xcwm_get_window_node_by_window_id(shapeevnt->affected_window);
+                _xcwm_window_set_shape(window, shapeevnt->shaped);
+
+                return_evt.event_type = XCWM_EVENT_WINDOW_SHAPE;
+                return_evt.window = window;
+                callback_ptr(&return_evt);
+            }
+        }
         else {
-            switch (evt->response_type & ~0x80) {
+            switch (response_type) {
             case 0:
             {
                 /* Error case. Something very bad has happened. Spit
