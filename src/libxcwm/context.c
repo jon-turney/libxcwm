@@ -111,8 +111,13 @@ xcwm_context_open(char *display)
 
     _xcwm_atoms_init(root_context);
 
+    /* Select for XFIXES cursor notify events */
+    /* We get notified on all cursor changes, irrespective of which window we select on */
+    xcb_xfixes_select_cursor_input(conn, root_window_id, XCB_XFIXES_CURSOR_NOTIFY_MASK_DISPLAY_CURSOR);
+
     return root_context;
 }
+
 /* Close all windows, the connection, as well as the event loop */
 void
 xcwm_context_close(xcwm_context_t *context)

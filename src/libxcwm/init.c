@@ -127,6 +127,8 @@ _xcwm_init_xfixes(xcwm_context_t *contxt)
     xcb_xfixes_query_version_reply_t *version_reply =
         xcb_xfixes_query_version_reply(contxt->conn, cookie, NULL);
 
+    contxt->fixes_event_base = reply->first_event + XCB_XFIXES_SELECTION_NOTIFY;
+
     free(version_reply);
     free(reply);
 }

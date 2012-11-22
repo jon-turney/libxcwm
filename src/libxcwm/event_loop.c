@@ -285,6 +285,14 @@ run_event_loop(void *thread_arg_struct)
                 callback_ptr(&return_evt);
             }
         }
+        else if (response_type == context->fixes_event_base + XCB_XFIXES_CURSOR_NOTIFY) {
+            /* xcb_xfixes_cursor_notify_event_t *cursorevnt = */
+            /*     (xcb_xfixes_cursor_notify_event_t *)evt; */
+
+            return_evt.event_type = XCWM_EVENT_CURSOR;
+            return_evt.window = NULL;
+            callback_ptr(&return_evt);
+        }
         else {
             switch (response_type) {
             case 0:
