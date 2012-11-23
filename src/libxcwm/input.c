@@ -49,7 +49,7 @@ xcwm_input_key_event(xcwm_context_t *context, uint8_t code, int state)
 }
 
 void
-xcwm_input_mouse_button_event(xcwm_window_t *window,
+xcwm_input_mouse_button_event(xcwm_context_t *context,
                               int button, int state)
 {
     int button_state;
@@ -60,12 +60,11 @@ xcwm_input_mouse_button_event(xcwm_window_t *window,
     else {
         button_state = XCB_BUTTON_RELEASE;
     }
-    /* FIXME: Why are we passing a specifing window ID here, when
-     * other handlers use either the root window or none. */
-    xcb_test_fake_input(window->context->conn, button_state, button,
+
+    xcb_test_fake_input(context->conn, button_state, button,
                         XCB_CURRENT_TIME,
-                        window->window_id, 0, 0, 0);
-    xcb_flush(window->context->conn);
+                        XCB_NONE, 0, 0, 0);
+    xcb_flush(context->conn);
     /* printf("Injected mouse event - button %d, state: %d\n", */
     /*        button, state); */
 }
