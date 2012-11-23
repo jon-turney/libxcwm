@@ -245,7 +245,7 @@
     int buttonInt = [mouseButton intValue];
 
     dispatch_async(xcwmDispatchQueue,
-                   ^{ xcwm_input_mouse_button_event (window,
+                   ^{ xcwm_input_mouse_button_event (rootContext,
                                                      buttonInt,
                                                      1);
                       ;
@@ -270,7 +270,7 @@
     int buttonInt = [mouseButton intValue];
 
     dispatch_async(xcwmDispatchQueue,
-                   ^{ xcwm_input_mouse_button_event (window,
+                   ^{ xcwm_input_mouse_button_event (rootContext,
                                                      buttonInt,
                                                      0);
                    });
