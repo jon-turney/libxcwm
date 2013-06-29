@@ -64,6 +64,15 @@ xcwm_image_t *
 xcwm_image_copy_damaged(xcwm_window_t *window);
 
 /**
+ * Returns a part of a window's image
+ * @param window The window to get image from.
+ * @param area The area of the window to get image from.
+ * @return an xcwm_image_t with an the image of a window
+ */
+xcwm_image_t *
+xcwm_image_copy_partial (xcwm_window_t *window, xcwm_rect_t *area);
+
+/**
  * Free the memory used by an xcwm_image_t created
  * during a call to xcwm_image_get_*.
  * @param image The image to be freed.

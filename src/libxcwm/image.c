@@ -33,67 +33,23 @@
 #include <xcb/xcb_image.h>
 #include "xcwm_internal.h"
 
-
 xcwm_image_t *
-xcwm_image_copy_full(xcwm_window_t *window)
-{
-
-    xcb_get_geometry_reply_t *geom_reply;
-    xcb_image_t *image;
-
-    geom_reply = _xcwm_get_window_geometry(window->context->conn,
-                                           window->window_id);
-
-    if (!geom_reply)
-        return NULL;
-
-    xcb_flush(window->context->conn);
-    /* Get the full image of the window */
-    image = xcb_image_get(window->context->conn,
-                          window->composite_pixmap_id,
-                          0,
-                          0,
-                          geom_reply->width,
-                          geom_reply->height,
-                          (unsigned int)~0L,
-                          XCB_IMAGE_FORMAT_Z_PIXMAP);
-
-    if (!image) {
-        return NULL;
-    }
-
-    xcwm_image_t * xcwm_image = malloc(sizeof(xcwm_image_t));
-
-    xcwm_image->image = image;
-    xcwm_image->x = geom_reply->x;
-    xcwm_image->y = geom_reply->y;
-    xcwm_image->width = geom_reply->width;
-    xcwm_image->height = geom_reply->height;
-
-    free(geom_reply);
-
-    return xcwm_image;
-}
-
-xcwm_image_t *
-xcwm_image_copy_damaged(xcwm_window_t *window)
+xcwm_image_copy_partial(xcwm_window_t *window, xcwm_rect_t *area)
 {
     xcb_image_t *image;
-
-    xcb_flush(window->context->conn);
 
     /* Return null if image is 0 by 0 */
-    if (window->dmg_bounds.width == 0 || window->dmg_bounds.height == 0) {
+    if (area->width == 0 || area->height == 0) {
         return NULL;
     }
 
-    /* Get the image of the damaged area of the window */
+    /* Get the image of the specified area of the window */
     image = xcb_image_get(window->context->conn,
                           window->composite_pixmap_id,
-                          window->dmg_bounds.x,
-                          window->dmg_bounds.y,
-                          window->dmg_bounds.width,
-                          window->dmg_bounds.height,
+                          area->x,
+                          area->y,
+                          area->width,
+                          area->height,
                           (unsigned int)~0L,
                           XCB_IMAGE_FORMAT_Z_PIXMAP);
 
@@ -105,19 +61,59 @@ xcwm_image_copy_damaged(xcwm_window_t *window)
     xcwm_image_t * xcwm_image = malloc(sizeof(xcwm_image_t));
 
     xcwm_image->image = image;
-    xcwm_image->x = window->dmg_bounds.x;
-    xcwm_image->y = window->dmg_bounds.y;
-    xcwm_image->width = window->dmg_bounds.width;
-    xcwm_image->height = window->dmg_bounds.height;
+    xcwm_image->x = area->x;
+    xcwm_image->y = area->y;
+    xcwm_image->width = area->width;
+    xcwm_image->height = area->height;
 
     return xcwm_image;
+}
+
+xcwm_image_t *
+xcwm_image_copy_full(xcwm_window_t *window)
+{
+    xcb_get_geometry_reply_t *geom_reply;
+
+    geom_reply = _xcwm_get_window_geometry(window->context->conn,
+                                           window->window_id);
+
+    if (!geom_reply)
+        return NULL;
+
+    xcb_flush(window->context->conn);
+
+    xcwm_rect_t area;
+    area.x = 0;
+    area.y = 0;
+    area.width = geom_reply->width;
+    area.height = geom_reply->height;
+
+    /* Get the full image of the window */
+    xcwm_image_t *xcwm_image = xcwm_image_copy_partial(window, &area);
+
+    /* The x and y position of the window (unused, but historical) */
+    if (xcwm_image) {
+        xcwm_image->x = geom_reply->x;
+        xcwm_image->y = geom_reply->y;
+    }
+
+    free(geom_reply);
+
+    return xcwm_image;
+}
+
+xcwm_image_t *
+xcwm_image_copy_damaged(xcwm_window_t *window)
+{
+    xcb_flush(window->context->conn);
+
+    /* Get the image of the damaged area of the window */
+    return xcwm_image_copy_partial(window, &(window->dmg_bounds));
 }
 
 void
 xcwm_image_destroy(xcwm_image_t * image)
 {
-
     xcb_image_destroy(image->image);
     free(image);
 }
-
