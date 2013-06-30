@@ -42,7 +42,7 @@ xcwm_keyboard_set_mapping (xcwm_context_t *context,
 
     xcb_void_cookie_t cookie;
     xcb_generic_error_t *error;
-    
+
     cookie = xcb_change_keyboard_mapping_checked(context->conn,
                                                  num_keycodes,
                                                  first_keycode,

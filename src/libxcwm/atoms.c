@@ -1,6 +1,6 @@
 /* Copyright (c) 2013 Jess VanDerwalker <jvanderw@freedesktop.org>
  *
- * atom.c
+ * atoms.c
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
@@ -92,7 +92,7 @@ _xcwm_atoms_init(xcwm_context_t *context)
                                      atom_cookies, &error)) {
         return error->major_code;;
     }
-    
+
     /* Set the _NET_SUPPORTED atom for this context
      * Most of these are defined as MUSTs in the
      * EWMH standards for window managers.
@@ -258,7 +258,7 @@ _xcwm_atoms_set_wm_delete(xcwm_window_t *window)
             if (reply.atoms[i] == window->context->atoms->wm_delete_window_atom) {
                 window->wm_delete_set = 1;
                 break;
-            } 
+            }
         }
     } else {
         window->wm_delete_set = 0;
@@ -345,7 +345,7 @@ setup_window_type(xcwm_window_t *window)
             }
         }
     }
-}    
+}
 
 void
 set_window_size_hints(xcwm_window_t *window)
@@ -403,7 +403,7 @@ _xcwm_atoms_set_wm_state(xcwm_window_t *window, xcwm_window_state_t state)
         ewmh_atom_cnt = 1;
         icccm_state[0] = XCB_ICCCM_WM_STATE_ICONIC;
         icccm_state[1] = XCB_NONE;
-        
+
         ewmh_state = calloc(ewmh_atom_cnt, sizeof(xcb_atom_t));
         ewmh_state[0] = window->context->atoms->ewmh_conn._NET_WM_STATE_HIDDEN;
         break;
@@ -433,7 +433,7 @@ _xcwm_atoms_set_wm_state(xcwm_window_t *window, xcwm_window_state_t state)
                           ewmh_state);
 
     xcb_flush(window->context->conn);
-        
+
     if (ewmh_state) {
         free(ewmh_state);
     }

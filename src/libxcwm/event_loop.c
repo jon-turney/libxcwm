@@ -420,7 +420,7 @@ run_event_loop(void *thread_arg_struct)
             {
                 xcb_unmap_notify_event_t *notify =
                     (xcb_unmap_notify_event_t *)evt;
-                
+
                 xcwm_window_t *window =
                     _xcwm_window_remove(event_conn, notify->window);
 

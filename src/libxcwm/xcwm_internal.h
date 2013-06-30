@@ -204,7 +204,7 @@ xcwm_window_t *
 _xcwm_add_window(xcwm_window_t *window);
 
 /**
- * Remove a context to the context_list using the window's id.
+ * Remove a window from the context_list using the window's id.
  * @param window_id The window_id of the window which should
  * be removed from the context_list
  */
@@ -212,8 +212,8 @@ void
 _xcwm_remove_window_node(xcb_window_t window_id);
 
 /**
- * Find a context in the doubly linked list using its window_id.
- * @param window_id The window_id of the context which should
+ * Find a window in the doubly linked list using its window_id.
+ * @param window_id The window_id of the window
  * @return Pointer to window (if found), NULL if not found.
  */
 xcwm_window_t *
@@ -224,10 +224,10 @@ _xcwm_get_window_node_by_window_id(xcb_window_t window_id);
 ****************/
 
 /**
- * Create a new context for the window specified in the event.
- * @param context The context window was created in.
+ * Create a new window
+ * @param context The context the window was created in.
  * @param new_window ID of the window being created.
- * @param parent ID of the new windows parent.
+ * @param parent ID of the new window's parent.
  * @return Pointer to new window. NULL if window already exists.
  */
 xcwm_window_t *
@@ -238,9 +238,8 @@ _xcwm_window_create(xcwm_context_t *context, xcb_window_t new_window,
  * Destroy the damage object associated with the window and
  * remove the window from the list of managed windows. Memory allocated
  * to the window must be removed with a call to _xcwm_window_release().
- * Call the remove function in context_list.c
  * @param conn The connection to xserver
- * @param event The destroy notify event for the window
+ * @param window The window being removed
  * @return Pointer to the window that was removed from the list, NULL if
  * window isn't being managed
  */
@@ -294,14 +293,14 @@ void
 _xcwm_atoms_init_window(xcwm_window_t *window);
 
 /**
- * Get and set the WM_NAME of the window.
+ * Set the WM_NAME of the window.
  * @param window The window
  */
 void
 _xcwm_atoms_set_window_name(xcwm_window_t *window);
 
 /**
- * Get the set the WM_DELETE_WINDOWatom for the winodw.
+ * Set the WM_DELETE_WINDOW atom for the window.
  * @param window The window.
  */
 void

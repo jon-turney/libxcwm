@@ -1,6 +1,6 @@
 /* Copyright (c) 2012 Apple Inc
  *
- * xcwm/event.h
+ * xcwm/keyboard.h
  *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation
