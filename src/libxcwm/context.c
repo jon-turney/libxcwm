@@ -52,7 +52,7 @@ xcwm_context_open(char *display)
 
     if (xcb_connection_has_error(conn)) {
       fprintf(stderr, "Cannot open display\n");
-      exit(1);
+      return NULL;
     }
 
     root_screen = xcb_aux_get_screen(conn, conn_screen);
@@ -76,7 +76,7 @@ xcwm_context_open(char *display)
                             "Could not set root window mask.")) {
         fprintf(stderr, "Is another window manager running?\n");
         xcb_disconnect(conn);
-        exit(1);
+        return NULL;
     }
 
     xcb_flush(conn);
@@ -99,19 +99,25 @@ xcwm_context_open(char *display)
     context->root_window->bounds.x = 0;
     context->root_window->bounds.y = 0;
 
-    _xcwm_init_composite(context);
+    if (!_xcwm_init_composite(context))
+        goto fail;
 
-    _xcwm_init_damage(context);
+    if (!_xcwm_init_damage(context))
+        goto fail;
 
-    _xcwm_init_xfixes(context);
+    if (!_xcwm_init_xfixes(context))
+        goto fail;
 
-    _xcwm_init_shape(context);
+    if (!_xcwm_init_shape(context))
+        goto fail;
 
     /* Add the root window to our list of windows being managed */
     _xcwm_add_window(context->root_window);
 
-    _xcwm_init_extension(conn, "XTEST");
-    _xcwm_init_extension(conn, "XKEYBOARD");
+    if (!_xcwm_init_extension(conn, "XTEST"))
+        goto fail;
+    if (!_xcwm_init_extension(conn, "XKEYBOARD"))
+        goto fail;
 
     _xcwm_atoms_init(context);
 
@@ -120,6 +126,12 @@ xcwm_context_open(char *display)
     xcb_xfixes_select_cursor_input(conn, root_window_id, XCB_XFIXES_CURSOR_NOTIFY_MASK_DISPLAY_CURSOR);
 
     return context;
+
+fail:
+    free(context->root_window);
+    free(context);
+
+    return NULL;
 }
 
 /* Close all windows, the connection, as well as the event loop */

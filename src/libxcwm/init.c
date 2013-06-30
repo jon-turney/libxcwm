@@ -48,7 +48,7 @@ _xcwm_init_extension(xcb_connection_t *conn, const char *extension_name)
     if (!reply->present) {
         free(reply);
         printf("%s extension not present\n", extension_name);
-        exit(1);
+        return NULL;
     }
     else {
         printf("%s extension present\n", extension_name);
@@ -57,12 +57,14 @@ _xcwm_init_extension(xcb_connection_t *conn, const char *extension_name)
     return reply;
 }
 
-void
+int
 _xcwm_init_damage(xcwm_context_t *contxt)
 {
 
     xcb_query_extension_reply_t *reply =
         _xcwm_init_extension(contxt->conn, "DAMAGE");
+    if (!reply)
+        return 0;
 
     xcb_damage_query_version_cookie_t version_cookie =
         xcb_damage_query_version(contxt->conn,
@@ -90,13 +92,16 @@ _xcwm_init_damage(xcwm_context_t *contxt)
     /* Assign this damage object to the roots window's context */
     contxt->root_window->damage = damage;
 
+    return 1;
 }
 
-void
+int
 _xcwm_init_composite(xcwm_context_t *contxt)
 {
     xcb_query_extension_reply_t *reply =
         _xcwm_init_extension(contxt->conn, "Composite");
+    if (!reply)
+        return 0;
 
     xcb_composite_query_version_cookie_t cookie =
         xcb_composite_query_version(contxt->conn,
@@ -113,13 +118,16 @@ _xcwm_init_composite(xcwm_context_t *contxt)
     free(version_reply);
     free(reply);
 
+    return 1;
 }
 
-void
+int
 _xcwm_init_xfixes(xcwm_context_t *contxt)
 {
     xcb_query_extension_reply_t *reply =
         _xcwm_init_extension(contxt->conn, "XFIXES");
+    if (!reply)
+        return 0;
 
     xcb_xfixes_query_version_cookie_t cookie =
         xcb_xfixes_query_version(contxt->conn, 4, 0);
@@ -131,13 +139,17 @@ _xcwm_init_xfixes(xcwm_context_t *contxt)
 
     free(version_reply);
     free(reply);
+
+    return 1;
 }
 
-void
+int
 _xcwm_init_shape(xcwm_context_t *contxt)
 {
     xcb_query_extension_reply_t *reply =
         _xcwm_init_extension(contxt->conn, "SHAPE");
+    if (!reply)
+        return 0;
 
     xcb_shape_query_version_cookie_t cookie =
         xcb_shape_query_version(contxt->conn);
@@ -149,5 +161,7 @@ _xcwm_init_shape(xcwm_context_t *contxt)
 
     free(version_reply);
     free(reply);
+
+    return 1;
 }
 

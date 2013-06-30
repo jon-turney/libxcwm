@@ -162,7 +162,7 @@ _xcwm_request_check(xcb_connection_t *conn, xcb_void_cookie_t cookie,
  * Initializes an extension on the xserver.
  * @param conn The connection to the xserver.
  * @param extension_name The string specifying the name of the extension.
- * @return The reply structure
+ * @return The reply structure, NULL if extension not available
  */
 xcb_query_extension_reply_t *
 _xcwm_init_extension(xcb_connection_t *conn, const char *extension_name);
@@ -170,30 +170,34 @@ _xcwm_init_extension(xcb_connection_t *conn, const char *extension_name);
 /**
  * Initializes the damage extension.
  * @param contxt  The context containing.
+ * @return non-zero if successful
  */
-void
+int
 _xcwm_init_damage(xcwm_context_t *contxt);
 
 /**
  * Initializes the composite extension on the context containg
  * the root window.
  * @param contxt The contxt containing the root window
+ * @return non-zero if successful
  */
-void
+int
 _xcwm_init_composite(xcwm_context_t *contxt);
 
 /**
  * Initialize the xfixes extension.
  * @param contxt The context
+ * @return non-zero if successful
  */
-void
+int
 _xcwm_init_xfixes(xcwm_context_t *contxt);
 
 /**
  * Initialize the shape extension.
  * @param contxt The context
+ * @return non-zero if successful
  */
-void
+int
 _xcwm_init_shape(xcwm_context_t *contxt);
 
 /****************
