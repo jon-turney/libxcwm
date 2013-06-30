@@ -39,10 +39,6 @@
 void
 set_window_event_masks(xcb_connection_t *conn, xcwm_window_t *window);
 
-/* Set the WM_NAME property in context */
-void
-set_wm_name_in_context(xcb_connection_t *conn, xcwm_window_t *window);
-
 /* Determine values of window WM_SIZE_HINTS */
 void
 set_wm_size_hints_for_window(xcb_connection_t *conn, xcwm_window_t *window);
