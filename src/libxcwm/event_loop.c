@@ -28,6 +28,8 @@
 #endif
 
 #include <pthread.h>
+#include <sys/shm.h>
+
 #include <xcwm/xcwm.h>
 #include <xcb/composite.h>
 #include "xcwm_internal.h"
@@ -105,19 +107,65 @@ _xcwm_event_stop_loop(void)
 static void
 _xcwm_window_composite_pixmap_release(xcwm_window_t *window)
 {
-  if (window->composite_pixmap_id)
-    {
+    /* Release composite pixmap */
+    if (window->composite_pixmap_id) {
       xcb_free_pixmap(window->context->conn, window->composite_pixmap_id);
       window->composite_pixmap_id = 0;
+    }
+
+    /* Release SHM resources */
+    if (window->context->has_shm) {
+        if (window->shminfo.shmseg) {
+            xcb_shm_detach(window->context->conn, window->shminfo.shmseg);
+            window->shminfo.shmseg = 0;
+        }
+
+        if (window->shminfo.shmaddr != (void *)-1) {
+            shmdt(window->shminfo.shmaddr);
+            window->shminfo.shmaddr = (void *)-1;
+        }
+
+        if (window->shminfo.shmid != -1) {
+            shmctl(window->shminfo.shmid, IPC_RMID, 0);
+            window->shminfo.shmid = -1;
+        }
     }
 }
 
 static void
 _xcwm_window_composite_pixmap_update(xcwm_window_t *window)
 {
-  _xcwm_window_composite_pixmap_release(window);
-  window->composite_pixmap_id = xcb_generate_id(window->context->conn);
-  xcb_composite_name_window_pixmap(window->context->conn, window->window_id, window->composite_pixmap_id);
+    _xcwm_window_composite_pixmap_release(window);
+
+    /* Assign a pixmap XID to the composite pixmap */
+    window->composite_pixmap_id = xcb_generate_id(window->context->conn);
+    xcb_composite_name_window_pixmap(window->context->conn, window->window_id, window->composite_pixmap_id);
+
+    if (window->context->has_shm)
+    {
+        /* Pre-compute the size of image data needed for this window */
+        xcb_image_t *image = xcb_image_create_native(window->context->conn,
+                                                 window->bounds.width,
+                                                 window->bounds.height,
+                                                 XCB_IMAGE_FORMAT_Z_PIXMAP,
+                                                 window->context->depth,
+                                                 NULL, ~0, NULL);
+        size_t image_size = image->size;
+        xcb_image_destroy(image);
+        printf("window 0x%08x requires %d bytes of SHM\n", window->window_id, image_size);
+
+        /* Allocate SHM resources */
+        window->shminfo.shmid = shmget(IPC_PRIVATE, image_size, IPC_CREAT | 0777);
+        if (window->shminfo.shmid < 0)
+            fprintf(stderr, "shmget failed\n");
+
+        window->shminfo.shmaddr = shmat(window->shminfo.shmid, 0, 0);
+        if (window->shminfo.shmaddr < 0)
+            fprintf(stderr, "shmget failed\n");
+
+        window->shminfo.shmseg = xcb_generate_id(window->context->conn);
+        xcb_shm_attach(window->context->conn, window->shminfo.shmseg, window->shminfo.shmid, 0);
+    }
 }
 
 /*

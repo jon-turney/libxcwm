@@ -119,6 +119,9 @@ xcwm_context_open(char *display)
     if (!_xcwm_init_extension(conn, "XKEYBOARD"))
         goto fail;
 
+    context->has_shm = (_xcwm_init_extension(conn, "MIT-SHM") != NULL);
+    context->depth = xcb_aux_get_depth(conn, root_screen);
+
     _xcwm_atoms_init(context);
 
     /* Select for XFIXES cursor notify events */

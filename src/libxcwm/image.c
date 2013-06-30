@@ -36,7 +36,7 @@
 xcwm_image_t *
 xcwm_image_copy_partial(xcwm_window_t *window, xcwm_rect_t *area)
 {
-    xcb_image_t *image;
+    xcb_image_t *image = NULL;
 
     /* Return null if image is 0 by 0 */
     if (area->width == 0 || area->height == 0) {
@@ -44,14 +44,55 @@ xcwm_image_copy_partial(xcwm_window_t *window, xcwm_rect_t *area)
     }
 
     /* Get the image of the specified area of the window */
-    image = xcb_image_get(window->context->conn,
-                          window->composite_pixmap_id,
-                          area->x,
-                          area->y,
-                          area->width,
-                          area->height,
-                          (unsigned int)~0L,
-                          XCB_IMAGE_FORMAT_Z_PIXMAP);
+
+    if (window->context->has_shm && window->shminfo.shmaddr) {
+        /*
+          A composite pixmap cannot be a shm pixmap, so we must use
+          xcb_image_shm_get to copy the image from the window's composite
+          pixmap to a shm image.
+
+          Rather than creating it every-time, we keep a shared memory
+          segment around which is of the right size for the window image.
+        */
+
+        /* Create an xcb_image_t for which we manage the data */
+        image = xcb_image_create_native(window->context->conn,
+                                        area->width,
+                                        area->height,
+                                        XCB_IMAGE_FORMAT_Z_PIXMAP,
+                                        window->context->depth,
+                                        NULL, ~0, NULL);
+        if (image) {
+            /* data is the shared memory */
+            image->data = window->shminfo.shmaddr;
+
+            /* Read image data from the composite pixmap into the shm image */
+            if (!xcb_image_shm_get(window->context->conn,
+                                   window->composite_pixmap_id,
+                                   image,
+                                   window->shminfo,
+                                   area->x,
+                                   area->y,
+                                   (unsigned int)~0L)) {
+                xcb_image_destroy(image);
+                image = NULL;
+            }
+        }
+    }
+
+    if (!image && window->context->has_shm)
+        printf("has_shm, but falling back to socket image\n");
+
+    /* If shm not available, or failed, use xcb_image_get() */
+    if (!image)
+        image = xcb_image_get(window->context->conn,
+                              window->composite_pixmap_id,
+                              area->x,
+                              area->y,
+                              area->width,
+                              area->height,
+                              (unsigned int)~0L,
+                              XCB_IMAGE_FORMAT_Z_PIXMAP);
 
     /* Failed to get a valid image, return null */
     if (!image) {

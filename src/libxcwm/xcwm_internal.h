@@ -69,6 +69,8 @@ struct xcwm_context_t {
     int fixes_event_base;
     xcb_window_t wm_cm_window;
     xcwm_wm_atoms_t atoms;
+    int has_shm;
+    int depth;
 };
 
 /**
@@ -92,6 +94,7 @@ struct xcwm_window_t {
     void *local_data;   /* Area for data client cares about */
     unsigned int opacity;
     xcb_pixmap_t composite_pixmap_id;
+    xcb_shm_segment_info_t shminfo;
     xcb_shape_get_rectangles_reply_t *shape;
 };
 

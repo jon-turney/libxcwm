@@ -120,6 +120,9 @@ _xcwm_window_create(xcwm_context_t *context, xcb_window_t new_window,
     window->notified_bounds = window->bounds;
     window->opacity = ~0;
     window->composite_pixmap_id = 0;
+    window->shminfo.shmseg = 0;
+    window->shminfo.shmaddr = (void *)-1;
+    window->shminfo.shmid = -1;
     window->local_data = 0;
     window->shape = 0;
 
