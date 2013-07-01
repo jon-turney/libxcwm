@@ -524,6 +524,17 @@ run_event_loop(void *thread_arg_struct)
         /* Free the event */
         free(evt);
     }
+
+    /* xcb_wait_for_event() returns NULL for I/O error */
+    printf("xcb_wait_for_event() failed, exiting event loop\n");
+
+    _event_thread = 0;
+
+    /* send event indicating we should shutdown */
+    return_evt.event_type = XCWM_EVENT_EXIT;
+    return_evt.window = 0;
+    callback_ptr(&return_evt);
+
     return NULL;
 }
 
