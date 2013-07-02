@@ -168,6 +168,43 @@ _xcwm_window_composite_pixmap_update(xcwm_window_t *window)
     }
 }
 
+static void
+_xcwm_window_change_state(xcwm_window_t *window, xcwm_window_state_t newstate, xcwm_event_cb_t callback_ptr)
+{
+    xcwm_event_t return_evt;
+
+    if (window->state == newstate)
+        return;
+
+    xcwm_window_state_t oldstate = window->state;
+    window->state = newstate;
+    _xcwm_atoms_set_wm_state(window, newstate);
+
+    if (newstate == XCWM_WINDOW_STATE_NORMAL)
+        xcb_map_window(window->context->conn, window->window_id);
+    else
+        xcb_unmap_window(window->context->conn, window->window_id);
+
+    if (oldstate == XCWM_WINDOW_STATE_WITHDRAWN) {
+        /* transitioned out of withdrawn, create the naive window */
+        return_evt.window = window;
+        return_evt.event_type = XCWM_EVENT_WINDOW_CREATE;
+        callback_ptr(&return_evt);
+    }
+    else if (newstate == XCWM_WINDOW_STATE_WITHDRAWN) {
+        /* transitioned into withdrawn, destroy the native window */
+        return_evt.event_type = XCWM_EVENT_WINDOW_DESTROY;
+        return_evt.window = window;
+        callback_ptr(&return_evt);
+    }
+    else {
+        /* iconify/deiconifiy, change state */
+        return_evt.event_type = XCWM_EVENT_WINDOW_STATE;
+        return_evt.window = window;
+        callback_ptr(&return_evt);
+    }
+}
+
 /*
   Generate a XCWM_EVENT_WINDOW_CREATE event for all
   existing mapped top-level windows when we start
@@ -194,29 +231,37 @@ _xcwm_windows_adopt(xcwm_context_t *context, xcwm_event_cb_t callback_ptr)
             continue;
         }
 
+        printf("window 0x%08x is %s\n", children[i], (attr->map_state == XCB_MAP_STATE_VIEWABLE) ? "mapped" : "withdrawn");
+
+        xcwm_window_t *window = _xcwm_window_create(context, children[i], context->root_window->window_id);
+        if (!window) {
+            continue;
+        }
+
         if (attr->map_state == XCB_MAP_STATE_VIEWABLE) {
-            printf("window 0x%08x viewable\n", children[i]);
-
             window->mapped = 1;
-
-            xcwm_window_t *window = _xcwm_window_create(context, children[i], context->root_window->window_id);
-            if (!window) {
-                continue;
-            }
 
             _xcwm_window_composite_pixmap_update(window);
 
-            xcwm_event_t return_evt;
-            return_evt.window = window;
-            return_evt.event_type = XCWM_EVENT_WINDOW_CREATE;
-
-            callback_ptr(&return_evt);
-
+            /* state of a mapped window must be normal */
+            _xcwm_window_change_state(window, XCWM_WINDOW_STATE_NORMAL, callback_ptr);
         }
         else {
-            printf("window 0x%08x non-viewable\n", children[i]);
-
             window->mapped = 0;
+
+            /*
+              state of an unmapped window must be either iconic or withdrawn
+              (careful: if the client didn't withdraw the window itself, we
+              must be sure to make it iconic, or the window will be lost...)
+            */
+            /*
+              XXX: saveset should map any iconic windows on WM exit, but...
+             */
+            xcwm_window_state_t state =  _xcwm_atoms_get_wm_state(window);
+            if (state != XCWM_WINDOW_STATE_WITHDRAWN)
+                state = XCWM_WINDOW_STATE_ICONIC;
+
+            _xcwm_window_change_state(window, state, callback_ptr);
         }
 
         free(attr);
@@ -408,12 +453,19 @@ run_event_loop(void *thread_arg_struct)
                 xcb_create_notify_event_t *notify =
                     (xcb_create_notify_event_t *)evt;
 
-                /* We don't actually allow our client to create its
-                 * window here, wait until the XCB_MAP_REQUEST */
-
                 if (EVENT_DEBUG) {
                     printf("CREATE_NOTIFY: XID 0x%08x\n", notify->window);
                 }
+
+                xcwm_window_t *window =
+                    _xcwm_get_window_node_by_window_id(notify->window);
+                if (window) {
+                    printf("Window XID %08x already exists when created?\n", notify->window);
+                    break;
+                }
+
+                window = _xcwm_window_create(context, notify->window,
+                                             notify->parent);
 
                 break;
             }
@@ -436,11 +488,6 @@ run_event_loop(void *thread_arg_struct)
                     break;
                 }
 
-                return_evt.event_type = XCWM_EVENT_WINDOW_DESTROY;
-                return_evt.window = window;
-
-                callback_ptr(&return_evt);
-
                 _xcwm_window_composite_pixmap_release(window);
 
                 // Release memory for the window
@@ -457,37 +504,18 @@ run_event_loop(void *thread_arg_struct)
                     printf("MAP_NOTIFY: XID 0x%08x\n", notify->window);
                 }
 
-                /* notify->event holds parent of the window */
-
                 xcwm_window_t *window =
                     _xcwm_get_window_node_by_window_id(notify->window);
 
                 if (!window)
-                {
-                    /*
-                      No MAP_REQUEST for override-redirect windows, so
-                      need to create the xcwm_window_t for it now
-                    */
-                    /* printf("MAP_NOTIFY without MAP_REQUEST\n"); */
-                    window =
-                        _xcwm_window_create(context, notify->window,
-                                            notify->event);
+                    break;
 
-                    if (window)
-                    {
-                        window->mapped = 1;
-                        _xcwm_window_composite_pixmap_update(window);
+                /* state of a mapped window must be normal */
+                _xcwm_window_change_state(window, XCWM_WINDOW_STATE_NORMAL, callback_ptr);
 
-                        return_evt.window = window;
-                        return_evt.event_type = XCWM_EVENT_WINDOW_CREATE;
-                        callback_ptr(&return_evt);
-                    }
-                }
-                else
-                {
-                    window->mapped = 1;
-                    _xcwm_window_composite_pixmap_update(window);
-                }
+                window->mapped = 1;
+
+                _xcwm_window_composite_pixmap_update(window);
 
                 break;
             }
@@ -501,19 +529,27 @@ run_event_loop(void *thread_arg_struct)
                     printf("MAP_REQEUST: XID 0x%08x\n", request->window);
                 }
 
-                /* Map the window */
-                xcb_map_window(context->conn, request->window);
-                xcb_flush(context->conn);
+                xcwm_window_t *window =
+                    _xcwm_get_window_node_by_window_id(request->window);
 
-                return_evt.window =
-                    _xcwm_window_create(context, request->window,
-                                        request->parent);
-                if (!return_evt.window) {
-                    break;
+                /*
+                  If state is withdrawn, we should take note of if WM_HINTS.initial_state,
+                  requests iconic state, otherwise set the state of the window to normal
+                */
+                xcwm_window_state_t state = XCWM_WINDOW_STATE_NORMAL;
+                if (window->state == XCWM_WINDOW_STATE_WITHDRAWN) {
+                    xcb_icccm_wm_hints_t hints;
+                    xcb_get_property_cookie_t cookie = xcb_icccm_get_wm_hints(event_conn, window->window_id);
+                    if (xcb_icccm_get_wm_hints_reply(event_conn, cookie, &hints, NULL)) {
+                        if (hints.initial_state == XCB_ICCCM_WM_STATE_ICONIC)
+                            state = XCWM_WINDOW_STATE_ICONIC;
+                    }
                 }
 
-                return_evt.event_type = XCWM_EVENT_WINDOW_CREATE;
-                callback_ptr(&return_evt);
+                _xcwm_window_change_state(window, state, callback_ptr);
+
+                xcb_flush(context->conn);
+
                 break;
             }
 
@@ -527,24 +563,33 @@ run_event_loop(void *thread_arg_struct)
                 }
 
                 xcwm_window_t *window =
-                    _xcwm_window_remove(event_conn, notify->window);
+                    _xcwm_get_window_node_by_window_id(notify->window);
 
                 if (!window) {
-                    /* Not a window in the list, don't try and destroy */
+                    /* Not a window in the list, don't try and unmap */
                     break;
                 }
 
                 window->mapped = 0;
 
-                return_evt.event_type = XCWM_EVENT_WINDOW_DESTROY;
-                return_evt.window = window;
+                /*
+                  Implementing ICCCM 4.1.4 is hard.
 
-                callback_ptr(&return_evt);
+                  It's not clear how we tell precisely if this UNMAP_NOTIFY comes from the WM or the
+                  client.
 
-                _xcwm_window_composite_pixmap_release(window);
+                  If this looks like the client calling XWithdrawWindow() (i.e it's a synthetic event)
+                  withdraw the window.
 
-                // Release memory for the window
-                _xcwm_window_release(window);
+                  If this looks like an UNMAP_NOTIFY we generated by us iconifying the window (i.e. we
+                  are in the iconic state), then do nothing.
+
+                */
+                if ((notify->response_type & 0x80) || (window->state != XCWM_WINDOW_STATE_ICONIC)) {
+                    /* Set the WM_STATE of the window to withdrawn */
+                    _xcwm_window_change_state(window, XCWM_WINDOW_STATE_WITHDRAWN, callback_ptr);
+                }
+
                 break;
             }
 
@@ -685,6 +730,35 @@ run_event_loop(void *thread_arg_struct)
 
             case XCB_MAPPING_NOTIFY:
                 break;
+
+            case XCB_CLIENT_MESSAGE:
+            {
+                xcb_client_message_event_t *msg =
+                    (xcb_client_message_event_t *)evt;
+
+                if (EVENT_DEBUG) {
+                    char *name = _xcwm_get_atom_name(event_conn, msg->type);
+                    printf("CLIENT_MESSAGE: XID 0x%08x, type atom '%s' (%d)\n",
+                           msg->window, name, msg->type);
+                    free(name);
+                }
+
+                // handle WM_CHANGE_STATE normal->iconic
+                if (msg->type == context->atoms.wm_change_state_atom)
+                {
+                    xcwm_window_t *window =
+                        _xcwm_get_window_node_by_window_id(msg->window);
+
+                    if (!window)
+                        break;
+
+                    if (msg->data.data32[0] == XCB_ICCCM_WM_STATE_ICONIC)
+                        _xcwm_window_change_state(window, XCWM_WINDOW_STATE_ICONIC, callback_ptr);
+                    else
+                        printf("CLIENT_MESSAGE: WM_CHANGE_STATE unexpected state %d/n", msg->data.data32[0]);
+                }
+            }
+            break;
 
             default:
             {

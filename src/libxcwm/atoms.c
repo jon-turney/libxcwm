@@ -196,6 +196,9 @@ _xcwm_atoms_init(xcwm_context_t *context)
     /* WM_STATE atom */
     context->atoms.wm_state_atom = _xcwm_atom_get(context, "WM_STATE");
 
+    /* WM_CHANGE_STATE atom */
+    context->atoms.wm_change_state_atom = _xcwm_atom_get(context, "WM_CHANGE_STATE");
+
     return 0;
 }
 
@@ -475,6 +478,9 @@ set_window_opacity(xcwm_window_t *window, xcwm_property_t *property)
 void
 _xcwm_atoms_set_wm_state(xcwm_window_t *window, xcwm_window_state_t state)
 {
+    printf("_xcwm_atoms_set_wm_state: XID 0x%08x state %d\n",
+           window->window_id, state);
+
     /* xcb_icccm_wm_state_t icccm_state; */
 
     uint32_t icccm_state[2];
@@ -488,7 +494,6 @@ _xcwm_atoms_set_wm_state(xcwm_window_t *window, xcwm_window_state_t state)
         icccm_state[1] = XCB_NONE;
         break;
     }
-
     case XCWM_WINDOW_STATE_ICONIC:
     {
         ewmh_atom_cnt = 1;
@@ -497,6 +502,12 @@ _xcwm_atoms_set_wm_state(xcwm_window_t *window, xcwm_window_state_t state)
 
         ewmh_state = calloc(ewmh_atom_cnt, sizeof(xcb_atom_t));
         ewmh_state[0] = window->context->atoms.ewmh_conn._NET_WM_STATE_HIDDEN;
+        break;
+    }
+    case XCWM_WINDOW_STATE_WITHDRAWN:
+    {
+        icccm_state[0] = XCB_ICCCM_WM_STATE_WITHDRAWN;
+        icccm_state[1] = XCB_NONE;
         break;
     }
     default:
@@ -528,6 +539,51 @@ _xcwm_atoms_set_wm_state(xcwm_window_t *window, xcwm_window_state_t state)
     if (ewmh_state) {
         free(ewmh_state);
     }
+}
+
+xcwm_window_state_t
+_xcwm_atoms_get_wm_state(xcwm_window_t *window)
+{
+    xcwm_window_state_t state = XCWM_WINDOW_STATE_WITHDRAWN;
+    xcb_get_property_cookie_t cookie;
+
+    cookie = xcb_get_property(window->context->conn,
+                              0,
+                              window->window_id,
+                              window->context->atoms.wm_state_atom,
+                              window->context->atoms.wm_state_atom,
+                              0L,
+                              1L);
+
+    xcb_get_property_reply_t *reply = xcb_get_property_reply(window->context->conn, cookie, NULL);
+    if (reply) {
+        int length = xcb_get_property_value_length(reply);
+        uint32_t *value = xcb_get_property_value(reply);
+
+        if (value && length == 4) {
+            switch (*value) {
+            case XCB_ICCCM_WM_STATE_NORMAL:
+                state = XCWM_WINDOW_STATE_NORMAL;
+                break;
+
+            case XCB_ICCCM_WM_STATE_ICONIC:
+                state = XCWM_WINDOW_STATE_ICONIC;
+                break;
+
+            default:
+                printf("window XID %08x has an unknown WM_STATE value %d\n", window->window_id, *value);
+                /* fall through */
+
+            case XCB_ICCCM_WM_STATE_WITHDRAWN:
+                state = XCWM_WINDOW_STATE_WITHDRAWN;
+                break;
+            }
+        }
+
+        free(reply);
+    }
+
+    return state;
 }
 
 void

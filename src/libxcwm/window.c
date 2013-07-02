@@ -126,6 +126,7 @@ _xcwm_window_create(xcwm_context_t *context, xcb_window_t new_window,
     window->local_data = 0;
     window->shape = 0;
     window->mapped = 0;
+    window->state = XCWM_WINDOW_STATE_WITHDRAWN;
 
     /* Find and set the parent */
     window->parent = _xcwm_get_window_node_by_window_id(parent);
@@ -158,9 +159,6 @@ _xcwm_window_create(xcwm_context_t *context, xcb_window_t new_window,
 
     /* add window to window list for this context */
     window = _xcwm_add_window(window);
-
-    /* Set the WM_STATE of the window to normal */
-    _xcwm_atoms_set_wm_state(window, XCWM_WINDOW_STATE_NORMAL);
 
     return window;
 }
@@ -537,18 +535,40 @@ xcwm_window_constrain_sizing(xcwm_window_t const *window, int *widthp, int *heig
 }
 #undef makemult
 
-
 void
 xcwm_window_iconify(xcwm_window_t *window)
 {
-    _xcwm_atoms_set_wm_state(window, XCWM_WINDOW_STATE_ICONIC);
+    if (window->state != XCWM_WINDOW_STATE_ICONIC) {
+        xcb_client_message_event_t *msg = malloc(32);
+
+        msg->type = XCB_CLIENT_MESSAGE;
+        msg->window = window->window_id;
+        msg->type = window->context->atoms.wm_change_state_atom;
+        msg->format = 32;
+        msg->data.data32[0] = XCB_ICCCM_WM_STATE_ICONIC;
+
+        xcb_send_event(window->context->conn, 0, window->window_id, 0, (char *)msg);
+        xcb_flush(window->context->conn);
+
+        free(msg);
+    }
 }
 
 void
 xcwm_window_deiconify(xcwm_window_t *window)
 {
-    _xcwm_atoms_set_wm_state(window, XCWM_WINDOW_STATE_NORMAL);
+    if (window->state != XCWM_WINDOW_STATE_NORMAL) {
+        xcb_map_window(window->context->conn, window->window_id);
+    }
 }
+
+xcwm_window_state_t
+xcwm_window_get_state(xcwm_window_t *window)
+{
+    return window->state;
+}
+
+
 
 /* Resize the window on server side */
 void

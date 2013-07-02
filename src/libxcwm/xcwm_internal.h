@@ -53,6 +53,7 @@ struct xcwm_wm_atoms_t {
     xcb_atom_t wm_delete_window_atom;
     xcb_atom_t wm_state_atom;
     xcb_atom_t net_wm_window_type_splashscreen;
+    xcb_atom_t wm_change_state_atom;
     xcb_ewmh_connection_t ewmh_conn;
 };
 typedef struct xcwm_wm_atoms_t xcwm_wm_atoms_t;
@@ -98,6 +99,7 @@ struct xcwm_window_t {
     xcb_shm_segment_info_t shminfo;
     xcb_shape_get_rectangles_reply_t *shape;
     int mapped;
+    xcwm_window_state_t state;
 };
 
 /**
@@ -360,6 +362,13 @@ _xcwm_atoms_release(xcwm_context_t *context);
  */
 void
 _xcwm_atoms_set_wm_state(xcwm_window_t *window, xcwm_window_state_t state);
+
+/**
+ * Get the ICCCM WM_STATE for the given window
+ * @param window The window to get the state from
+ * @return state The current state
+ */
+xcwm_window_state_t _xcwm_atoms_get_wm_state(xcwm_window_t *window);
 
 /**
  * Note change of a property atom, and look up corresponding event type

@@ -67,9 +67,10 @@ typedef enum xcwm_window_type_t xcwm_window_type_t;
  * Enumeration for possible supported window states.
  */
 enum xcwm_window_state_t {
-    XCWM_WINDOW_STATE_UNKNOWN = 0,
-    XCWM_WINDOW_STATE_NORMAL,
-    XCWM_WINDOW_STATE_ICONIC
+    XCWM_WINDOW_STATE_UNKNOWN = -1,
+    XCWM_WINDOW_STATE_NORMAL = 1,
+    XCWM_WINDOW_STATE_ICONIC = 3,
+    XCWM_WINDOW_STATE_WITHDRAWN = 0
 };
 typedef enum xcwm_window_state_t xcwm_window_state_t;
 
@@ -244,6 +245,13 @@ xcwm_window_iconify(xcwm_window_t *window);
  */
 void
 xcwm_window_deiconify(xcwm_window_t *window);
+
+/**
+ * Get the window state.
+ * @param window The window
+ * @return The window state
+ */
+xcwm_window_state_t xcwm_window_get_state(xcwm_window_t *window);
 
 /**
  * Get the opacity for the window.
