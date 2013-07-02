@@ -51,7 +51,8 @@ _xcwm_init_extension(xcb_connection_t *conn, const char *extension_name)
         return NULL;
     }
     else {
-        printf("%s extension present\n", extension_name);
+        printf("%s extension present (major opcode %d, base event %d, base error %d)\n",
+               extension_name, reply->major_opcode, reply->first_event, reply->first_error);
     }
 
     return reply;
