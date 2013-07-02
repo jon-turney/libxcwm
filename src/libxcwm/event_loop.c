@@ -251,6 +251,7 @@ run_event_loop(void *thread_arg_struct)
     xcb_generic_event_t *evt;
     xcwm_event_t return_evt;
     xcwm_event_cb_t callback_ptr;
+#define EVENT_DEBUG (context->flags & XCWM_VERBOSE_LOG_XEVENTS)
 
     conn_data = thread_arg_struct;
     context = conn_data->context;
@@ -270,9 +271,12 @@ run_event_loop(void *thread_arg_struct)
             xcb_damage_notify_event_t *dmgevnt =
                 (xcb_damage_notify_event_t *)evt;
 
-            /* printf("damage %d,%d @ %d,%d reported against window 0x%08x\n", */
-            /*        dmgevnt->area.width, dmgevnt->area.height, dmgevnt->area.x, dmgevnt->area.y, */
-            /*        dmgevnt->drawable); */
+
+            if (EVENT_DEBUG) {
+            printf("DAMAGE_NOTIFY: XID 0x%08x %d,%d @ %d,%d\n",
+                   dmgevnt->drawable,
+                   dmgevnt->area.width, dmgevnt->area.height, dmgevnt->area.x, dmgevnt->area.y);
+            }
 
             xcwm_window_t *window = _xcwm_get_window_node_by_window_id(dmgevnt->drawable);
 
@@ -346,6 +350,10 @@ run_event_loop(void *thread_arg_struct)
             xcb_shape_notify_event_t *shapeevnt =
                 (xcb_shape_notify_event_t *)evt;
 
+            if (EVENT_DEBUG) {
+                printf("SHAPE_NOTIFY: XID 0x%08x\n", shapeevnt->affected_window);
+            }
+
             if (shapeevnt->shape_kind == XCB_SHAPE_SK_BOUNDING) {
                 xcwm_window_t *window = _xcwm_get_window_node_by_window_id(shapeevnt->affected_window);
                 _xcwm_window_set_shape(window, shapeevnt->shaped);
@@ -358,6 +366,10 @@ run_event_loop(void *thread_arg_struct)
         else if (response_type == context->fixes_event_base + XCB_XFIXES_CURSOR_NOTIFY) {
             /* xcb_xfixes_cursor_notify_event_t *cursorevnt = */
             /*     (xcb_xfixes_cursor_notify_event_t *)evt; */
+
+            if (EVENT_DEBUG) {
+                printf("CURSOR_NOTIFY:\n");
+            }
 
             return_evt.event_type = XCWM_EVENT_CURSOR;
             return_evt.window = NULL;
@@ -391,8 +403,16 @@ run_event_loop(void *thread_arg_struct)
 
             case XCB_CREATE_NOTIFY:
             {
+                xcb_create_notify_event_t *notify =
+                    (xcb_create_notify_event_t *)evt;
+
                 /* We don't actually allow our client to create its
                  * window here, wait until the XCB_MAP_REQUEST */
+
+                if (EVENT_DEBUG) {
+                    printf("CREATE_NOTIFY: XID 0x%08x\n", notify->window);
+                }
+
                 break;
             }
 
@@ -401,6 +421,11 @@ run_event_loop(void *thread_arg_struct)
                 // Window destroyed in root window
                 xcb_destroy_notify_event_t *notify =
                     (xcb_destroy_notify_event_t *)evt;
+
+                if (EVENT_DEBUG) {
+                    printf("DESTROY_NOTIFY: XID 0x%08x\n", notify->window);
+                }
+
                 xcwm_window_t *window =
                     _xcwm_window_remove(event_conn, notify->window);
 
@@ -426,10 +451,15 @@ run_event_loop(void *thread_arg_struct)
                 xcb_map_notify_event_t *notify =
                     (xcb_map_notify_event_t *)evt;
 
+                if (EVENT_DEBUG) {
+                    printf("MAP_NOTIFY: XID 0x%08x\n", notify->window);
+                }
+
                 /* notify->event holds parent of the window */
 
                 xcwm_window_t *window =
                     _xcwm_get_window_node_by_window_id(notify->window);
+
                 if (!window)
                 {
                     /*
@@ -463,6 +493,10 @@ run_event_loop(void *thread_arg_struct)
                 xcb_map_request_event_t *request =
                     (xcb_map_request_event_t *)evt;
 
+                if (EVENT_DEBUG) {
+                    printf("MAP_REQEUST: XID 0x%08x\n", request->window);
+                }
+
                 /* Map the window */
                 xcb_map_window(context->conn, request->window);
                 xcb_flush(context->conn);
@@ -483,6 +517,10 @@ run_event_loop(void *thread_arg_struct)
             {
                 xcb_unmap_notify_event_t *notify =
                     (xcb_unmap_notify_event_t *)evt;
+
+                if (EVENT_DEBUG) {
+                    printf("UNMAP_NOTIFY: XID 0x%08x\n", notify->window);
+                }
 
                 xcwm_window_t *window =
                     _xcwm_window_remove(event_conn, notify->window);
@@ -509,9 +547,11 @@ run_event_loop(void *thread_arg_struct)
                 xcb_configure_notify_event_t *request =
                     (xcb_configure_notify_event_t *)evt;
 
-                printf("CONFIGURE_NOTIFY: XID 0x%08x %dx%d @ %d,%d\n",
-                       request->window, request->width, request->height,
-                       request->x, request->y);
+                if (EVENT_DEBUG) {
+                    printf("CONFIGURE_NOTIFY: XID 0x%08x %dx%d @ %d,%d\n",
+                           request->window, request->width, request->height,
+                           request->x, request->y);
+                }
 
                 xcwm_window_t *window =
                     _xcwm_get_window_node_by_window_id(request->window);
@@ -569,9 +609,11 @@ run_event_loop(void *thread_arg_struct)
                 xcb_configure_request_event_t *request =
                     (xcb_configure_request_event_t *)evt;
 
-                printf("CONFIGURE_REQUEST: XID 0x%08x %dx%d @ %d,%d mask 0x%04x\n",
-                       request->window, request->width, request->height,
-                       request->x, request->y, request->value_mask);
+                if (EVENT_DEBUG) {
+                    printf("CONFIGURE_REQUEST: XID 0x%08x %dx%d @ %d,%d mask 0x%04x\n",
+                           request->window, request->width, request->height,
+                           request->x, request->y, request->value_mask);
+                }
 
                 xcwm_window_t *window =
                     _xcwm_get_window_node_by_window_id(request->window);
@@ -599,6 +641,13 @@ run_event_loop(void *thread_arg_struct)
                     break;
                 }
 
+                if (EVENT_DEBUG) {
+                    char *name = _xcwm_get_atom_name(event_conn, notify->atom);
+                    printf("PROPERTY_NOTIFY: XID 0x%08x, property atom '%s' (%d)\n",
+                           notify->window, name, notify->atom);
+                    free(name);
+                }
+
                 /* If this is WM_PROTOCOLS, do not send event, just
                  * handle internally */
                 if (notify->atom == window->context->atoms.ewmh_conn.WM_PROTOCOLS) {
@@ -615,7 +664,10 @@ run_event_loop(void *thread_arg_struct)
                     callback_ptr(&return_evt);
                 }
                 else {
-                    printf("PROPERTY_NOTIFY for ignored property atom %d\n", notify->atom);
+                    if (EVENT_DEBUG) {
+                        printf("PROPERTY_NOTIFY: no registered event, ignored\n");
+                    }
+
                     /*
                       We need a mechanism to forward properties we don't know about to WM,
                       otherwise everything needs to be in libXcwm ...?
@@ -630,7 +682,10 @@ run_event_loop(void *thread_arg_struct)
 
             default:
             {
-                printf("UNKNOWN EVENT: %i\n", (evt->response_type & ~0x80));
+                if (EVENT_DEBUG) {
+                    printf("UNKNOWN EVENT: %i\n", (evt->response_type & ~0x80));
+                }
+
                 break;
             }
             }
