@@ -44,6 +44,7 @@ typedef enum xcwm_event_type_t {
     XCWM_EVENT_WINDOW_NAME,
     XCWM_EVENT_WINDOW_APPEARANCE,
     XCWM_EVENT_WINDOW_SHAPE,
+    XCWM_EVENT_WINDOW_CONFIGURE,
     XCWM_EVENT_CURSOR,
     XCWM_EVENT_EXIT,
 } xcwm_event_type_t;

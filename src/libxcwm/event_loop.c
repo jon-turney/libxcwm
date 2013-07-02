@@ -445,8 +445,52 @@ run_event_loop(void *thread_arg_struct)
 
                 xcwm_window_t *window =
                     _xcwm_get_window_node_by_window_id(request->window);
-                if (window)
+
+                if (!window)
+                    break;
+
+		int resized = 0;
+                int moved = 0;
+
+		if ((request->width != window->notified_bounds.width) ||
+                    (request->height != window->notified_bounds.height))
+                    resized = 1;
+
+		if ((request->x != window->notified_bounds.x) ||
+                    (request->y != window->notified_bounds.y))
+                    moved = 1;
+
+                /*
+                   Update the window bounds.  This is the only place that should
+                   update them, so we can accurately tell when a window has been moved or resized.
+                */
+                window->notified_bounds.x = request->x;
+                window->notified_bounds.y = request->y;
+                window->notified_bounds.width = request->width;
+                window->notified_bounds.height = request->height;
+
+                /*
+                  We don't receive CONFIGURE_REQUEST for override-redirect windows, so note
+                  the actual window bounds here
+                */
+                if (window->override_redirect) {
+                    window->bounds.x = request->x;
+                    window->bounds.y = request->y;
+                    window->bounds.width = request->width;
+                    window->bounds.height = request->height;
+                }
+
+                /* if window was resized, we must reallocate composite pixmap */
+                if (resized)
                     _xcwm_window_composite_pixmap_update(window);
+
+                /* if window was moved or resized, send configure event */
+                if (moved || resized) {
+                    return_evt.event_type = XCWM_EVENT_WINDOW_CONFIGURE;
+                    return_evt.window = window;
+                    callback_ptr(&return_evt);
+                }
+
                 break;
             }
 
@@ -459,18 +503,18 @@ run_event_loop(void *thread_arg_struct)
                        request->window, request->width, request->height,
                        request->x, request->y, request->value_mask);
 
-                /*
-                   relying on the server's idea of the current values of values not
-                   in value_mask is a bad idea, we might have a configure request of
-                   our own on this window in flight
-                */
+                xcwm_window_t *window =
+                    _xcwm_get_window_node_by_window_id(request->window);
+                if (!window) {
+                    break;
+                }
+
                 if (request->value_mask &
                     (XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y | XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT))
-                    _xcwm_resize_window(event_conn, request->window,
-                                        request->x, request->y,
-                                        request->width, request->height);
-
-                /* Ignore requests to change stacking ? */
+                    xcwm_window_configure(window,
+                                          request->x, request->y,
+                                          request->width, request->height);
+                /* XXX: requests to change stacking are currently ignored */
 
                 break;
             }

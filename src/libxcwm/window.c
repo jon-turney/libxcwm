@@ -117,6 +117,7 @@ _xcwm_window_create(xcwm_context_t *context, xcb_window_t new_window,
     window->bounds.y = geom->y;
     window->bounds.width = geom->width;
     window->bounds.height = geom->height;
+    window->notified_bounds = window->bounds;
     window->opacity = ~0;
     window->composite_pixmap_id = 0;
     window->local_data = 0;
@@ -185,18 +186,23 @@ void
 xcwm_window_configure(xcwm_window_t *window, int x, int y,
                       int width, int height)
 {
+    if ((window->bounds.x != x) ||
+        (window->bounds.y != y) ||
+        (window->bounds.width != width) ||
+        (window->bounds.height != height))
+    {
+        window->bounds.x = x;
+        window->bounds.y = y;
+        window->bounds.width = width;
+        window->bounds.height = height;
 
-    /* Set values for xcwm_window_t */
-    window->bounds.x = x;
-    window->bounds.y = y;
-    window->bounds.width = width;
-    window->bounds.height = height;
+        _xcwm_resize_window(window->context->conn, window->window_id,
+                            x, y, width, height);
 
-    _xcwm_resize_window(window->context->conn, window->window_id,
-                        x, y, width, height);
-    /* Set the damage area to the new window size so its redrawn properly */
-    window->dmg_bounds.width = width;
-    window->dmg_bounds.height = height;
+        /* Set the damage area to the new window size so its redrawn properly */
+        window->dmg_bounds.width = width;
+        window->dmg_bounds.height = height;
+    }
 }
 
 void

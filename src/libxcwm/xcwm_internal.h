@@ -81,7 +81,8 @@ struct xcwm_window_t {
     struct xcwm_window_t *parent;
     struct xcwm_window_t *transient_for; /* Window this one is transient for */
     xcb_damage_damage_t damage;
-    xcwm_rect_t bounds;
+    xcwm_rect_t bounds; /* the window bounds */
+    xcwm_rect_t notified_bounds; /* windows bounds received in configure_notify */
     xcwm_rect_t dmg_bounds;
     xcb_size_hints_t size_hints; /* WM_NORMAL_HINTS */
     char *name;         /* The name of the window */
