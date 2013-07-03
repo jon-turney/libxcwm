@@ -97,6 +97,7 @@ struct xcwm_window_t {
     xcb_pixmap_t composite_pixmap_id;
     xcb_shm_segment_info_t shminfo;
     xcb_shape_get_rectangles_reply_t *shape;
+    int mapped;
 };
 
 /**

@@ -125,6 +125,7 @@ _xcwm_window_create(xcwm_context_t *context, xcb_window_t new_window,
     window->shminfo.shmid = -1;
     window->local_data = 0;
     window->shape = 0;
+    window->mapped = 0;
 
     /* Find and set the parent */
     window->parent = _xcwm_get_window_node_by_window_id(parent);

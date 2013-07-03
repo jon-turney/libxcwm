@@ -197,6 +197,8 @@ _xcwm_windows_adopt(xcwm_context_t *context, xcwm_event_cb_t callback_ptr)
         if (attr->map_state == XCB_MAP_STATE_VIEWABLE) {
             printf("window 0x%08x viewable\n", children[i]);
 
+            window->mapped = 1;
+
             xcwm_window_t *window = _xcwm_window_create(context, children[i], context->root_window->window_id);
             if (!window) {
                 continue;
@@ -209,9 +211,12 @@ _xcwm_windows_adopt(xcwm_context_t *context, xcwm_event_cb_t callback_ptr)
             return_evt.event_type = XCWM_EVENT_WINDOW_CREATE;
 
             callback_ptr(&return_evt);
+
         }
         else {
             printf("window 0x%08x non-viewable\n", children[i]);
+
+            window->mapped = 0;
         }
 
         free(attr);
@@ -470,6 +475,7 @@ run_event_loop(void *thread_arg_struct)
 
                     if (window)
                     {
+                        window->mapped = 1;
                         _xcwm_window_composite_pixmap_update(window);
 
                         return_evt.window = window;
@@ -479,6 +485,7 @@ run_event_loop(void *thread_arg_struct)
                 }
                 else
                 {
+                    window->mapped = 1;
                     _xcwm_window_composite_pixmap_update(window);
                 }
 
@@ -526,6 +533,8 @@ run_event_loop(void *thread_arg_struct)
                     /* Not a window in the list, don't try and destroy */
                     break;
                 }
+
+                window->mapped = 0;
 
                 return_evt.event_type = XCWM_EVENT_WINDOW_DESTROY;
                 return_evt.window = window;
@@ -587,8 +596,8 @@ run_event_loop(void *thread_arg_struct)
                     window->bounds.height = request->height;
                 }
 
-                /* if window was resized, we must reallocate composite pixmap */
-                if (resized)
+                /* if window is mapped and was resized, we must reallocate composite pixmap */
+                if (window->mapped && resized)
                     _xcwm_window_composite_pixmap_update(window);
 
                 /* if window was moved or resized, send configure event */
