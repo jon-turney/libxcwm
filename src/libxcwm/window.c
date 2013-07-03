@@ -614,9 +614,15 @@ _xcwm_window_set_shape(xcwm_window_t *window, uint8_t shaped)
     if (window->shape)
         free(window->shape);
 
+    window->shape = 0;
+
     /* If shaped == FALSE, window is unshaped and we don't need to ask to find shaped region */
     if (shaped)
     {
+        /* ... but unfortunately, there is no way to ask if a window is shaped initially, so
+           we have to check if we got exactly 1 rectangle which is the same as the window bounds
+           and treat that as unshaped, as well */
+
         xcb_shape_get_rectangles_cookie_t cookie = xcb_shape_get_rectangles(window->context->conn,
                                                                             window->window_id,
                                                                             XCB_SHAPE_SK_BOUNDING);
@@ -625,22 +631,17 @@ _xcwm_window_set_shape(xcwm_window_t *window, uint8_t shaped)
                                                                                 cookie,
                                                                                 NULL);
 
-        /* ... but unfortunately, there is no way to ask if a window is shaped initially, so
-           we have to check if we got exactly 1 rectangle which is the same as the window bounds
-           and treat that as unshaped, as well */
-        xcb_rectangle_iterator_t ri = xcb_shape_get_rectangles_rectangles_iterator(reply);
-        if ((ri.rem == 0) ||
-            ((ri.rem == 1) && (ri.data->x <= 0) && (ri.data->y <= 0)
-             && (ri.data->width >= window->bounds.width) && (ri.data->height >= window->bounds.height))) {
-            printf("window 0x%08x is actually unshaped\n", window->window_id);
-            window->shape = 0;
-            free(reply);
-        } else
-        {
-            window->shape = reply;
+        if (reply) {
+            xcb_rectangle_iterator_t ri = xcb_shape_get_rectangles_rectangles_iterator(reply);
+            if ((ri.rem == 0) ||
+                ((ri.rem == 1) && (ri.data->x <= 0) && (ri.data->y <= 0)
+                 && (ri.data->width >= window->bounds.width) && (ri.data->height >= window->bounds.height))) {
+                printf("window 0x%08x is actually unshaped\n", window->window_id);
+                free(reply);
+            } else
+            {
+                window->shape = reply;
+            }
         }
-    } else
-    {
-        window->shape = 0;
     }
 }
