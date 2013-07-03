@@ -319,21 +319,6 @@ run_event_loop(void *thread_arg_struct)
                 break;
             }
 
-            case XCB_EXPOSE:
-            {
-                xcb_expose_event_t *exevnt = (xcb_expose_event_t *)evt;
-
-                printf(
-                    "Window %u exposed. Region to be redrawn at location (%d, %d), ",
-                    exevnt->window, exevnt->x, exevnt->y);
-                printf("with dimensions (%d, %d).\n", exevnt->width,
-                       exevnt->height);
-
-                return_evt.event_type = XCWM_EVENT_WINDOW_EXPOSE;
-                callback_ptr(&return_evt);
-                break;
-            }
-
             case XCB_CREATE_NOTIFY:
             {
                 /* We don't actually allow our client to create its
