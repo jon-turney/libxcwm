@@ -388,16 +388,13 @@ run_event_loop(void *thread_arg_struct)
                 fprintf(stderr, "Error received in event loop.\n"
                         "Error code: %i\n",
                         err->error_code);
-                if ((err->error_code >= XCB_VALUE)
-                    && (err->error_code <= XCB_FONT)) {
-                    xcb_value_error_t *val_err = (xcb_value_error_t *)evt;
-                    fprintf(stderr, "Bad value: %i\n"
-                            "Major opcode: %i\n"
-                            "Minor opcode: %i\n",
-                            val_err->bad_value,
-                            val_err->major_opcode,
-                            val_err->minor_opcode);
-                }
+                fprintf(stderr, "ID: 0x%08x\n"
+                        "Major opcode: %i\n"
+                        "Minor opcode: %i\n",
+                        err->resource_id,
+                        err->major_code,
+                        err->minor_code);
+
                 break;
             }
 
