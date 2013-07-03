@@ -205,6 +205,53 @@ _xcwm_window_change_state(xcwm_window_t *window, xcwm_window_state_t newstate, x
     }
 }
 
+static void
+_xcwm_window_adopt(xcb_drawable_t window_id, xcwm_context_t *context, xcwm_event_cb_t callback_ptr)
+{
+    xcb_get_window_attributes_cookie_t cookie = xcb_get_window_attributes(context->conn, window_id);
+    xcb_get_window_attributes_reply_t *attr = xcb_get_window_attributes_reply(context->conn, cookie, NULL);
+
+    if (!attr) {
+        fprintf(stderr, "Couldn't get attributes for window 0x%08x\n", window_id);
+        return;
+    }
+
+    printf("window 0x%08x is %s\n", window_id, (attr->map_state == XCB_MAP_STATE_VIEWABLE) ? "mapped" : "withdrawn");
+
+    xcwm_window_t *window = _xcwm_window_create(context, window_id, context->root_window->window_id);
+    if (!window) {
+        return;
+    }
+
+    if (attr->map_state == XCB_MAP_STATE_VIEWABLE) {
+        window->mapped = 1;
+
+        _xcwm_window_composite_pixmap_update(window);
+
+        /* state of a mapped window must be normal */
+        _xcwm_window_change_state(window, XCWM_WINDOW_STATE_NORMAL, callback_ptr);
+    }
+    else {
+        window->mapped = 0;
+
+        /*
+          state of an unmapped window must be either iconic or withdrawn
+          (careful: if the client didn't withdraw the window itself, we
+          must be sure to make it iconic, or the window will be lost...)
+        */
+        /*
+          XXX: saveset should map any iconic windows on WM exit, but...
+        */
+        xcwm_window_state_t state =  _xcwm_atoms_get_wm_state(window);
+        if (state != XCWM_WINDOW_STATE_WITHDRAWN)
+            state = XCWM_WINDOW_STATE_ICONIC;
+
+        _xcwm_window_change_state(window, state, callback_ptr);
+    }
+
+    free(attr);
+}
+
 /*
   Generate a XCWM_EVENT_WINDOW_CREATE event for all
   existing mapped top-level windows when we start
@@ -223,48 +270,7 @@ _xcwm_windows_adopt(xcwm_context_t *context, xcwm_event_cb_t callback_ptr)
 
     int i;
     for (i = 0; i < len; i ++) {
-        xcb_get_window_attributes_cookie_t cookie = xcb_get_window_attributes(context->conn, children[i]);
-        xcb_get_window_attributes_reply_t *attr = xcb_get_window_attributes_reply(context->conn, cookie, NULL);
-
-        if (!attr) {
-            fprintf(stderr, "Couldn't get attributes for window 0x%08x\n", children[i]);
-            continue;
-        }
-
-        printf("window 0x%08x is %s\n", children[i], (attr->map_state == XCB_MAP_STATE_VIEWABLE) ? "mapped" : "withdrawn");
-
-        xcwm_window_t *window = _xcwm_window_create(context, children[i], context->root_window->window_id);
-        if (!window) {
-            continue;
-        }
-
-        if (attr->map_state == XCB_MAP_STATE_VIEWABLE) {
-            window->mapped = 1;
-
-            _xcwm_window_composite_pixmap_update(window);
-
-            /* state of a mapped window must be normal */
-            _xcwm_window_change_state(window, XCWM_WINDOW_STATE_NORMAL, callback_ptr);
-        }
-        else {
-            window->mapped = 0;
-
-            /*
-              state of an unmapped window must be either iconic or withdrawn
-              (careful: if the client didn't withdraw the window itself, we
-              must be sure to make it iconic, or the window will be lost...)
-            */
-            /*
-              XXX: saveset should map any iconic windows on WM exit, but...
-             */
-            xcwm_window_state_t state =  _xcwm_atoms_get_wm_state(window);
-            if (state != XCWM_WINDOW_STATE_WITHDRAWN)
-                state = XCWM_WINDOW_STATE_ICONIC;
-
-            _xcwm_window_change_state(window, state, callback_ptr);
-        }
-
-        free(attr);
+        _xcwm_window_adopt(children[i], context, callback_ptr);
     }
 
     free(reply);
@@ -730,6 +736,42 @@ run_event_loop(void *thread_arg_struct)
 
             case XCB_MAPPING_NOTIFY:
                 break;
+
+            case XCB_REPARENT_NOTIFY:
+            {
+                xcb_reparent_notify_event_t *notify =
+                    (xcb_reparent_notify_event_t *)evt;
+
+                if (EVENT_DEBUG) {
+                    printf("REPARENT_NOTIFY: XID 0x%08x new parent XID 0x%08x\n",
+                           notify->window, notify->parent);
+                }
+
+                if (notify->parent == context->root_window->window_id) {
+                    /* reparented to root window, adopt window */
+                    xcwm_window_t *window =
+                        _xcwm_get_window_node_by_window_id(notify->window);
+                    if (window) {
+                        printf("Window XID %08x already exists when reparented to root!\n", notify->window);
+                    }
+                    else {
+                        _xcwm_window_adopt(notify->window, context, callback_ptr);
+                    }
+                }
+                else {
+                    /* reparented from root window, destroy window */
+                    xcwm_window_t *window =
+                        _xcwm_window_remove(event_conn, notify->window);
+
+                    if (window) {
+                        _xcwm_window_composite_pixmap_release(window);
+
+                        // Release memory for the window
+                        _xcwm_window_release(window);
+                    }
+                }
+            }
+            break;
 
             case XCB_CLIENT_MESSAGE:
             {
