@@ -40,7 +40,7 @@ xcwm_context_t *
 xcwm_context_open(char *display)
 {
 
-    xcwm_context_t *root_context;
+    xcwm_context_t *context;
     xcb_connection_t *conn;
     int conn_screen;
     xcb_screen_t *root_screen;
@@ -81,45 +81,45 @@ xcwm_context_open(char *display)
 
     xcb_flush(conn);
 
-    root_context = malloc(sizeof(xcwm_context_t));
-    assert(root_context);
-    root_context->root_window = malloc(sizeof(xcwm_window_t));
-    assert(root_context->root_window);
+    context = malloc(sizeof(xcwm_context_t));
+    assert(context);
+    context->root_window = malloc(sizeof(xcwm_window_t));
+    assert(context->root_window);
 
-    root_context->conn = conn;
-    root_context->conn_screen = conn_screen;
-    root_context->root_window->parent = 0;
-    root_context->root_window->window_id = root_window_id;
+    context->conn = conn;
+    context->conn_screen = conn_screen;
+    context->root_window->parent = 0;
+    context->root_window->window_id = root_window_id;
     /* FIXME: Should we have a circular assignment like this? */
-    root_context->root_window->context = root_context;
+    context->root_window->context = context;
 
     /* Set width, height, x, & y from root_screen into the xcwm_context_t */
-    root_context->root_window->bounds.width = root_screen->width_in_pixels;
-    root_context->root_window->bounds.height = root_screen->height_in_pixels;
-    root_context->root_window->bounds.x = 0;
-    root_context->root_window->bounds.y = 0;
+    context->root_window->bounds.width = root_screen->width_in_pixels;
+    context->root_window->bounds.height = root_screen->height_in_pixels;
+    context->root_window->bounds.x = 0;
+    context->root_window->bounds.y = 0;
 
-    _xcwm_init_composite(root_context);
+    _xcwm_init_composite(context);
 
-    _xcwm_init_damage(root_context);
+    _xcwm_init_damage(context);
 
-    _xcwm_init_xfixes(root_context);
+    _xcwm_init_xfixes(context);
 
-    _xcwm_init_shape(root_context);
+    _xcwm_init_shape(context);
 
     /* Add the root window to our list of windows being managed */
-    _xcwm_add_window(root_context->root_window);
+    _xcwm_add_window(context->root_window);
 
     _xcwm_init_extension(conn, "XTEST");
     _xcwm_init_extension(conn, "XKEYBOARD");
 
-    _xcwm_atoms_init(root_context);
+    _xcwm_atoms_init(context);
 
     /* Select for XFIXES cursor notify events */
     /* We get notified on all cursor changes, irrespective of which window we select on */
     xcb_xfixes_select_cursor_input(conn, root_window_id, XCB_XFIXES_CURSOR_NOTIFY_MASK_DISPLAY_CURSOR);
 
-    return root_context;
+    return context;
 }
 
 /* Close all windows, the connection, as well as the event loop */

@@ -42,9 +42,9 @@ struct xcwm_context_t;
 typedef struct xcwm_context_t xcwm_context_t;
 
 /**
- * Sets up the connection and grabs the root window from the specified screen
+ * Sets up the connection and creates the context
  * @param display the display to connect to
- * @return The root context which contains the root window
+ * @return The context
  */
 xcwm_context_t *
 xcwm_context_open (char *display);
