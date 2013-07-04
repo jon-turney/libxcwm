@@ -220,6 +220,28 @@ _xcwm_windows_adopt(xcwm_context_t *context, xcwm_event_cb_t callback_ptr)
     free(reply);
 }
 
+static char *
+_xcwm_get_atom_name(xcb_connection_t *conn, xcb_atom_t atom)
+{
+    char *name = NULL;
+
+    xcb_get_atom_name_cookie_t cookie = xcb_get_atom_name(conn, atom);
+    xcb_get_atom_name_reply_t *reply = xcb_get_atom_name_reply(conn, cookie, NULL);
+
+    if (reply) {
+        int length = xcb_get_atom_name_name_length(reply);
+        name = malloc(length+1);
+        strncpy(name, xcb_get_atom_name_name(reply), length);
+        name[length] = '\0';
+        free(reply);
+    }
+    else {
+        name = strdup("unknown");
+    }
+
+    return name;
+}
+
 void *
 run_event_loop(void *thread_arg_struct)
 {
