@@ -344,18 +344,23 @@ run_event_loop(void *thread_arg_struct)
                 continue;
             }
 
+            if (!window->mapped) {
+                printf("damage reported against unmapped window 0x%08x\n", dmgevnt->drawable);
+                continue;
+            }
+
             /* Increase the damaged area of window if new damage is
              * larger than current. */
             xcwm_event_get_thread_lock();
 
-            /* Initial damage events for override-redirect windows are
+            /* Initial damage events for windows are
              * reported relative to the root window, subsequent events
              * are relative to the window itself. We also catch cases
-             * where the damage area is larger than the bounds of the
+             * where the damage area is outside the bounds of the
              * window. */
             if (window->initial_damage == 1
-                || (dmgevnt->area.width > window->bounds.width)
-                || (dmgevnt->area.height > window->bounds.height) ) {
+                || ((dmgevnt->area.x + dmgevnt->area.width) > window->bounds.width)
+                || ((dmgevnt->area.y + dmgevnt->area.height) > window->bounds.height) ) {
                 xcb_xfixes_region_t region =
                     xcb_generate_id(window->context->conn);
                 xcb_rectangle_t rect;
