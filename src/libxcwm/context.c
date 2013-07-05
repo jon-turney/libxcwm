@@ -37,7 +37,7 @@
 // This init function needs set the window to be registered for events!
 // First one we should handle is damage
 xcwm_context_t *
-xcwm_context_open(char *display)
+xcwm_context_open(char *display, xcwm_context_flags_t flags)
 {
 
     xcwm_context_t *context;
@@ -86,6 +86,7 @@ xcwm_context_open(char *display)
     context->root_window = malloc(sizeof(xcwm_window_t));
     assert(context->root_window);
 
+    context->flags = flags;
     context->conn = conn;
     context->conn_screen = conn_screen;
     context->root_window->parent = 0;
@@ -119,8 +120,10 @@ xcwm_context_open(char *display)
     if (!_xcwm_init_extension(conn, "XKEYBOARD"))
         goto fail;
 
-    context->has_shm = (_xcwm_init_extension(conn, "MIT-SHM") != NULL);
-    context->depth = xcb_aux_get_depth(conn, root_screen);
+    if (!(flags & XCWM_DISABLE_SHM)) {
+        context->has_shm = (_xcwm_init_extension(conn, "MIT-SHM") != NULL);
+        context->depth = xcb_aux_get_depth(conn, root_screen);
+    }
 
     _xcwm_atoms_init(context);
 

@@ -34,6 +34,13 @@
 #include <xcb/damage.h>
 #include <xcb/xcb_icccm.h>
 
+enum xcwm_context_flags_t {
+    XCWM_DISABLE_SHM = 1,         // Disable SHM use on this context
+    XCWM_VERBOSE_LOG_XEVENTS = 2, // Log all Xevent
+};
+typedef enum xcwm_context_flags_t xcwm_context_flags_t;
+
+
 /* forward reference to xcwm_window_t type */
 struct xcwm_window_t;
 typedef struct xcwm_window_t xcwm_window_t;
@@ -44,10 +51,11 @@ typedef struct xcwm_context_t xcwm_context_t;
 /**
  * Sets up the connection and creates the context
  * @param display the display to connect to
+ * @flags flags to be applied to the context
  * @return The context
  */
 xcwm_context_t *
-xcwm_context_open (char *display);
+xcwm_context_open(char *display, xcwm_context_flags_t flags);
 
 /**
  * Closes the windows open on the X Server, the connection, and the event

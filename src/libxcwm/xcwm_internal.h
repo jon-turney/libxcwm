@@ -71,6 +71,7 @@ struct xcwm_context_t {
     xcwm_wm_atoms_t atoms;
     int has_shm;
     int depth;
+    xcwm_context_flags_t flags;
 };
 
 /**
