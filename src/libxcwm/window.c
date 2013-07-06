@@ -666,12 +666,16 @@ _xcwm_window_set_shape(xcwm_window_t *window, uint8_t shaped)
             if ((ri.rem == 0) ||
                 ((ri.rem == 1) && (ri.data->x <= 0) && (ri.data->y <= 0)
                  && (ri.data->width >= window->bounds.width) && (ri.data->height >= window->bounds.height))) {
-                printf("window 0x%08x is actually unshaped\n", window->window_id);
+                printf("window 0x%08x was checked for shaping and is unshaped\n", window->window_id);
                 free(reply);
             } else
             {
+                printf("window 0x%08x is shaped\n", window->window_id);
                 window->shape = reply;
             }
         }
+    }
+    else {
+        printf("window 0x%08x is unshaped\n", window->window_id);
     }
 }

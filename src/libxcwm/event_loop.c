@@ -316,7 +316,9 @@ run_event_loop(void *thread_arg_struct)
 
     free(thread_arg_struct);
 
+    printf("Adopting existing windows\n");
     _xcwm_windows_adopt(context, callback_ptr);
+    printf("Adopting existing windows, done\n");
 
     /* Start the event loop, and flush if first */
     xcb_flush(event_conn);
@@ -748,14 +750,15 @@ run_event_loop(void *thread_arg_struct)
                     (xcb_reparent_notify_event_t *)evt;
 
                 if (EVENT_DEBUG) {
-                    printf("REPARENT_NOTIFY: XID 0x%08x new parent XID 0x%08x\n",
-                           notify->window, notify->parent);
+                    printf("REPARENT_NOTIFY: XID 0x%08x new parent XID 0x%08x reported on XID 0x%08x\n",
+                           notify->window, notify->parent, notify->event);
                 }
 
                 if (notify->parent == context->root_window->window_id) {
                     /* reparented to root window, adopt window */
                     xcwm_window_t *window =
                         _xcwm_get_window_node_by_window_id(notify->window);
+
                     if (window) {
                         printf("Window XID %08x already exists when reparented to root!\n", notify->window);
                     }
