@@ -4,7 +4,7 @@ AC_PREREQ(2.61)
 AC_INIT([libxcwm], [0.1])
 AM_INIT_AUTOMAKE([foreign dist-bzip2])
 AM_MAINTAINER_MODE
-AM_CONFIG_HEADER(config.h)
+AC_CONFIG_HEADERS(config.h)
 
 # Initialize libtool
 AC_PROG_LIBTOOL
