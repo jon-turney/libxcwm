@@ -29,7 +29,6 @@
 
 #include <xcb/xcb.h>
 #include <xcb/xcb_aux.h>
-#include <xcb/xcb_keysyms.h>
 #include <xcwm/xcwm.h>
 #include "xcwm_internal.h"
 #include <string.h>
