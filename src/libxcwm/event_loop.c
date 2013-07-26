@@ -665,6 +665,27 @@ run_event_loop(void *thread_arg_struct)
                     callback_ptr(&return_evt);
                 }
 
+                /*
+                  ICCCM 4.1.5, 4.2.3
+
+                  Always follow a non-synthetic CONFIGURE_NOTIFY with a synthetic one.
+
+                  This ensures clients know the position of the top-level window
+                */
+                if (!(response_type & 0x80)) {
+                    xcb_configure_notify_event_t event;
+                    memset(&event, 0, sizeof(xcb_configure_notify_event_t));
+
+                    event = *request;
+                    event.response_type = XCB_CONFIGURE_NOTIFY;
+                    event.event = window->window_id;
+                    event.window = window->window_id;
+
+                    xcb_send_event(window->context->conn, 0, window->window_id,
+                                   XCB_EVENT_MASK_STRUCTURE_NOTIFY,
+                                   (char *)&event);
+                }
+
                 break;
             }
 
