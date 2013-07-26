@@ -152,7 +152,7 @@ _xcwm_window_composite_pixmap_update(xcwm_window_t *window)
                                                  NULL, ~0, NULL);
         size_t image_size = image->size;
         xcb_image_destroy(image);
-        printf("window 0x%08x requires %d bytes of SHM\n", window->window_id, image_size);
+        printf("window 0x%08x requires %zu bytes of SHM\n", window->window_id, image_size);
 
         /* Allocate SHM resources */
         window->shminfo.shmid = shmget(IPC_PRIVATE, image_size, IPC_CREAT | 0777);
