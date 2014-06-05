@@ -539,7 +539,7 @@ run_event_loop(void *thread_arg_struct)
                     (xcb_map_request_event_t *)evt;
 
                 if (EVENT_DEBUG) {
-                    printf("MAP_REQEUST: XID 0x%08x\n", request->window);
+                    printf("MAP_REQUEST: XID 0x%08x\n", request->window);
                 }
 
                 xcwm_window_t *window =
