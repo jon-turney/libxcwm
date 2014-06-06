@@ -122,6 +122,11 @@ xcwm_context_open(char *display, xcwm_context_flags_t flags)
     if (!(flags & XCWM_DISABLE_SHM)) {
         context->has_shm = (_xcwm_init_extension(conn, "MIT-SHM") != NULL);
         context->depth = xcb_aux_get_depth(conn, root_screen);
+
+        /* Promote 24-bit root window to 32-bit, as we want alpha as well */
+        if (context->depth == 24) {
+            context->depth = 32;
+        }
     }
 
     _xcwm_atoms_init(context);
